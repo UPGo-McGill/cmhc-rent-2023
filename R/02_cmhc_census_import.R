@@ -12,7 +12,7 @@ province <-
   get_census("CA21", regions = list(C = 1), level = "PR", 
              geo_format = "sf") |> 
   st_transform(4326) |> 
-  select(province = name, geometry) |> 
+  select(province = name, province_ID = GeoUID, geometry) |> 
   mutate(province = str_remove(province, " \\(.*\\)"))
 
 CMA <- 
@@ -31,7 +31,7 @@ DA <-
                            owners = "v_CA21_4305",
                            entertainment = "v_CA21_6657",
                            accommodation = "v_CA21_6660",
-                           parent = "v_CA21_6606"), geo_format = "sf")})
+                           accom_parent = "v_CA21_6606"), geo_format = "sf")})
 
 # Combine output and add area
 DA <- 
@@ -42,10 +42,25 @@ DA <-
   st_transform(3347) |> 
   mutate(accommodation = entertainment + accommodation) |> 
   select(DA = GeoUID, CMA = CMA_UID, pop = Population, dwellings = Dwellings,
-         accommodation, parent, rent, tenants, owners) |> 
+         accommodation, accom_parent, rent, tenants, owners) |> 
   mutate(area_DA = units::drop_units(st_area(geometry)), .before = geometry) |> 
   st_set_agr("constant")
 
+DA <- 
+  DA |> 
+  mutate(province_ID = substr(DA, 1, 2)) |> 
+  inner_join(st_drop_geometry(province), by = "province_ID") |> 
+  relocate(province, province_ID, .after = CMA)
+
+province <-
+  province |> 
+  select(-province_ID)
+
+DA_union <-
+  DA |> 
+  group_by(province) |> 
+  summarize()
+  
 
 # Process neighbourhoods --------------------------------------------------
 
@@ -71,13 +86,11 @@ cmhc_PR <-
   cmhc_nbhd |> 
   st_set_agr("constant") |> 
   st_centroid() |> 
-  st_intersection(province) |> 
-  st_drop_geometry()
+  nngeo::st_nn(province)
 
 cmhc_nbhd <- 
   cmhc_nbhd |> 
-  inner_join(cmhc_PR, by = c("id", "year", "name", "CMA")) |> 
-  relocate(province, .after = name)
+  mutate(province = !!province$province[as.numeric(cmhc_PR)], .after = name)
 
 rm(cmhc_PR)
 
@@ -93,6 +106,7 @@ cmhc_nbhd <-
 
 cmhc_DA <-
   cmhc_nbhd |> 
+  st_set_agr("constant") |> 
   st_intersection(DA) |> 
   mutate(area_int = units::drop_units(st_area(geometry)), .before = geometry)
 
@@ -103,7 +117,7 @@ cmhc_DA <-
     pop = sum(pop * area_int / area_DA, na.rm = TRUE),
     dwellings = sum(dwellings * area_int / area_DA, na.rm = TRUE),
     accommodation = sum(accommodation * area_int / area_DA, na.rm = TRUE),
-    parent = sum(parent * area_int / area_DA, na.rm = TRUE),
+    accom_parent = sum(accom_parent * area_int / area_DA, na.rm = TRUE),
     rent_DA = sum(rent * tenants * area_int / area_DA, na.rm = TRUE) / 
       sum(tenants + area_int / area_DA, na.rm = TRUE),
     tenants_DA = sum(tenants + area_int / area_DA, na.rm = TRUE),
@@ -114,9 +128,9 @@ cmhc_DA <-
 cmhc_DA <- 
   cmhc_DA |> 
   mutate(
-    accommodation = accommodation / parent,
+    accommodation = accommodation / accom_parent,
     tenant_share = tenants_DA / (tenants_DA + owners_DA)) |> 
-  select(-parent, -tenants_DA, -owners_DA)
+  select(-accom_parent, -tenants_DA, -owners_DA)
 
 cmhc_nbhd <- 
   cmhc_nbhd |> 
@@ -148,6 +162,8 @@ cmhc_nbhd <-
   relocate(name_CMA, .after = CMA) |> 
   relocate(geometry, .after = last_col())
 
+rm(cmhc_CMA)
+
 
 # Process data ------------------------------------------------------------
 
@@ -167,5 +183,6 @@ rm(cmhc_2016, cmhc_2017, cmhc_2018, cmhc_2019, cmhc_2020, cmhc_2021, cmhc_2022)
 qsavem(cmhc, cmhc_nbhd, file = "output/cmhc.qsm", nthreads = availableCores())
 
 qsave(DA, file = "output/DA.qs", nthreads = availableCores())
+qsave(DA_union, file = "output/DA_union.qs", nthreads = availableCores())
 qsave(CMA, file = "output/CMA.qs", nthreads = availableCores())
 qsave(province, file = "output/province.qs", nthreads = availableCores())
