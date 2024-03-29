@@ -28,6 +28,14 @@ handlers(global = TRUE)
 
 # Set global variables ----------------------------------------------------
 
-col_palette <-
-  c("#B8D6BE", "#73AE80", "#B5C0DA", "#6C83B5", "#2A5A5B", "#B58A6C", "#5B362A",
-    "#AE7673")
+# col_palette <-
+#   c("#B8D6BE", "#73AE80", "#B5C0DA", "#6C83B5", "#2A5A5B", "#B58A6C", "#5B362A",
+#     "#AE7673")
+
+impute <- function(x) {
+  x |> 
+    inner_join(monthly_impute, by = c("id", "year", "rent", "universe")) |> 
+    mutate(rent = coalesce(rent, rent_new), 
+           universe = coalesce(universe, univ_new)) |> 
+    select(-rent_new, -univ_new)
+}
