@@ -3,6 +3,7 @@
 source("R/01_startup.R")
 qload("output/cmhc.qsm", nthreads = availableCores())
 province <- qread("output/province.qs", nthreads = availableCores())
+CSD <- qread("output/CSD.qs", nthreads = availableCores())
 
 
 # # Import raw monthly file -------------------------------------------------
@@ -30,6 +31,13 @@ province <- qread("output/province.qs", nthreads = availableCores())
 #          .keep = "none") |>
 #   mutate(month = yearmonth(month)) |>
 #   filter(!region %in% c("Idaho", "Vermont"))
+# 
+# 
+# # Remove Vrbo listings, because they aren't added until 2017 --------------
+# 
+# monthly <- 
+#   monthly |> 
+#   filter(str_starts(property_ID, "ab-"))
 # 
 # 
 # # Fill in missing provinces -----------------------------------------------
@@ -61,7 +69,7 @@ province <- qread("output/province.qs", nthreads = availableCores())
 #   monthly |>
 #   filter(month <= max(month[scraped]),
 #          month >= min(month[scraped]),
-#          .by = property_ID) |> 
+#          .by = property_ID) |>
 #   select(-scraped)
 # 
 # 
@@ -113,20 +121,64 @@ province <- qread("output/province.qs", nthreads = availableCores())
 # # Calculate FREH ----------------------------------------------------------
 # 
 # # Add FREH
-# monthly <- 
-#   monthly |> 
-#   arrange(property_ID, month) |> 
+# monthly <-
+#   monthly |>
+#   arrange(property_ID, month) |>
 #   mutate(FREH = listing_type == "Entire home/apt" & slide2_lgl(
-#     A, R, \(A, R) sum(A) + sum(R) >= 183 & sum(R) > 90, .before = 11), 
+#     A, R, \(A, R) sum(A) + sum(R) >= 183 & sum(R) > 90, .before = 11),
 #     .by = property_ID, .after = B)
 # 
 # # Add FREH_3
-# monthly <- 
-#   monthly |> 
-#   arrange(property_ID, month) |> 
+# monthly <-
+#   monthly |>
+#   arrange(property_ID, month) |>
 #   mutate(FREH_3 = listing_type == "Entire home/apt" & slide2_lgl(
-#     A, R, \(A, R) sum(A) + sum(R) >= 46 & sum(R) >= 23, .before = 2), 
+#     A, R, \(A, R) sum(A) + sum(R) >= 46 & sum(R) >= 23, .before = 2),
 #     .by = property_ID, .after = FREH)
+# 
+# 
+# # Get monthly/CSD correspondence ------------------------------------------
+# 
+# # Get intersections with st_join
+# prop_csd <-
+#   monthly |>
+#   distinct(property_ID, .keep_all = TRUE) |>
+#   strr_as_sf(3347) |>
+#   select(property_ID, geometry) |>
+#   st_join(CSD) |>
+#   arrange(property_ID, CSD) |>
+#   slice(1, .by = property_ID) |>
+#   select(property_ID, CSD)
+# 
+# # Use st_nn for non-intersecting points
+# prop_csd_2 <-
+#   prop_csd |>
+#     filter(is.na(CSD)) |>
+#     select(property_ID, geometry) |>
+#     nngeo::st_nn(CSD, maxdist = 250, parallel = 9)
+# 
+# prop_csd_2 <-
+#   prop_csd |>
+#   filter(is.na(CSD)) |>
+#   rename(CSD_new = CSD) |> 
+#   mutate(CSD_new = map_chr(prop_csd_2, \(x) {
+#     if (length(x) == 0) NA_character_ else CSD$CSD[x]})) |> 
+#   rename(CSD = CSD_new)
+# 
+# prop_csd <-
+#   prop_csd |>
+#   st_drop_geometry() |>
+#   filter(!is.na(CSD)) |>
+#   bind_rows(st_drop_geometry(prop_csd_2)) |>
+#   arrange(property_ID)
+# 
+# qsave(prop_csd, "output/prop_csd.qs", nthreads = availableCores())
+# # prop_csd <- qread("output/prop_csd .qs", nthreads = availableCores())
+# 
+# monthly <-
+#   monthly |>
+#   inner_join(prop_csd, by = "property_ID") |>
+#   relocate(CSD, .after = city)
 # 
 # 
 # # Save intermediate output ------------------------------------------------
@@ -148,18 +200,17 @@ monthly <- qread("output/monthly.qs", nthreads = availableCores())
 # prop_cmhc <-
 #   monthly_close |>
 #   select(property_ID, geometry) |>
-#   st_join(cmhc_nbhd) |> 
-#   arrange(property_ID, id) |> 
+#   st_join(cmhc_nbhd) |>
+#   arrange(property_ID, id) |>
 #   slice(1, .by = property_ID) |>
 #   select(property_ID, id, province, CMA)
-# 
 # 
 # # Use st_nn for non-intersecting points
 # prop_cmhc_2 <-
 #   prop_cmhc |>
 #     filter(is.na(id)) |>
 #     select(property_ID, geometry) |>
-#     mutate(id = cmhc_nbhd$id[unlist(nngeo::st_nn(geometry, cmhc_nbhd))]) |> 
+#     mutate(id = cmhc_nbhd$id[unlist(nngeo::st_nn(geometry, cmhc_nbhd))]) |>
 #   arrange(property_ID) |>
 #   st_drop_geometry() |>
 #   inner_join(st_drop_geometry(select(cmhc_nbhd, id, province, CMA)), by = "id")
@@ -177,10 +228,10 @@ prop_cmhc <- qread("output/prop_cmhc.qs", nthreads = availableCores())
 
 # Join to monthly ---------------------------------------------------------
 
-monthly_year <- 
+monthly_year <-
   monthly |> 
-  mutate(year = year(month)) |> 
-  inner_join(prop_cmhc, by = "property_ID") |> 
+  mutate(year = year(month)) |>
+  inner_join(prop_cmhc, by = "property_ID") |>
   inner_join(cmhc, by = c("id", "year"))
   
 

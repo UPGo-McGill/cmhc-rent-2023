@@ -39,3 +39,18 @@ impute <- function(x) {
            universe = coalesce(universe, univ_new)) |> 
     select(-rent_new, -univ_new)
 }
+
+mutate_region <- function(x) {
+  x |> 
+    mutate(region = case_when(
+      province %in% c("British Columbia", "Ontario", "Québec", "Quebec") ~ 
+        province, 
+      province %in% c("Alberta", "Saskatchewan", "Manitoba") ~ "Prairies",
+      province %in% c("New Brunswick", "Nova Scotia", "Prince Edward Island", 
+                      "Newfoundland and Labrador") ~ "Atlantic"))
+}
+
+mutate_days <- function(x) {
+  x |> 
+    mutate(days = days_in_month(month(as.Date(month))))
+}

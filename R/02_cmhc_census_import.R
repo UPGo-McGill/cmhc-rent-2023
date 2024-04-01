@@ -20,6 +20,15 @@ source("R/01_startup.R")
 #          dwellings_CMA = Dwellings, geometry) |> 
 #   mutate(name_CMA = str_remove(name_CMA, " \\(.*\\)"))
 # 
+# CSD <- 
+#   get_census("CA21", regions = list(C = 1), level = "CSD", geo_format = "sf") |>
+#   as_tibble() |> 
+#   st_as_sf() |> 
+#   st_transform(3347) |>
+#   select(CSD = GeoUID, name_CSD = name, pop_CSD = Population,
+#          households_CSD = Households, dwellings_CSD = Dwellings, geometry) |>
+#   mutate(name_CSD = str_remove(name_CSD, " \\(.*\\)"))
+# 
 # DA <- 
 #   map(c(35, 24, 59, 48, 46, 47, 12, 13, 10, 11, 61, 60, 62), \(x) {
 #     get_census("CA21", regions = list(PR = x), level = "DA",
@@ -63,6 +72,7 @@ source("R/01_startup.R")
 # 
 # qsave(DA, file = "output/DA.qs", nthreads = availableCores())
 # qsave(DA_union, file = "output/DA_union.qs", nthreads = availableCores())
+# qsave(CSD, file = "output/CSD.qs", nthreads = availableCores())
 # qsave(CMA, file = "output/CMA.qs", nthreads = availableCores())
 # qsave(province, file = "output/province.qs", nthreads = availableCores())
 
