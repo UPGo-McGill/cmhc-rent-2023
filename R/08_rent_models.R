@@ -21,7 +21,6 @@ lr <- list()
 # impute: Alternative specification with imputed rent values
 # alt: Alternative specification with FREH_3
 # housing: Alternative specification with housing only
-# 3: FREH and rev with 3-level prov/CMA model
 
 
 # Formulas ----------------------------------------------------------------
@@ -46,27 +45,6 @@ fr$no_zero <-
   rent_log ~ FREH_log + rev_log + 
   universe_log + tenant + tourism_log + CMA:year
 
-fr$m_FREH <- 
-  rent_log ~ FREH_log + FREH_dummy + 
-  universe_log + tenant + tourism_log + (1 | CMA:year)
-
-fr$m_rev <- 
-  rent_log ~ rev_log + rev_dummy + 
-  universe_log + tenant + tourism_log + (1 | CMA:year)
-
-fr$m_both <- 
-  rent_log ~ FREH_log + FREH_dummy + rev_log + rev_dummy + 
-  universe_log + tenant + tourism_log + (1 | CMA:year)
-
-
-fr$m_outliers <- 
-  rent_log ~ FREH_log + FREH_dummy + rev_log + 
-  universe_log + tenant + tourism_log + (1 | CMA:year)
-
-fr$m_no_zero <- 
-  rent_log ~ FREH_log + rev_log + 
-  universe_log + tenant + tourism_log + (1 | CMA:year)
-
 fr$s_FREH <- 
   c("FREH_log", "FREH_dummy", 
     "universe_log", "tenant", "tourism_log")
@@ -86,11 +64,6 @@ fr$s_outliers <-
 fr$s_no_zero <- 
   c("FREH_log", "rev_log", 
     "universe_log", "tenant", "tourism_log")
-
-fr$p_FREH <- rent_log ~ FREH_log + FREH_dummy + universe_log
-fr$p_rev <- rent_log ~ rev_log + rev_dummy + universe_log
-fr$p_both <- rent_log ~ FREH_log + FREH_dummy + rev_log + rev_dummy + 
-  universe_log
 
 
 # Linear models -----------------------------------------------------------
@@ -114,53 +87,14 @@ mr$l_p <- map(list(
 
 # Prepare eigenvectors for spatial regressions ----------------------------
 
-er$main <- 
-  dr$main |> 
-  st_transform(4326) |> 
-  st_set_agr("constant") |> 
-  st_centroid() |> 
-  st_coordinates() |> 
-  meigen(s_id = dr$main$id)
-
-er$outliers <- 
-  dr$outliers |> 
-  st_transform(4326) |> 
-  st_set_agr("constant") |> 
-  st_centroid() |> 
-  st_coordinates() |> 
-  meigen(s_id = dr$outliers$id)
-
-er$no_zero <- 
-  dr$no_zero |> 
-  st_transform(4326) |> 
-  st_set_agr("constant") |> 
-  st_centroid() |> 
-  st_coordinates() |> 
-  meigen(s_id = dr$no_zero$id)
-
-er$impute <- 
-  dr$impute |> 
-  st_transform(4326) |> 
-  st_set_agr("constant") |> 
-  st_centroid() |> 
-  st_coordinates() |> 
-  meigen(s_id = dr$impute$id)
-
-er$alt <- 
-  dr$alt |> 
-  st_transform(4326) |> 
-  st_set_agr("constant") |> 
-  st_centroid() |> 
-  st_coordinates() |> 
-  meigen(s_id = dr$alt$id)
-
-er$housing <- 
-  dr$housing |> 
-  st_transform(4326) |> 
-  st_set_agr("constant") |> 
-  st_centroid() |> 
-  st_coordinates() |> 
-  meigen(s_id = dr$housing$id)
+er <- map(dr, \(x) {
+  x |> 
+    st_transform(4326) |> 
+    st_set_agr("constant") |> 
+    st_centroid() |> 
+    st_coordinates() |> 
+    meigen(s_id = x$id)
+})
 
 
 # RE-ESF ------------------------------------------------------------------
