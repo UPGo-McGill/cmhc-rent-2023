@@ -1,8 +1,6 @@
 #### RENT CHANGE MODELS ########################################################
 
 source("R/06_data_for_models.R")
-library(spmoran)
-#library(spdep)
 
 fc <- list()
 mc <- list()

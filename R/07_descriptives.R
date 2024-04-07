@@ -1,7 +1,6 @@
 #### 07 DESCRIPTIVE STATISTICS #################################################
 
 source("R/06_data_for_models.R")
-library(GGally)
 
 
 # Correlation between STRs and rent ---------------------------------------

@@ -1,8 +1,6 @@
 #### RENT MODELS ###############################################################
 
 source("R/06_data_for_models.R")
-library(spmoran)
-library(spdep)
 
 fr <- list()
 mr <- list()
