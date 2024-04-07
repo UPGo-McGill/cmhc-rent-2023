@@ -5,8 +5,6 @@ source("R/06_data_for_models.R")
 fc <- list()
 mc <- list()
 ec <- list()
-nc <- list()
-lc <- list()
 
 
 # Legend ------------------------------------------------------------------
