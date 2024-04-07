@@ -37,7 +37,14 @@ impute <- function(x) {
     inner_join(monthly_impute, by = c("id", "year", "rent", "universe")) |> 
     mutate(rent = coalesce(rent, rent_new), 
            universe = coalesce(universe, univ_new)) |> 
-    select(-rent_new, -univ_new)
+    arrange(id, year) |> 
+    mutate(rent_change_new = slide_dbl(rent, \(x) x[2] - x[1], .before = 1, 
+                                       .complete = TRUE), .by = id) |> 
+    mutate(rent_change = coalesce(rent_change, rent_change_new)) |> 
+    mutate(univ_change_new = slide_dbl(universe, \(x) x[2] - x[1], .before = 1, 
+                                       .complete = TRUE), .by = id) |> 
+    mutate(universe_change = coalesce(universe_change, univ_change_new)) |> 
+    select(-rent_new, -univ_new, -rent_change_new, -univ_change_new)
 }
 
 mutate_region <- function(x) {
