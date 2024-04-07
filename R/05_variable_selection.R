@@ -480,7 +480,7 @@ monthly_sept |>
             bad = sum(vacancy_rel == "d"),
             good = n() - missing - bad)
 
-# So use vacancy as an extra test, but probably don't include it in main models
+# So don't include vacancy in main models
 
 
 ## Full variable specification for rent model ##################################
@@ -491,8 +491,8 @@ monthly_sept |>
          rev > 1.67017e-05)
 
 # Choose variables
-# rent_log, FREH_log, FREH_3_log, rev_log, year, EH, # universe_log, tenant, 
-# tourism_log, vacancy
+# id, year, rent_log, FREH_log, FREH_3_log, rev_log, universe_log, tenant, 
+# tourism_log
 
 
 ################################################################################
@@ -515,7 +515,7 @@ monthly_sept |>
 
 # Outliers above +/- 400?
 monthly_sept |> 
-  filter(abs(rent_change) < 400) |> 
+  filter(abs(rent_change) < 400) |>
   ggplot(aes(rent_change)) +
   geom_histogram()
 
@@ -539,12 +539,12 @@ monthly_sept |>
 
 # `FREH_change` -----------------------------------------------------------
 
-# FREH_change has extreme outliers
+# FREH_change has long tails
 monthly_sept |> 
   ggplot(aes(FREH_change)) +
   geom_histogram()
 
-# Relatively heavy negative skew
+# Moderate positive skew
 monthly_sept |> 
   pull(FREH_change) |> 
   skew()
@@ -552,185 +552,162 @@ monthly_sept |>
 # There is no reasonable outlier threshold that establishes normalcy, and no
 # strong theoretical justification for removing extreme values
 monthly_sept |> 
-  filter(abs(FREH_change) < 50) |> 
+  # filter(abs(FREH_change) < 0) |>
   ggplot(aes(FREH_change)) +
   geom_histogram()
 
-# A log transformation doesn't work
+
+# `FREH_count_change` -----------------------------------------------------
+
+# FREH_count_change has extreme outliers
 monthly_sept |> 
-  mutate(FREH_change_log = log(FREH_change)) |> 
-  ggplot(aes(FREH_change_log)) +
+  ggplot(aes(FREH_count_change)) +
   geom_histogram()
 
-
-# `FREH_share_change` -----------------------------------------------------
-
-# FREH_share_change has extreme outliers
+# Extreme negative skew
 monthly_sept |> 
-  ggplot(aes(FREH_share_change)) +
-  geom_histogram()
-
-# Moderate positive skew
-monthly_sept |> 
-  pull(FREH_share_change) |> 
+  pull(FREH_count_change) |> 
   skew()
 
-# There is no reasonable outlier threshold that establishes normalcy, and no
-# strong theoretical justification for removing extreme values
+# There is no reasonable outlier threshold that establishes normalcy
 monthly_sept |> 
-  filter(abs(FREH_share_change) < 0.005) |> 
-  ggplot(aes(FREH_share_change)) +
+  filter(abs(FREH_count_change) < 100) |> 
+  ggplot(aes(FREH_count_change)) +
   geom_histogram()
 
 
 # `FREH_3_change` ---------------------------------------------------------
 
-# FREH_3_change has extreme outliers
+# FREH_3_change has long tails
 monthly_sept |> 
   ggplot(aes(FREH_3_change)) +
   geom_histogram()
 
-# Heavy negative skew
+# No skew
 monthly_sept |> 
   pull(FREH_3_change) |> 
   skew()
 
-# There is no reasonable outlier threshold that establishes normalcy, and no
-# strong theoretical justification for removing extreme values
+# No obvious need to remove values in the tails
 monthly_sept |> 
-  filter(abs(FREH_3_change) < 100) |> 
+  filter(abs(FREH_3_change) < 0.01) |> 
   ggplot(aes(FREH_3_change)) +
   geom_histogram()
 
-# A log transformation doesn't work
+
+# `FREH_3_count_change` ---------------------------------------------------
+
+# FREH_3_count_change has very long tails
 monthly_sept |> 
-  mutate(FREH_3_change_log = log(FREH_3_change)) |> 
-  ggplot(aes(FREH_3_change_log)) +
+  ggplot(aes(FREH_3_count_change)) +
   geom_histogram()
 
-
-# `FREH_3_share_change` ---------------------------------------------------
-
-# FREH_3_share_change has modest
+# Extreme negative skew
 monthly_sept |> 
-  ggplot(aes(FREH_3_share_change)) +
-  geom_histogram()
-
-# Minor negative skew
-monthly_sept |> 
-  pull(FREH_3_share_change) |> 
+  pull(FREH_3_count_change) |> 
   skew()
 
-# There is no reasonable outlier threshold that establishes normalcy, and no
-# strong theoretical justification for removing extreme values
+# There is no reasonable outlier threshold that establishes normalcy
 monthly_sept |> 
-  filter(abs(FREH_3_share_change) < 0.005) |> 
-  ggplot(aes(FREH_3_share_change)) +
+  filter(abs(FREH_3_count_change) < 100) |> 
+  ggplot(aes(FREH_3_count_change)) +
   geom_histogram()
 
-# FREH_3_share_change has more extreme values than FREH_share_change
+# FREH_3_count_change has more extreme values than FREH_count_change
 monthly_sept |> 
-  ggplot(aes(FREH_share_change, FREH_3_share_change)) +
+  ggplot(aes(FREH_count_change, FREH_3_count_change)) +
   geom_point()
 
 
 # `FREH_change` vs. `rent_change` -----------------------------------------
 
-# No serious outliers in rent, but arguably could remove abs(FREH_change) < 395
 monthly_sept |> 
   # Maybe rent_change < 400 is too strict? Instead could try -400/600
   # filter(abs(rent_change) < 400) |>
   filter(rent_change > -400, rent_change < 600) |>
-  filter(abs(FREH_change) < 395) |>
+  # Arguably could remove abs(FREH_change) < 0.01
+  filter(abs(FREH_change) < 0.01) |>
   ggplot(aes(FREH_change, rent_change)) +
   geom_point() +
   geom_smooth(method = "lm")
 
 
-# `FREH_share_change` vs. `rent_change` -----------------------------------
+# `FREH_count_change` vs. `rent_change` -----------------------------------
 
 # No outliers
 monthly_sept |> 
-  # filter(abs(rent_change) < 400) |>
   filter(rent_change > -400, rent_change < 600) |>
-  ggplot(aes(FREH_share_change, rent_change)) +
+  filter(abs(FREH_count_change) < 200) |>
+  ggplot(aes(FREH_count_change, rent_change)) +
   geom_point() +
   geom_smooth(method = "lm")
 
 
 # `FREH_3_change` vs. `rent_change` ---------------------------------------
 
-# No serious outliers in rent, but could remove abs(FREH_3_change) < 500
 monthly_sept |> 
   filter(rent_change > -400, rent_change < 600) |>
-  filter(abs(FREH_3_change) < 500) |>
+  # Could remove abs(FREH_3_change) < 0.015
+  filter(abs(FREH_3_change) < 0.015) |>
   ggplot(aes(FREH_3_change, rent_change)) +
   geom_point() +
   geom_smooth(method = "lm")
 
 
-# `FREH_3_share_change` vs. `rent_change` ---------------------------------
+# `FREH_3_count_change` vs. `rent_change` ---------------------------------
 
-# No outliers
 monthly_sept |> 
   filter(rent_change > -400, rent_change < 600) |>
-  ggplot(aes(FREH_3_share_change, rent_change)) +
+  filter(abs(FREH_3_count_change) < 250) |> 
+  ggplot(aes(FREH_3_count_change, rent_change)) +
   geom_point() +
   geom_smooth(method = "lm")
 
 
 # `rev_change` ------------------------------------------------------------
 
-# rev_change has extreme outliers
+# rev_change has long tails
 monthly_sept |> 
   ggplot(aes(rev_change)) +
   geom_histogram()
 
-# Very heavy negative skew
+# Minor positive skew
 monthly_sept |> 
   pull(rev_change) |> 
   skew()
 
-# There is no reasonable outlier threshold that establishes normalcy, and no
-# strong theoretical justification for removing extreme values
+# There is no reasonable outlier threshold that establishes normalcy
 monthly_sept |> 
-  filter(abs(rev_change) < 100000) |> 
+  filter(abs(rev_change) < 0.2) |>
   ggplot(aes(rev_change)) +
   geom_histogram()
 
-# A log transformation doesn't work becuase of many zero values
+
+# `rev_count_change` ------------------------------------------------------
+
+# rev_count_change has extreme outliers
 monthly_sept |> 
-  mutate(rev_change_log = log(rev_change)) |> 
-  ggplot(aes(rev_change_log)) +
+  ggplot(aes(rev_count_change)) +
   geom_histogram()
 
-
-# `rev_share_change` ------------------------------------------------------
-
-# rev_share_change has extreme outliers
+# Heavy negative skew
 monthly_sept |> 
-  ggplot(aes(rev_share_change)) +
-  geom_histogram()
-
-# Moderately strong positive skew
-monthly_sept |> 
-  pull(rev_share_change) |> 
+  pull(rev_count_change) |> 
   skew()
 
-# There is no reasonable outlier threshold that establishes normalcy, and no
-# strong theoretical justification for removing extreme values
+# There is no reasonable outlier threshold that establishes normalcy
 monthly_sept |> 
-  filter(abs(rev_share_change) < 0.1) |> 
-  ggplot(aes(rev_share_change)) +
+  filter(abs(rev_count_change) < 500000) |> 
+  ggplot(aes(rev_count_change)) +
   geom_histogram()
 
 
 # `rev_change` vs. `rent_change` ------------------------------------------
 
-# No serious outliers in rent, but could remove abs(rev_change) < 5e6
 monthly_sept |> 
   filter(rent_change > -400, rent_change < 600) |>
-  filter(abs(rev_change) < 5000000) |>
+  # Could remove abs(rev_change) < 0.2
+  filter(abs(rev_change) < 0.2) |>
   ggplot(aes(rev_change, rent_change)) +
   geom_point() +
   geom_smooth(method = "lm")
@@ -738,11 +715,11 @@ monthly_sept |>
 
 # `rev_share_change` vs. `rent_change` ------------------------------------
 
-# Likely outliers at +- 0.5
 monthly_sept |> 
   filter(rent_change > -400, rent_change < 600) |>
-  filter(abs(rev_share_change) < 0.48) |>
-  ggplot(aes(rev_share_change, rent_change)) +
+  # Could remove abs(rev_count_change) < 2500000
+  filter(abs(rev_count_change) < 2500000) |>
+  ggplot(aes(rev_count_change, rent_change)) +
   geom_point() +
   geom_smooth(method = "lm")
 
@@ -750,15 +727,15 @@ monthly_sept |>
 # DV/IV outlier removal ---------------------------------------------------
 
 # Remove rent_change > -400, rent_change < 600
-# Remove abs(rev_change) < 5000000
-# Remove abs(rev_share_change) < 0.48
+# Remove abs(FREH_change) < 0.01
+# Remove abs(rev_change) < 0.2
+# Remove abs(rev_count_change) < 2500000
 
-# Final filter? From 5110 complete obs to 5082, so 28 dropped obs (0.5%)
+# Final filter? From 5172 complete obs to 5150, so 22 dropped obs (0.4%)
 monthly_sept |> 
   filter(!is.na(rent_change)) |> 
   filter(rent_change > -400, rent_change < 600,
-         abs(FREH_change) < 395, abs(rev_change) < 5000000, 
-         abs(rev_share_change) < 0.48)
+         abs(FREH_change) < 0.01, abs(rev_change) < 0.2)
 
 
 ## Rent change model control variables #########################################
@@ -783,23 +760,16 @@ monthly_sept |>
   ggplot(aes(universe_change)) +
   geom_histogram()
 
-# Can't log transform because of zero values
-monthly_sept |> 
-  mutate(universe_log = log(universe)) |> 
-  ggplot(aes(universe_log)) +
-  geom_histogram()
-
-# Use universe_log, and no obvious outliers to remove
-
 
 ## Full variable specification for rent_change model ###########################
 
 # Remove outliers
 monthly_sept |> 
-  filter(rent_change > -400, rent_change < 600, abs(FREH_change) < 395,
-         abs(rev_change) < 5000000, abs(rev_share_change) < 0.5)
+  filter(!is.na(rent_change)) |> 
+  filter(rent_change > -400, rent_change < 600,
+         abs(FREH_change) < 0.01, abs(rev_change) < 0.2)
 
 # Choose variables
-# rent_change, FREH_change, FREH_share_change, FREH_3_change, 
-# FREH_3_share_change, rev_change, rev_share_change, year, EH_share,
-# universe_log, universe_change, tenant_share, tourism_log, vacancy
+# year, rent_change, FREH_change, FREH_count_change, FREH_3_change, 
+# FREH_3_count_change, rev_change, rev_count_change, universe_change, 
+# universe_log, tenant_share, tourism_log
