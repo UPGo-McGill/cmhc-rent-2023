@@ -262,6 +262,7 @@ monthly_sept <-
                mutate(year = list(2016:2022)) |> 
                ungroup() |> 
                unnest(year)), by = c("id", "year")) |> 
+  arrange(id, year) |> 
   mutate(across(c(active_count, rev_count, FREH_count, FREH_3_count), 
                 \(x) coalesce(x, 0))) |> 
   mutate(
@@ -279,7 +280,8 @@ monthly_sept <-
     across(c(rent:FREH_3_u), 
            list(change = \(x) slide_dbl(x, \(y) y[2] - y[1], .before = 1))),
     .by = id) |> 
-  st_as_sf()
+  st_as_sf() |> 
+  arrange(id, year)
 
 # Housing only
 monthly_sept_housing <-
@@ -308,6 +310,7 @@ monthly_sept_housing <-
                mutate(year = list(2016:2022)) |> 
                ungroup() |> 
                unnest(year)), by = c("id", "year")) |> 
+  arrange(id, year) |> 
   mutate(across(c(active_count, rev_count, FREH_count, FREH_3_count), 
                 \(x) coalesce(x, 0))) |> 
   mutate(
@@ -325,7 +328,8 @@ monthly_sept_housing <-
     across(c(rent:FREH_3_u), 
            list(change = \(x) slide_dbl(x, \(y) y[2] - y[1], .before = 1))),
     .by = id) |> 
-  st_as_sf()
+  st_as_sf() |> 
+  arrange(id, year)
 
 qsave(monthly_sept, "output/monthly_sept.qs", nthreads = availableCores())
 qsave(monthly_sept_housing, "output/monthly_sept_housing.qs", 
