@@ -30,6 +30,15 @@ fc$rev <- rent_change ~ rev_change + universe_change + universe_log + tenant +
 fc$both <- rent_change ~ FREH_change + rev_change + universe_change + 
   universe_log + tenant + tourism_log + CMA:year
 
+fc$year_FREH <- rent_change ~ FREH_change + universe_change + universe_log + 
+  tenant + tourism_log + CMA
+
+fc$year_rev <- rent_change ~ rev_change + universe_change + universe_log + 
+  tenant + tourism_log + CMA
+
+fc$year_both <- rent_change ~ FREH_change + rev_change + universe_change + 
+  universe_log + tenant + tourism_log + CMA
+
 fc$s_FREH <- c("FREH_change", "universe_change", "universe_log", "tenant", 
                "tourism_log")
 
@@ -58,6 +67,16 @@ mc$l_p <- map(list(
   "Ontario", "Quebec", c("New Brunswick", "Nova Scotia", "Prince Edward Island", 
                          "Newfoundland and Labrador")), 
   \(x) lm(fc$both, data = filter(dc$main, province %in% x)))
+
+# Models by year
+mc$y_FREH <- map(2017:2022, 
+                 \(x) lm(fc$year_FREH, data = filter(dc$main, year == x)))
+
+mc$y_rev <- map(2017:2022, 
+                \(x) lm(fc$year_rev, data = filter(dc$main, year == x)))
+
+mc$y_both <- map(2017:2022, 
+                 \(x) lm(fc$year_both, data = filter(dc$main, year == x)))
 
 
 # Prepare eigenvectors for spatial regressions ----------------------------

@@ -114,7 +114,6 @@ ggsave("output/figure_5.png", fig_5, width = 8, height = 11, units = "in")
 
 ### Effects by year ############################################################
 
-
 # Table 4: Effects by year ------------------------------------------------
 
 modelsummary(set_names(mr$y_FREH, 2016:2022), 
@@ -132,7 +131,7 @@ modelsummary(set_names(mr$y_both, 2016:2022),
 
 # Figure 6: Effects by year -----------------------------------------------
 
-y1 <- map(mr$y_both, \(x) {
+fig_6_1 <- map(mr$y_both, \(x) {
   y <- summary(x)$coefficients
   tibble(
     FREH_log = y[["FREH_log", "Estimate"]],
@@ -148,7 +147,7 @@ y1 <- map(mr$y_both, \(x) {
          up = value + 1.96 * if_else(var == "FREH_log", F_SE, R_SE)) |> 
   select(-F_SE, -R_SE)
 
-y2 <- map(mr$y_FREH, \(x) {
+fig_6_2 <- map(mr$y_FREH, \(x) {
   y <- summary(x)$coefficients
   tibble(
     FREH_log = y[["FREH_log", "Estimate"]],
@@ -161,7 +160,7 @@ y2 <- map(mr$y_FREH, \(x) {
   mutate(down = value - 1.96 * F_SE, up = value + 1.96 * F_SE) |> 
   select(-F_SE)
 
-y3 <- map(mr$y_rev, \(x) {
+fig_6_3 <- map(mr$y_rev, \(x) {
   y <- summary(x)$coefficients
   tibble(
     rev_log = y[["rev_log", "Estimate"]],
@@ -175,7 +174,7 @@ y3 <- map(mr$y_rev, \(x) {
   select(-R_SE)
 
 fig_6 <- 
-  bind_rows(y1, y2, y3) |> 
+  bind_rows(fig_6_1, fig_6_2, fig_6_3) |> 
   ggplot(aes(year, value, colour = var)) +
   geom_smooth(method = "lm", se = FALSE, lwd = 0.3, linetype = "dashed") +
   geom_pointrange((aes(ymin = down, ymax = up)), position = position_jitter(
