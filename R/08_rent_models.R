@@ -5,8 +5,6 @@ source("R/06_data_for_models.R")
 fr <- list()
 mr <- list()
 er <- list()
-nr <- list()
-lr <- list()
 
 
 # Legend ------------------------------------------------------------------
@@ -23,25 +21,29 @@ lr <- list()
 
 # Formulas ----------------------------------------------------------------
 
-fr$FREH <- 
-  rent_log ~ FREH_log + FREH_dummy + 
+fr$FREH <- rent_log ~ FREH_log + FREH_dummy + universe_log + tenant + 
+  tourism_log + CMA:year
+
+fr$rev <- rent_log ~ rev_log + rev_dummy + universe_log + tenant + 
+  tourism_log + CMA:year
+
+fr$both <- rent_log ~ FREH_log + FREH_dummy + rev_log + rev_dummy + 
   universe_log + tenant + tourism_log + CMA:year
 
-fr$rev <- 
-  rent_log ~ rev_log + rev_dummy + 
-  universe_log + tenant + tourism_log + CMA:year
+fr$outliers <- rent_log ~ FREH_log + FREH_dummy + rev_log + universe_log + 
+  tenant + tourism_log + CMA:year
 
-fr$both <- 
-  rent_log ~ FREH_log + FREH_dummy + rev_log + rev_dummy + 
-  universe_log + tenant + tourism_log + CMA:year
+fr$no_zero <- rent_log ~ FREH_log + rev_log + universe_log + tenant + 
+  tourism_log + CMA:year
 
-fr$outliers <- 
-  rent_log ~ FREH_log + FREH_dummy + rev_log + 
-  universe_log + tenant + tourism_log + CMA:year
+fr$year_FREH <- rent_log ~ FREH_log + FREH_dummy + universe_log + tenant + 
+  tourism_log + CMA
 
-fr$no_zero <- 
-  rent_log ~ FREH_log + rev_log + 
-  universe_log + tenant + tourism_log + CMA:year
+fr$year_rev <- rent_log ~ rev_log + rev_dummy + universe_log + tenant + 
+  tourism_log + CMA
+
+fr$year_both <- rent_log ~ FREH_log + FREH_dummy + rev_log + rev_dummy + 
+  universe_log + tenant + tourism_log + CMA
 
 fr$s_FREH <- 
   c("FREH_log", "FREH_dummy", 
@@ -81,6 +83,16 @@ mr$l_p <- map(list(
   "Ontario", "Quebec", c("New Brunswick", "Nova Scotia", "Prince Edward Island", 
                          "Newfoundland and Labrador")), 
   \(x) lm(fr$both, data = filter(dr$main, province %in% x)))
+
+# Models by year
+mr$y_FREH <- map(2016:2022, 
+                 \(x) lm(fr$year_FREH, data = filter(dr$main, year == x)))
+
+mr$y_rev <- map(2016:2022, 
+                \(x) lm(fr$year_rev, data = filter(dr$main, year == x)))
+
+mr$y_both <- map(2016:2022, 
+                 \(x) lm(fr$year_both, data = filter(dr$main, year == x)))
 
 
 # Prepare eigenvectors for spatial regressions ----------------------------

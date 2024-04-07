@@ -3,7 +3,7 @@
 source("R/06_data_for_models.R")
 
 
-# Correlation between STRs and rent ---------------------------------------
+# Figure 4: Correlation between STRs and rent -----------------------------
 
 fig_4 <- 
   monthly_sept |> 
@@ -14,10 +14,11 @@ fig_4 <-
   st_drop_geometry() |> 
   select(rent_log, FREH_log, rev_log, rent_change, FREH_change, rev_change) |> 
   filter(!is.infinite(FREH_log), !is.infinite(rev_log)) |> 
-  ggpairs(aes(size = "fixed", alpha = "fixed"),
-          upper = list(continuous = wrap(
-            ggally_cor, display_grid = FALSE, family = "Futura")),
-          lower = list(continuous = wrap(ggally_smooth_lm, se = FALSE))) +
+  GGally::ggpairs(aes(size = "fixed", alpha = "fixed"),
+          upper = list(continuous = GGally::wrap(
+            GGally::ggally_cor, display_grid = FALSE, family = "Futura")),
+          lower = list(continuous = GGally::wrap(
+            GGally::ggally_smooth_lm, se = FALSE))) +
   theme_minimal() +
   scale_size_manual(values = c(fixed = 0.2)) +
   scale_alpha_manual(values = c(fixed = 0.4)) +
@@ -26,7 +27,7 @@ fig_4 <-
 ggsave("output/figure_4.png", fig_4, width = 8, height = 5, units = "in")
 
 
-# Variable table ----------------------------------------------------------
+# Table 1: Variables ------------------------------------------------------
 
 monthly_sept |> 
   select(rent, rent_change, FREH, FREH_change, rev, rev_change, universe, 
