@@ -69,14 +69,14 @@ mc$l_p <- map(list(
   \(x) lm(fc$both, data = filter(dc$main, province %in% x)))
 
 # Models by year
-mc$y_FREH <- map(2017:2022, 
-                 \(x) lm(fc$year_FREH, data = filter(dc$main, year == x)))
+mc$l_year_FREH <- 
+  map(2017:2022, \(x) lm(fc$year_FREH, data = filter(dc$main, year == x)))
 
-mc$y_rev <- map(2017:2022, 
-                \(x) lm(fc$year_rev, data = filter(dc$main, year == x)))
+mc$l_year_rev <- 
+  map(2017:2022, \(x) lm(fc$year_rev, data = filter(dc$main, year == x)))
 
-mc$y_both <- map(2017:2022, 
-                 \(x) lm(fc$year_both, data = filter(dc$main, year == x)))
+mc$l_year_both <- 
+  map(2017:2022, \(x) lm(fc$year_both, data = filter(dc$main, year == x)))
 
 
 # Prepare eigenvectors for spatial regressions ----------------------------
@@ -89,6 +89,16 @@ ec <- map(dc, \(x) {
     st_coordinates() |> 
     meigen(s_id = x$id)
 })
+
+ec$year <- map(2017:2022, \(x) {
+  dc$main |> 
+    filter(year == x) |> 
+    st_transform(4326) |> 
+    st_set_agr("constant") |> 
+    st_centroid() |> 
+    st_coordinates() |> 
+    meigen()}) |> 
+  set_names(2017:2022)
 
 
 # RE-ESF ------------------------------------------------------------------
@@ -146,6 +156,12 @@ mc$sf_lag <- resf(
   x = st_drop_geometry(dc$lag[fc$s_both]),
   meig = ec$lag,
   xgroup = st_drop_geometry(dc$lag[c("CMA", "year")]))
+
+mc$sf_year <- map(as.character(2017:2022), \(x) resf(
+  y = dc$main$rent_change[dc$main$year == x],
+  x = st_drop_geometry(dc$main[dc$main$year == x, fc$s_both]),
+  meig = ec$year[[x]],
+  xgroup = st_drop_geometry(dc$main[dc$main$year == x, "CMA"])))
 
 
 # S&NVC -------------------------------------------------------------------

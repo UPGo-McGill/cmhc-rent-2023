@@ -45,25 +45,19 @@ fr$year_rev <- rent_log ~ rev_log + rev_dummy + universe_log + tenant +
 fr$year_both <- rent_log ~ FREH_log + FREH_dummy + rev_log + rev_dummy + 
   universe_log + tenant + tourism_log + CMA
 
-fr$s_FREH <- 
-  c("FREH_log", "FREH_dummy", 
-    "universe_log", "tenant", "tourism_log")
+fr$s_FREH <- c("FREH_log", "FREH_dummy", "universe_log", "tenant", 
+               "tourism_log")
 
-fr$s_rev <- 
-  c("rev_log", "rev_dummy", 
-    "universe_log", "tenant", "tourism_log")
+fr$s_rev <- c("rev_log", "rev_dummy", "universe_log", "tenant", "tourism_log")
 
-fr$s_both <- 
-  c("FREH_log", "FREH_dummy", "rev_log", "rev_dummy", 
-    "universe_log", "tenant", "tourism_log")
+fr$s_both <- c("FREH_log", "FREH_dummy", "rev_log", "rev_dummy", "universe_log", 
+               "tenant", "tourism_log")
 
-fr$s_outliers <- 
-  c("FREH_log", "FREH_dummy", "rev_log", 
-    "universe_log", "tenant", "tourism_log")
+fr$s_outliers <- c("FREH_log", "FREH_dummy", "rev_log", "universe_log", 
+                   "tenant", "tourism_log")
 
-fr$s_no_zero <- 
-  c("FREH_log", "rev_log", 
-    "universe_log", "tenant", "tourism_log")
+fr$s_no_zero <- c("FREH_log", "rev_log", "universe_log", "tenant", 
+                  "tourism_log")
 
 
 # Linear models -----------------------------------------------------------
@@ -85,14 +79,14 @@ mr$l_p <- map(list(
   \(x) lm(fr$both, data = filter(dr$main, province %in% x)))
 
 # Models by year
-mr$y_FREH <- map(2016:2022, 
-                 \(x) lm(fr$year_FREH, data = filter(dr$main, year == x)))
+mr$l_year_FREH <- 
+  map(2016:2022, \(x) lm(fr$year_FREH, data = filter(dr$main, year == x)))
 
-mr$y_rev <- map(2016:2022, 
-                \(x) lm(fr$year_rev, data = filter(dr$main, year == x)))
+mr$l_year_rev <- 
+  map(2016:2022, \(x) lm(fr$year_rev, data = filter(dr$main, year == x)))
 
-mr$y_both <- map(2016:2022, 
-                 \(x) lm(fr$year_both, data = filter(dr$main, year == x)))
+mr$l_year_both <- 
+  map(2016:2022, \(x) lm(fr$year_both, data = filter(dr$main, year == x)))
 
 
 # Prepare eigenvectors for spatial regressions ----------------------------
@@ -105,6 +99,16 @@ er <- map(dr, \(x) {
     st_coordinates() |> 
     meigen(s_id = x$id)
 })
+
+er$year <- map(2016:2022, \(x) {
+  dr$main |> 
+    filter(year == x) |> 
+    st_transform(4326) |> 
+    st_set_agr("constant") |> 
+    st_centroid() |> 
+    st_coordinates() |> 
+    meigen()}) |> 
+  set_names(2016:2022)
 
 
 # RE-ESF ------------------------------------------------------------------
@@ -157,6 +161,12 @@ mr$sf_housing <- resf(
   meig = er$housing,
   xgroup = st_drop_geometry(dr$housing[c("CMA", "year")]))
 
+mr$sf_year <- map(as.character(2016:2022), \(x) resf(
+  y = dr$main$rent_log[dr$main$year == x],
+  x = st_drop_geometry(dr$main[dr$main$year == x, fr$s_both]),
+  meig = er$year[[x]],
+  xgroup = st_drop_geometry(dr$main[dr$main$year == x, "CMA"])))
+                  
 
 # S&NVC -------------------------------------------------------------------
 

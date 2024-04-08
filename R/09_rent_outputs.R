@@ -116,22 +116,28 @@ ggsave("output/figure_5.png", fig_5, width = 8, height = 11, units = "in")
 
 # Table 4: Effects by year ------------------------------------------------
 
-modelsummary(set_names(mr$y_FREH, 2016:2022), 
+modelsummary(set_names(mr$l_year_FREH, 2016:2022), 
              coef_map = "FREH_log", stars = TRUE,
              output = "kableExtra")
 
-modelsummary(set_names(mr$y_rev, 2016:2022), 
+modelsummary(set_names(mr$l_year_rev, 2016:2022), 
              coef_map = "rev_log", stars = TRUE,
              output = "kableExtra")
 
-modelsummary(set_names(mr$y_both, 2016:2022), 
+modelsummary(set_names(mr$l_year_both, 2016:2022), 
              coef_map = c("FREH_log", "rev_log"), stars = TRUE,
              output = "kableExtra")
+
+map(mr$sf_year, \(x) {
+  x$b |> 
+    select(Estimate, SE, p_value) |> 
+    slice(c(2, 4))
+})
 
 
 # Figure 6: Effects by year -----------------------------------------------
 
-fig_6_1 <- map(mr$y_both, \(x) {
+fig_6_1 <- map(mr$l_year_both, \(x) {
   y <- summary(x)$coefficients
   tibble(
     FREH_log = y[["FREH_log", "Estimate"]],
@@ -140,41 +146,57 @@ fig_6_1 <- map(mr$y_both, \(x) {
     R_SE = y[["rev_log", "Std. Error"]])}) |> 
   bind_rows() |> 
   mutate(year = 2016:2022, 
-         model = "FREH_log and rev_log together", 
+         model = "FREH_log and rev_log together (model iii)", 
          .before = FREH_log) |> 
   pivot_longer(c(FREH_log, rev_log), names_to = "var") |> 
   mutate(down = value - 1.96 * if_else(var == "FREH_log", F_SE, R_SE),
          up = value + 1.96 * if_else(var == "FREH_log", F_SE, R_SE)) |> 
   select(-F_SE, -R_SE)
 
-fig_6_2 <- map(mr$y_FREH, \(x) {
+fig_6_2 <- map(mr$l_year_FREH, \(x) {
   y <- summary(x)$coefficients
   tibble(
     FREH_log = y[["FREH_log", "Estimate"]],
     F_SE = y[["FREH_log", "Std. Error"]])}) |> 
   bind_rows() |> 
   mutate(year = 2016:2022, 
-         model = "FREH_log and rev_log separate", 
+         model = "FREH_log and rev_log separate (models i & ii)", 
          .before = FREH_log) |> 
   pivot_longer(c(FREH_log), names_to = "var") |> 
   mutate(down = value - 1.96 * F_SE, up = value + 1.96 * F_SE) |> 
   select(-F_SE)
 
-fig_6_3 <- map(mr$y_rev, \(x) {
+fig_6_3 <- map(mr$l_year_rev, \(x) {
   y <- summary(x)$coefficients
   tibble(
     rev_log = y[["rev_log", "Estimate"]],
     R_SE = y[["rev_log", "Std. Error"]])}) |> 
   bind_rows() |> 
   mutate(year = 2016:2022, 
-         model = "FREH_log and rev_log separate", 
+         model = "FREH_log and rev_log separate (models i & ii)", 
          .before = rev_log) |> 
   pivot_longer(c(rev_log), names_to = "var") |> 
   mutate(down = value - 1.96 * R_SE, up = value + 1.96 * R_SE) |> 
   select(-R_SE)
 
+fig_6_4 <- map(mr$sf_year, \(x) {
+  y <- x$b
+  tibble(
+    FREH_log = y[["FREH_log", "Estimate"]],
+    rev_log = y[["rev_log", "Estimate"]],
+    F_SE = y[["FREH_log", "SE"]],
+    R_SE = y[["rev_log", "SE"]])}) |> 
+  bind_rows() |> 
+  mutate(year = 2016:2022, 
+         model = "FREH_log and rev_log together (model iv)", 
+         .before = FREH_log) |> 
+  pivot_longer(c(FREH_log, rev_log), names_to = "var") |> 
+  mutate(down = value - 1.96 * if_else(var == "FREH_log", F_SE, R_SE),
+         up = value + 1.96 * if_else(var == "FREH_log", F_SE, R_SE)) |> 
+  select(-F_SE, -R_SE)
+
 fig_6 <- 
-  bind_rows(fig_6_1, fig_6_2, fig_6_3) |> 
+  bind_rows(fig_6_1, fig_6_2, fig_6_3, fig_6_4) |> 
   ggplot(aes(year, value, colour = var)) +
   geom_smooth(method = "lm", se = FALSE, lwd = 0.3, linetype = "dashed") +
   geom_pointrange((aes(ymin = down, ymax = up)), position = position_jitter(
@@ -182,9 +204,9 @@ fig_6 <-
   scale_color_brewer(name = NULL, palette = "Dark2") +
   scale_x_continuous(name = NULL) +
   scale_y_continuous(name = "Estimate") +
-  facet_wrap(~model, nrow = 2) +
+  facet_wrap(~model, nrow = 3) +
   theme_minimal() +
   theme(text = element_text(family = "Futura"),
         legend.position = "bottom")
 
-ggsave("output/figure_6.png", fig_6, width = 8, height = 5, units = "in")
+ggsave("output/figure_6.png", fig_6, width = 8, height = 7, units = "in")
