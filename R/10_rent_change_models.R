@@ -12,8 +12,10 @@ ec <- list()
 # FREH: FREH_change only
 # rev: rev_change only
 # both: FREH_change and rev_change
+# vacancy: vacancy_change included
 # outliers: Alternative specification with outliers removed
-# impute: Alternative specification with imputed rent values
+# impute: Alternative specification with imputed rent/universe values
+# impute_vacancy: Alt. specification with imputed rent/universe/vacancy values
 # alt: Alternative specification with FREH_3_change
 # count: Alternative specification with FREH_count_change and rev_count_change
 # housing: Alternative specification with housing only
@@ -30,6 +32,9 @@ fc$rev <- rent_change ~ rev_change + universe_change + universe_log + tenant +
 fc$both <- rent_change ~ FREH_change + rev_change + universe_change + 
   universe_log + tenant + tourism_log + CMA:year
 
+fc$vacancy <- rent_change ~ FREH_change + rev_change + universe_change + 
+  universe_log + vacancy_change + vacancy + tenant + tourism_log + CMA:year
+
 fc$year_FREH <- rent_change ~ FREH_change + universe_change + universe_log + 
   tenant + tourism_log + CMA
 
@@ -38,6 +43,9 @@ fc$year_rev <- rent_change ~ rev_change + universe_change + universe_log +
 
 fc$year_both <- rent_change ~ FREH_change + rev_change + universe_change + 
   universe_log + tenant + tourism_log + CMA
+
+fc$year_vacancy <- rent_change ~ FREH_change + rev_change + universe_change + 
+  universe_log + vacancy_change + vacancy + tenant + tourism_log + CMA
 
 fc$s_FREH <- c("FREH_change", "universe_change", "universe_log", "tenant", 
                "tourism_log")
@@ -48,14 +56,20 @@ fc$s_rev <- c("rev_change", "universe_change", "universe_log", "tenant",
 fc$s_both <- c("FREH_change", "rev_change", "universe_change", "universe_log", 
                "tenant", "tourism_log")
 
+fc$s_vacancy <- c("FREH_change", "rev_change", "universe_change", 
+                  "universe_log", "vacancy_change", "vacancy", "tenant", 
+                  "tourism_log")
+
 
 # Linear models -----------------------------------------------------------
 
 mc$l_FREH <- lm(fc$FREH, data = dc$main)
 mc$l_rev <- lm(fc$rev, data = dc$main)
 mc$l_both <- lm(fc$both, data = dc$main)
+mc$l_vacancy <- lm(fc$vacancy, data = dc$vacancy)
 mc$l_outliers <- lm(fc$both, data = dc$outliers)
 mc$l_impute <- lm(fc$both, data = dc$impute)
+mc$l_impute_vacancy <- lm(fc$vacancy, data = dc$impute)
 mc$l_alt <- lm(fc$both, data = dc$alt)
 mc$l_count <- lm(fc$both, data = dc$count)
 mc$l_housing <- lm(fc$both, data = dc$housing)
@@ -78,6 +92,9 @@ mc$l_year_rev <-
 mc$l_year_both <- 
   map(2017:2022, \(x) lm(fc$year_both, data = filter(dc$main, year == x)))
 
+mc$l_year_vacancy <- 
+  map(2017:2022, \(x) lm(fc$year_vacancy, data = filter(dc$vacancy, year == x)))
+
 
 # Prepare eigenvectors for spatial regressions ----------------------------
 
@@ -92,6 +109,16 @@ ec <- map(dc, \(x) {
 
 ec$year <- map(2017:2022, \(x) {
   dc$main |> 
+    filter(year == x) |> 
+    st_transform(4326) |> 
+    st_set_agr("constant") |> 
+    st_centroid() |> 
+    st_coordinates() |> 
+    meigen()}) |> 
+  set_names(2017:2022)
+
+ec$year_vacancy <- map(2017:2022, \(x) {
+  dc$vacancy |> 
     filter(year == x) |> 
     st_transform(4326) |> 
     st_set_agr("constant") |> 
@@ -121,6 +148,12 @@ mc$sf_both <- resf(
   meig = ec$main,
   xgroup = st_drop_geometry(dc$main[c("CMA", "year")]))
 
+mc$sf_vacancy <- resf(
+  y = dc$vacancy$rent_change,
+  x = st_drop_geometry(dc$vacancy[fc$s_vacancy]),
+  meig = ec$vacancy,
+  xgroup = st_drop_geometry(dc$vacancy[c("CMA", "year")]))
+
 mc$sf_outliers <- resf(
   y = dc$outliers$rent_change,
   x = st_drop_geometry(dc$outliers[fc$s_both]),
@@ -130,6 +163,12 @@ mc$sf_outliers <- resf(
 mc$sf_impute <- resf(
   y = dc$impute$rent_change,
   x = st_drop_geometry(dc$impute[fc$s_both]),
+  meig = ec$impute,
+  xgroup = st_drop_geometry(dc$impute[c("CMA", "year")]))
+
+mc$sf_impute_year <- resf(
+  y = dc$impute$rent_change,
+  x = st_drop_geometry(dc$impute[fc$s_vacancy]),
   meig = ec$impute,
   xgroup = st_drop_geometry(dc$impute[c("CMA", "year")]))
 
@@ -163,6 +202,12 @@ mc$sf_year <- map(as.character(2017:2022), \(x) resf(
   meig = ec$year[[x]],
   xgroup = st_drop_geometry(dc$main[dc$main$year == x, "CMA"])))
 
+mc$sf_year_vacancy <- map(as.character(2017:2022), \(x) resf(
+  y = dc$vacancy$rent_change[dc$vacancy$year == x],
+  x = st_drop_geometry(dc$vacancy[dc$vacancy$year == x, fc$s_vacancy]),
+  meig = ec$year_vacancy[[x]],
+  xgroup = st_drop_geometry(dc$vacancy[dc$vacancy$year == x, "CMA"])))
+
 
 # S&NVC -------------------------------------------------------------------
 
@@ -187,6 +232,13 @@ mc$sn_both <- resf_vc(
   xgroup = st_drop_geometry(dc$main[c("CMA", "year")]),
   x_nvc = TRUE)
 
+mc$sn_vacancy <- resf_vc(
+  y = dc$vacancy$rent_change,
+  x = st_drop_geometry(dc$vacancy[fc$s_vacancy]),
+  meig = ec$vacancy,
+  xgroup = st_drop_geometry(dc$vacancy[c("CMA", "year")]),
+  x_nvc = TRUE)
+
 mc$sn_outliers <- resf_vc(
   y = dc$outliers$rent_change,
   x = st_drop_geometry(dc$outliers[fc$s_both]),
@@ -197,6 +249,13 @@ mc$sn_outliers <- resf_vc(
 mc$sn_impute <- resf_vc(
   y = dc$impute$rent_change,
   x = st_drop_geometry(dc$impute[fc$s_both]),
+  meig = ec$impute,
+  xgroup = st_drop_geometry(dc$impute[c("CMA", "year")]),
+  x_nvc = TRUE)
+
+mc$sn_impute_vacancy <- resf_vc(
+  y = dc$impute$rent_change,
+  x = st_drop_geometry(dc$impute[fc$s_vacancy]),
   meig = ec$impute,
   xgroup = st_drop_geometry(dc$impute[c("CMA", "year")]),
   x_nvc = TRUE)
