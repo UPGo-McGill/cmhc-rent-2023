@@ -15,25 +15,29 @@ largest_CMAs <-
 
 ### Model summaries ############################################################
 
-# Table 5: OLS and RE-ESF models ------------------------------------------
+# Table 7: OLS and RE-ESF models ------------------------------------------
 
 # OLS models
-modelsummary(list(FREH = mc$l_FREH, rev = mc$l_rev, Both = mc$l_both), 
+modelsummary(list(ix = mc$l_FREH, x = mc$l_rev, xi = mc$l_both, 
+                  xii = mc$l_vacancy), 
              coef_map = c("(Intercept)", "FREH_change", "rev_change", 
-                          "universe_change", "universe_log", "tenant", 
-                          "tourism_log"), stars = TRUE,
+                          "universe_change", "universe_log", "vacancy_change", 
+                          "vacancy", "tenant", "tourism_log"), stars = TRUE,
              add_rows = tibble(x = "Fixed effects",
                                y1 = "CMA by year",
                                y2 = "CMA by year",
-                               y3 = "CMA by year") |>
-               structure(position = 15),
+                               y3 = "CMA by year",
+                               y4 = "CMA by year") |>
+               structure(position = 19),
              output = "kableExtra")
 
-# RE-ESF model
+# RE-ESF models
 mc$sf_both
+mc$sf_vacancy
 
-# S&NVC model
+# S&NVC models
 mc$sn_both
+mc$sn_vacancy
 
 
 ### Effects by year ############################################################
@@ -52,7 +56,17 @@ modelsummary(set_names(mc$l_year_both, 2017:2022),
              coef_map = c("FREH_change", "rev_change"), stars = TRUE,
              output = "kableExtra")
 
+modelsummary(set_names(mc$l_year_vacancy, 2017:2022), 
+             coef_map = c("FREH_change", "rev_change"), stars = TRUE,
+             output = "kableExtra")
+
 map(mc$sf_year, \(x) {
+  x$b |> 
+    select(Estimate, SE, p_value) |> 
+    slice(c(2, 3))
+})
+
+map(mc$sf_year_vacancy, \(x) {
   x$b |> 
     select(Estimate, SE, p_value) |> 
     slice(c(2, 3))
@@ -60,9 +74,36 @@ map(mc$sf_year, \(x) {
 
 
 
-# Figure 7: Effects by year -----------------------------------------------
 
-fig_7_1 <- map(mc$l_year_both, \(x) {
+# Figure 8: Effects by year -----------------------------------------------
+
+fig_8_1 <- map(mc$l_year_FREH, \(x) {
+  y <- summary(x)$coefficients
+  tibble(
+    FREH_change = y[["FREH_change", "Estimate"]],
+    F_SE = y[["FREH_change", "Std. Error"]])}) |> 
+  bind_rows() |> 
+  mutate(year = 2017:2022, 
+         model = "FREH_change and rev_change separate (models ix & x)", 
+         .before = FREH_change) |> 
+  pivot_longer(c(FREH_change), names_to = "var") |> 
+  mutate(down = value - 1.96 * F_SE, up = value + 1.96 * F_SE) |> 
+  select(-F_SE)
+
+fig_8_2 <- map(mc$l_year_rev, \(x) {
+  y <- summary(x)$coefficients
+  tibble(
+    rev_change = y[["rev_change", "Estimate"]],
+    R_SE = y[["rev_change", "Std. Error"]])}) |> 
+  bind_rows() |> 
+  mutate(year = 2017:2022, 
+         model = "FREH_change and rev_change separate (models ix & x)", 
+         .before = rev_change) |> 
+  pivot_longer(c(rev_change), names_to = "var") |> 
+  mutate(down = value - 1.96 * R_SE, up = value + 1.96 * R_SE) |> 
+  select(-R_SE)
+
+fig_8_3 <- map(mc$l_year_both, \(x) {
   y <- summary(x)$coefficients
   tibble(
     FREH_change = y[["FREH_change", "Estimate"]],
@@ -71,40 +112,30 @@ fig_7_1 <- map(mc$l_year_both, \(x) {
     R_SE = y[["rev_change", "Std. Error"]])}) |> 
   bind_rows() |> 
   mutate(year = 2017:2022, 
-         model = "FREH_change and rev_change together (model viii)", 
+         model = "FREH_change and rev_change together (model xi)", 
          .before = FREH_change) |> 
   pivot_longer(c(FREH_change, rev_change), names_to = "var") |> 
   mutate(down = value - 1.96 * if_else(var == "FREH_change", F_SE, R_SE),
          up = value + 1.96 * if_else(var == "FREH_change", F_SE, R_SE)) |> 
   select(-F_SE, -R_SE)
 
-fig_7_2 <- map(mc$l_year_FREH, \(x) {
+fig_8_4 <- map(mc$l_year_vacancy, \(x) {
   y <- summary(x)$coefficients
   tibble(
     FREH_change = y[["FREH_change", "Estimate"]],
-    F_SE = y[["FREH_change", "Std. Error"]])}) |> 
-  bind_rows() |> 
-  mutate(year = 2017:2022, 
-         model = "FREH_change and rev_change separate (models vi & vii)", 
-         .before = FREH_change) |> 
-  pivot_longer(c(FREH_change), names_to = "var") |> 
-  mutate(down = value - 1.96 * F_SE, up = value + 1.96 * F_SE) |> 
-  select(-F_SE)
-
-fig_7_3 <- map(mc$l_year_rev, \(x) {
-  y <- summary(x)$coefficients
-  tibble(
     rev_change = y[["rev_change", "Estimate"]],
+    F_SE = y[["FREH_change", "Std. Error"]],
     R_SE = y[["rev_change", "Std. Error"]])}) |> 
   bind_rows() |> 
   mutate(year = 2017:2022, 
-         model = "FREH_change and rev_change separate (models vi & vii)", 
-         .before = rev_change) |> 
-  pivot_longer(c(rev_change), names_to = "var") |> 
-  mutate(down = value - 1.96 * R_SE, up = value + 1.96 * R_SE) |> 
-  select(-R_SE)
+         model = "FREH_change and rev_change together (model xii)", 
+         .before = FREH_change) |> 
+  pivot_longer(c(FREH_change, rev_change), names_to = "var") |> 
+  mutate(down = value - 1.96 * if_else(var == "FREH_change", F_SE, R_SE),
+         up = value + 1.96 * if_else(var == "FREH_change", F_SE, R_SE)) |> 
+  select(-F_SE, -R_SE)
 
-fig_7_4 <- map(mc$sf_year, \(x) {
+fig_8_5 <- map(mc$sf_year, \(x) {
   y <- x$b
   tibble(
     FREH_change = y[["FREH_change", "Estimate"]],
@@ -113,15 +144,31 @@ fig_7_4 <- map(mc$sf_year, \(x) {
     R_SE = y[["rev_change", "SE"]])}) |> 
   bind_rows() |> 
   mutate(year = 2017:2022, 
-         model = "FREH_change and rev_change together (model ix)", 
+         model = "FREH_change and rev_change together (model xiii)", 
          .before = FREH_change) |> 
   pivot_longer(c(FREH_change, rev_change), names_to = "var") |> 
   mutate(down = value - 1.96 * if_else(var == "FREH_change", F_SE, R_SE),
          up = value + 1.96 * if_else(var == "FREH_change", F_SE, R_SE)) |> 
   select(-F_SE, -R_SE)
 
-fig_7 <-
-  bind_rows(fig_7_1, fig_7_2, fig_7_3, fig_7_4) |> 
+fig_8_6 <- map(mc$sf_year_vacancy, \(x) {
+  y <- x$b
+  tibble(
+    FREH_change = y[["FREH_change", "Estimate"]],
+    rev_change = y[["rev_change", "Estimate"]],
+    F_SE = y[["FREH_change", "SE"]],
+    R_SE = y[["rev_change", "SE"]])}) |> 
+  bind_rows() |> 
+  mutate(year = 2017:2022, 
+         model = "FREH_change and rev_change together (model xiv)", 
+         .before = FREH_change) |> 
+  pivot_longer(c(FREH_change, rev_change), names_to = "var") |> 
+  mutate(down = value - 1.96 * if_else(var == "FREH_change", F_SE, R_SE),
+         up = value + 1.96 * if_else(var == "FREH_change", F_SE, R_SE)) |> 
+  select(-F_SE, -R_SE)
+
+fig_8 <-
+  bind_rows(fig_8_1, fig_8_2, fig_8_3, fig_8_4, fig_8_5, fig_8_6) |> 
   ggplot(aes(year, value, colour = var)) +
   geom_smooth(method = "lm", se = FALSE, lwd = 0.3, linetype = "dashed") +
   geom_pointrange((aes(ymin = down, ymax = up)), position = position_jitter(
@@ -134,5 +181,4 @@ fig_7 <-
   theme(text = element_text(family = "Futura"),
         legend.position = "bottom")
 
-ggsave("output/figure_7.png", fig_7, width = 8, height = 7, units = "in")
-
+ggsave("output/figure_8.png", fig_8, width = 8, height = 7, units = "in")
