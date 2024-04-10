@@ -298,6 +298,24 @@ dc$main <-
          across(c(rent_change:tourism_log), \(x) as.numeric(scale(x))), 
          .before = geometry)
 
+# Vacancy dataset
+dc$vacancy <-
+  monthly_sept |> 
+  filter(!is.na(rent_change), !is.na(vacancy_change), year != 2016) |> 
+  # Select relevant variables
+  select(id, year, CMA, name_CMA, province, rent_change, FREH_change, 
+         rev_change, universe, universe_change, tenant, tourism, vacancy,
+         vacancy_change) |> 
+  # Make year a character vector so it is treated as a factor
+  mutate(year = as.character(year)) |> 
+  # Create logged versions of universe and tourism
+  mutate(across(c(universe, tourism), .fns = list(log = \(x) log(x))), 
+         .before = geometry) |> 
+  # Normalize all variables
+  mutate(across(c(rent_change:tourism_log), list(raw = \(x) x)),
+         across(c(rent_change:tourism_log), \(x) as.numeric(scale(x))), 
+         .before = geometry)
+
 # Alternate dataset with arguable outliers removed
 dc$outliers <-
   monthly_sept |> 
