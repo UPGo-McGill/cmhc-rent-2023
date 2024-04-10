@@ -27,51 +27,98 @@ monthly_impute <-
   inner_join(nn_join, by = "id") |> 
   relocate(nn, .after = rent)
 
-# Calculate rent/universe values for nearest neighbours
+# Calculate rent/universe/vacancy values for nearest neighbours
 monthly_impute <-
   monthly_impute |> 
   mutate(rent_nn = map2_dbl(nn, year, \(x, y) {
     monthly_impute |> 
       filter(id %in% x, year == y) |> 
       pull(rent) |> 
-      mean(na.rm = TRUE)
-  }), .before = nn) |> 
+      mean(na.rm = TRUE)}), .before = nn) |> 
   mutate(univ_nn = map2_dbl(nn, year, \(x, y) {
     monthly_impute |> 
       filter(id %in% x, year == y) |> 
       pull(universe) |> 
-      mean(na.rm = TRUE)
-  }), .before = nn)
+      mean(na.rm = TRUE)}), .before = nn) |> 
+  mutate(vac_nn = map2_dbl(nn, year, \(x, y) {
+    monthly_impute |> 
+      filter(id %in% x, year == y) |> 
+      pull(vacancy) |> 
+      mean(na.rm = TRUE)}), .before = nn)
 
-# Calculate ratio of local rent and universe to nn values for each year
+# Calculate ratio of local values to nn values for each year
 monthly_impute <-
   monthly_impute |> 
   mutate(rent_ratio = rent / rent_nn, .after = rent_nn) |> 
   mutate(univ_ratio = universe / univ_nn, .after = univ_nn) |> 
-  mutate(across(c(rent_ratio, univ_ratio), \(x) if_else(is.nan(x), 0, x)))
-  
-# Fit per-neighbourhood linear models and predict missing values
-monthly_impute <- 
+  mutate(vac_ratio = vacancy / vac_nn, .after = vac_nn)
+
+# Fit per-neighbourhood linear models and predict missing values for rent
+monthly_impute_rent <-
   monthly_impute |> 
-  mutate(
-    rent_lm = list(lm(rent_ratio ~ year, data = tibble(rent_ratio, year))),
-    univ_lm = list(lm(univ_ratio ~ year, data = tibble(univ_ratio, year))),
-    .by = id) |>
+  st_drop_geometry() |> 
+  filter(sum(is.na(rent)) > 0, .by = id) |> 
+  mutate(rent_lm = list(lm(rent_ratio ~ year, data = tibble(rent_ratio, year))),
+         .after = rent_ratio, .by = id) |> 
   rowwise() |>
-  mutate(rent_ratio = coalesce(rent_ratio, 
-                               predict(rent_lm, tibble(rent_ratio, year))),
-         univ_ratio = coalesce(univ_ratio, 
-                               predict(univ_lm, tibble(univ_ratio, year)))) |>
+  mutate(new_ratio = predict(rent_lm, tibble(rent_ratio, year))) |> 
   ungroup() |> 
+  mutate(rent_new = rent_nn * new_ratio) |> 
+  filter(is.na(rent)) |> 
+  select(id, year, rent_new) |> 
   # Suppress warnings about rank deficiency in models
   suppressWarnings()
   
-# Calculate new rent/universe values from the model predictions
+# Fit per-neighbourhood linear models and predict missing values for universe
+monthly_impute_univ <-
+  monthly_impute |> 
+  st_drop_geometry() |> 
+  filter(sum(is.na(universe)) > 0, .by = id) |> 
+  mutate(univ_lm = list(lm(univ_ratio ~ year, data = tibble(univ_ratio, year))),
+         .after = univ_ratio, .by = id) |> 
+  rowwise() |>
+  mutate(new_ratio = predict(univ_lm, tibble(univ_ratio, year))) |> 
+  ungroup() |> 
+  mutate(univ_new = univ_nn * new_ratio) |> 
+  filter(is.na(universe)) |> 
+  select(id, year, univ_new)
+
+# Fit per-neighbourhood linear models and predict missing values for vacancy
+monthly_impute_vac <-
+  monthly_impute |> 
+  st_drop_geometry() |> 
+  filter(sum(is.na(vacancy)) > 0, .by = id) |> 
+  mutate(vac_ratio = if_else(is.infinite(vac_ratio), NA, vac_ratio)) |> 
+  mutate(vac_nn_group = mean(vac_nn, na.rm = TRUE), .by = id, 
+         .after = vac_nn) |> 
+  mutate(vac_lm = list(
+    if (sum(!is.na(vac_ratio)) > 0) {
+      lm(vac_ratio ~ year, data = tibble(vac_ratio, year))  
+    } else NA), .after = vac_ratio, .by = id) |>
+  # Try to predict with model
+  rowwise() |>
+  mutate(new_ratio = if (is.logical(vac_lm[[1]])) NA_real_ else 
+    predict(vac_lm, tibble(vac_ratio, year)), .after = vac_ratio) |> 
+  ungroup() |> 
+  # Use vac_nn_group is vac_nn is NA, and use vac_nn or vac_nn_group directly 
+  # if there is no model
+  mutate(vac_new = coalesce(vac_nn * new_ratio, vac_nn_group * new_ratio,
+                            vac_nn, vac_nn_group), .after = vacancy) |> 
+  filter(is.na(vacancy)) |>
+  select(id, year, vac_new) |>
+  # Suppress warnings about rank deficiency in models
+  suppressWarnings()
+
+# Coalesce new values
 monthly_impute <-
   monthly_impute |> 
-  mutate(rent_new = coalesce(rent, rent_nn * rent_ratio)) |> 
-  mutate(univ_new = coalesce(universe, univ_nn * univ_ratio)) |> 
-  select(id, year, rent, rent_new, universe, univ_new) |> 
+  left_join(monthly_impute_rent, by = c("id", "year")) |> 
+  left_join(monthly_impute_univ, by = c("id", "year")) |> 
+  left_join(monthly_impute_vac, by = c("id", "year")) |> 
+  mutate(rent_new = coalesce(rent, rent_new)) |> 
+  mutate(univ_new = coalesce(universe, univ_new)) |>
+  mutate(vac_new = coalesce(vacancy, vac_new)) |> 
+  select(id, year, rent, rent_new, universe, univ_new, vacancy, vac_new) |> 
   st_drop_geometry() 
 
 
@@ -100,6 +147,26 @@ dr$main <-
          across(c(rent:tourism_log), \(x) as.numeric(scale(x))), 
          .before = geometry)
 
+# Vacancy dataset
+dr$vacancy <-
+  monthly_sept |> 
+  filter(!is.na(rent), !is.na(vacancy)) |> 
+  # Select relevant variables
+  select(id, year, CMA, name_CMA, province, rent, FREH, rev, universe, 
+         tenant, tourism, vacancy) |> 
+  # Make year a character vector so it is treated as a factor
+  mutate(year = as.character(year)) |> 
+  # Replace zero-values of FREH/rev with lowest non-zero values
+  mutate(FREH_dummy = FREH == 0, rev_dummy = rev == 0, .before = rent) |> 
+  mutate(FREH = if_else(FREH == 0, min(FREH[FREH > 0]), FREH),
+         rev = if_else(rev == 0, min(rev[rev > 0]), rev)) |> 
+  # Create logged versions of all variables except for vacancy
+  mutate(across(c(rent:tourism), .fns = list(log = \(x) log(x))), 
+         .before = geometry) |> 
+  # Normalize all variables
+  mutate(across(c(rent:tourism_log), list(raw = \(x) x)),
+         across(c(rent:tourism_log), \(x) as.numeric(scale(x))), 
+         .before = geometry)
 # Alternate dataset with arguable outliers removed
 dr$outliers <-
   monthly_sept |> 
@@ -143,7 +210,7 @@ dr$no_zero <-
          across(c(rent:tourism_log), \(x) as.numeric(scale(x))), 
          .before = geometry)
 
-# Alternate with imputed rent/universe for balanced panel
+# Alternate with imputed rent/universe/vacancy for balanced panel
 dr$impute <-
   monthly_sept |> 
   # Do imputation
@@ -219,7 +286,8 @@ dc$main <-
   filter(!is.na(rent_change), year != 2016) |> 
   # Select relevant variables
   select(id, year, CMA, name_CMA, province, rent_change, FREH_change, 
-         rev_change, universe, universe_change, tenant, tourism, vacancy) |> 
+         rev_change, universe, universe_change, tenant, tourism, vacancy,
+         vacancy_change) |> 
   # Make year a character vector so it is treated as a factor
   mutate(year = as.character(year)) |> 
   # Create logged versions of universe and tourism
@@ -239,7 +307,8 @@ dc$outliers <-
          abs(FREH_change) < 0.01, abs(rev_change) < 0.2) |> 
 # Select relevant variables
   select(id, year, CMA, name_CMA, province, rent_change, FREH_change, 
-         rev_change, universe, universe_change, tenant, tourism, vacancy) |> 
+         rev_change, universe, universe_change, tenant, tourism, vacancy,
+         vacancy_change) |> 
   # Make year a character vector so it is treated as a factor
   mutate(year = as.character(year)) |> 
   # Create logged versions of universe and tourism
@@ -258,7 +327,8 @@ dc$impute <-
   filter(year != 2016) |> 
   # Select relevant variables
   select(id, year, CMA, name_CMA, province, rent_change, FREH_change, 
-         rev_change, universe, universe_change, tenant, tourism, vacancy) |> 
+         rev_change, universe, universe_change, tenant, tourism, vacancy,
+         vacancy_change) |> 
   # Make year a character vector so it is treated as a factor
   mutate(year = as.character(year)) |> 
   # Create logged versions of universe and tourism
@@ -276,7 +346,7 @@ dc$alt <-
   # Select relevant variables
   select(id, year, CMA, name_CMA, province, rent_change, 
          FREH_change = FREH_3_change, rev_change, universe, universe_change, 
-         tenant, tourism, vacancy) |> 
+         tenant, tourism, vacancy, vacancy_change) |> 
   # Make year a character vector so it is treated as a factor
   mutate(year = as.character(year)) |> 
   # Create logged versions of universe and tourism
@@ -294,7 +364,7 @@ dc$count <-
   # Select relevant variables
   select(id, year, CMA, name_CMA, province, rent_change, 
          FREH_change = FREH_count_change, rev_change = rev_count_change, 
-         universe, universe_change, tenant, tourism, vacancy) |> 
+         universe, universe_change, tenant, tourism, vacancy, vacancy_change) |> 
   # Make year a character vector so it is treated as a factor
   mutate(year = as.character(year)) |> 
   # Create logged versions of universe and tourism
@@ -311,7 +381,8 @@ dc$housing <-
   filter(!is.na(rent_change), year != 2016) |> 
   # Select relevant variables
   select(id, year, CMA, name_CMA, province, rent_change, FREH_change, 
-         rev_change, universe, universe_change, tenant, tourism, vacancy) |> 
+         rev_change, universe, universe_change, tenant, tourism, vacancy,
+         vacancy_change) |> 
   # Make year a character vector so it is treated as a factor
   mutate(year = as.character(year)) |> 
   # Create logged versions of universe and tourism
@@ -326,12 +397,13 @@ dc$housing <-
 dc$lag <-
   monthly_sept |> 
   arrange(id, year) |> 
-  mutate(across(c(FREH_change, rev_change, universe_change), 
+  mutate(across(c(FREH_change, rev_change, universe_change, vacancy_change), 
                 \(x) slide_dbl(x, \(y) y[1], .before = 1)), .by = id) |> 
   filter(!is.na(rent_change), !is.na(universe_change), year >= 2018) |> 
   # Select relevant variables
   select(id, year, CMA, name_CMA, province, rent_change, FREH_change, 
-         rev_change, universe, universe_change, tenant, tourism, vacancy) |> 
+         rev_change, universe, universe_change, tenant, tourism, vacancy,
+         vacancy_change) |> 
   # Make year a character vector so it is treated as a factor
   mutate(year = as.character(year)) |> 
   # Create logged versions of universe and tourism
@@ -345,4 +417,5 @@ dc$lag <-
 
 # Clean up ----------------------------------------------------------------
 
-rm(cmhc, cmhc_nbhd, monthly_impute, nn, nn_join)
+rm(cmhc, cmhc_nbhd, monthly_impute, monthly_impute_rent, monthly_impute_univ,
+   monthly_impute_vac, nn, nn_join)
