@@ -252,7 +252,8 @@ monthly_sept <-
                    v2 = vacancy, vr2 = vacancy_rel), by = c("id", "year")) |> 
   mutate(rent = coalesce(rent, r2),
          rent_rel = coalesce(rent_rel, rr2),
-         vacancy = coalesce(vacancy, v2),
+         # Convert vacancy rate to proper percentage
+         vacancy = coalesce(vacancy, v2) / 100,
          vacancy_rel = coalesce(vacancy_rel, vr2),
          universe = coalesce(universe, u2)) |> 
   select(-c(u2:vr2)) |> 
@@ -300,7 +301,8 @@ monthly_sept_housing <-
                    v2 = vacancy, vr2 = vacancy_rel), by = c("id", "year")) |> 
   mutate(rent = coalesce(rent, r2),
          rent_rel = coalesce(rent_rel, rr2),
-         vacancy = coalesce(vacancy, v2),
+         # Convert vacancy rate to proper percentage
+         vacancy = coalesce(vacancy, v2) / 100,
          vacancy_rel = coalesce(vacancy_rel, vr2),
          universe = coalesce(universe, u2)) |> 
   select(-c(u2:vr2)) |> 
