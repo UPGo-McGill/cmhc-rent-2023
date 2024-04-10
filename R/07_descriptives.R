@@ -27,20 +27,20 @@ fig_4 <-
 ggsave("output/figure_4.png", fig_4, width = 8, height = 5, units = "in")
 
 
-# Table 1: Variables ------------------------------------------------------
+# Table 2: Variables ------------------------------------------------------
 
 monthly_sept |> 
   select(rent, rent_change, FREH, FREH_change, rev, rev_change, universe, 
-         universe_change, tenant, tourism) |> 
+         universe_change, vacancy, vacancy_change, tenant, tourism) |> 
   st_drop_geometry() |> 
   mutate(FREH_dummy = FREH == 0, rev_dummy = rev == 0, .before = rent) |> 
   mutate(FREH = if_else(FREH == 0, min(FREH[FREH > 0]), FREH),
          rev = if_else(rev == 0, min(rev[rev > 0]), rev)) |> 
-  # Create logged versions of all variables except for vacancy
+  # Create logged versions of all variables
   mutate(across(c(rent:tourism), .fns = list(log = \(x) log(x)))) |> 
   select(rent_log, rent_change, FREH_log, FREH_dummy, FREH_change, rev_log,
-         rev_dummy, rev_change, universe_log, universe_change, tenant,
-         tourism_log) |> 
+         rev_dummy, rev_change, universe_log, universe_change, vacancy,
+         vacancy_change, tenant, tourism_log) |> 
   pivot_longer(everything()) |> 
   summarize(
     n = sum(!is.na(value)),
@@ -49,4 +49,5 @@ monthly_sept |>
     min = min(value, na.rm = TRUE),
     max = max(value, na.rm = TRUE),
     .by = name) |> 
-  mutate(across(-name, \(x) scales::comma(x, 0.001)))
+  mutate(across(-c(name, n), \(x) scales::comma(x, 0.001))) |> 
+  suppressWarnings()
