@@ -67,6 +67,16 @@ source("R/01_startup.R")
 #   group_by(province) |>
 #   summarize()
 # 
+# water <-
+#   read_sf("data/lhy_000c16a_e/lhy_000c16a_e.shp") |>
+#   st_transform(3347) |> 
+#   mutate(province = case_when(
+#     PRUID == 24 ~ "Quebec",
+#     PRUID == 35 ~ "Ontario",
+#     PRUID == 48 ~ "Alberta",
+#     PRUID == 59 ~ "British Columbia")) |> 
+#   filter(!is.na(province))
+# 
 # 
 # # Save census geometries --------------------------------------------------
 # 
@@ -75,6 +85,7 @@ source("R/01_startup.R")
 # qsave(CSD, file = "output/CSD.qs", nthreads = availableCores())
 # qsave(CMA, file = "output/CMA.qs", nthreads = availableCores())
 # qsave(province, file = "output/province.qs", nthreads = availableCores())
+# qsave(water, file = "output/water.qs", nthreads = availableCores())
 
 DA <- qread("output/DA.qs", nthreads = availableCores())
 CMA <- qread("output/CMA.qs", nthreads = availableCores())
