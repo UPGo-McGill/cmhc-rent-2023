@@ -3,6 +3,7 @@
 source("R/08_rent_models.R")
 DA_union <- qread("output/DA_union.qs", nthreads = availableCores())
 province <- qread("output/province.qs", nthreads = availableCores())
+water <- qread("output/water.qs", nthreads = availableCores())
 
 # Get largest six CMAs to map residuals for
 largest_CMAs <- 
