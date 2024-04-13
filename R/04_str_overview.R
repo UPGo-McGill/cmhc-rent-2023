@@ -22,18 +22,22 @@ fig_1 <-
       summarize(rent = mean(rent), .by = year) |> 
       mutate(region = "Canada total")) |> 
   mutate(CA = region == "Canada total") |> 
-  ggplot(aes(year, rent, colour = region, lwd = CA)) +
+  mutate(region = factor(region, levels = c(
+    "Canada total", "Atlantic", "British Columbia", "Ontario", "Prairies",
+    "Quebec"))) |> 
+  ggplot(aes(year, rent, colour = region, linetype = region, lwd = CA)) +
   geom_line() +
-  scale_linewidth_manual(values = c("TRUE" = 2.5, "FALSE" = 1), 
+  scale_linewidth_manual(values = c("TRUE" = 2, "FALSE" = 1), 
                          guide = NULL) +
   scale_colour_brewer(name = NULL, palette = "Dark2") +
+  scale_linetype(name = NULL) +
   scale_x_continuous(name = NULL) +
   scale_y_continuous(name = "Average monthly rent", labels = scales::dollar) +
   theme_minimal() +
   theme(text = element_text(family = "Futura"),
         legend.position = "bottom")
 
-ggsave("output/figure_1.png", fig_1, width = 8, height = 5, units = "in")
+ggsave("output/figure_1.png", fig_1, width = 8, height = 4, units = "in")
   
 # 2016-2022 rent change
 cmhc |> 
