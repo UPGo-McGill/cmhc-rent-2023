@@ -6,6 +6,7 @@
 # remotes::install_github("UPGo-McGill/upgo")
 # remotes::install_github("UPGo-McGill/strr")
 # remotes::install_github("UPGo-McGill/matchr")
+# remotes::install_github("jtextor/dagitty/r")
 
 
 # Load packages -----------------------------------------------------------
@@ -26,6 +27,7 @@ library(spmoran)
 library(spdep)
 library(ggfortify)
 library(modelsummary)
+library(dagitty)
 plan(multisession)
 handlers(global = TRUE)
 
