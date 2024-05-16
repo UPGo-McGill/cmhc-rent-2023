@@ -33,22 +33,22 @@ source("R/01_startup.R")
 #   st_as_sf() |>
 #   st_transform(3347)
 # 
-# CSD <- 
-#   CSD |> 
+# CSD <-
+#   CSD |>
 #   select(CSD = GeoUID, name_CSD = name, CMA = CMA_UID, pop_CSD = Population,
-#          households_CSD = Households, dwellings_CSD = Dwellings, 
+#          households_CSD = Households, dwellings_CSD = Dwellings,
 #          rent:tourism_parent, geometry) |>
-#   mutate(name_CSD = str_remove(name_CSD, " \\(.*\\)")) |> 
+#   mutate(name_CSD = str_remove(name_CSD, " \\(.*\\)")) |>
 #   mutate(province_ID = substr(CSD, 1, 2)) |>
 #   inner_join(st_drop_geometry(province), by = "province_ID") |>
 #   relocate(province, province_ID, .after = CMA)
 # 
-# CSD <- 
-#   CSD |> 
+# CSD <-
+#   CSD |>
 #   mutate(tourism = (entertainment + accommodation) / tourism_parent,
-#          .after = dwellings_CSD) |> 
-#   mutate(tenant = tenants / (tenants + owners), .after = tenants) |> 
-#   rename(tenant_count = tenants) |> 
+#          .after = dwellings_CSD) |>
+#   mutate(tenant = tenants / (tenants + owners), .after = tenants) |>
+#   rename(tenant_count = tenants) |>
 #   select(-owners, -entertainment, -accommodation, -tourism_parent)
 # 
 # DA <-
@@ -59,7 +59,8 @@ source("R/01_startup.R")
 #                            owners = "v_CA21_4305",
 #                            entertainment = "v_CA21_6657",
 #                            accommodation = "v_CA21_6660",
-#                            tourism_parent = "v_CA21_6606"), geo_format = "sf")})
+#                            tourism_parent = "v_CA21_6606"), 
+#                geo_format = "sf")})
 # 
 # # Combine output and add area
 # DA <-
@@ -71,7 +72,8 @@ source("R/01_startup.R")
 #   mutate(tourism = entertainment + accommodation) |>
 #   select(DA = GeoUID, CMA = CMA_UID, pop = Population, dwellings = Dwellings,
 #          tourism, tourism_parent, rent, tenants, owners) |>
-#   mutate(area_DA = units::drop_units(st_area(geometry)), .before = geometry) |>
+#   mutate(area_DA = units::drop_units(st_area(geometry)), 
+#          .before = geometry) |>
 #   st_set_agr("constant")
 # 
 # DA <-
@@ -253,7 +255,7 @@ rm(cmhc_CMA)
 
 # Process data ------------------------------------------------------------
 
-qload("data/cmhc_data.qsm", nthreads = 10)
+qload("data/cmhc_data.qsm", nthreads = availableCores())
 
 # Fix 2016 IDs
 cmhc_2016 <- 

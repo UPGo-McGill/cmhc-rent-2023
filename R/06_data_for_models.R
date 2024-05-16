@@ -2,7 +2,6 @@
 
 source("R/01_startup.R")
 monthly_sept <- qread("output/monthly_sept.qs")
-monthly_sept_housing <- qread("output/monthly_sept_housing.qs")
 qload("output/cmhc.qsm", nthreads = availableCores())
 
 
