@@ -5,6 +5,15 @@ monthly <- qread("output/monthly.qs", nthreads = availableCores())
 qload("output/cmhc.qsm", nthreads = availableCores())
 monthly_sept <- qread("output/monthly_sept.qs", nthreads = availableCores())
 CSD <- qread("output/CSD.qs", nthreads = availableCores())
+cpi <- 
+  read_csv("data/CPI.csv") |> 
+  select(REF_DATE, GEO, product = `Products and product groups`, UOM, 
+         value = VALUE) |> 
+  filter(product %in% c("All-items", "Shelter"), GEO == "Canada",
+         UOM == "2002=100") |>
+  mutate(month = yearmonth(REF_DATE)) |>
+  select(month, product, value) |>
+  filter(month >= yearmonth("2014-10"))
 
 
 # Trends in rent ----------------------------------------------------------
@@ -45,8 +54,17 @@ cmhc |>
   summarize(rent = sum(rent * universe, na.rm = TRUE) / 
               sum(universe, na.rm = TRUE), .by = year)
 
-# Annualized increase
-913 * 1.047 ^ 6
+# Annualized increase: 8.2%
+752 * 1.082 ^ 6
+
+# 2016-2022 inflation
+cpi |> 
+  filter(month %in% c(yearmonth("2016-10"), yearmonth("2022-10")),
+         product == "All-items") |> 
+  summarize(change = value[2] / value[1] - 1)
+
+# Annualized increase: 3.0%
+129 * 1.03 ^ 6
 
 
 # Trends in FREH ----------------------------------------------------------
