@@ -1,0 +1,53 @@
+dag {
+bb="-7.54,-8.016,8.841,7.107"
+"FREH(t-1)" [exposure,pos="2.489,-6.644"]
+"FREH(t-2)" [pos="-3.590,-6.504"]
+"Highrise housing stock" [pos="3.826,-0.398"]
+"Landlord mix" [latent,pos="4.447,0.796"]
+"Rent stickiness" [latent,pos="5.737,1.958"]
+"income(t-1)" [pos="3.826,-4.078"]
+"non-FREH(t-1)" [pos="1.956,-4.665"]
+"price(t-1)" [pos="2.871,3.702"]
+"price(t-2)" [pos="-3.926,3.508"]
+"rent(t)" [outcome,pos="8.077,-1.915"]
+"rent(t-1)" [pos="2.839,1.813"]
+"rent(t-2)" [pos="-4.038,0.796"]
+"rev(t-1)" [pos="2.744,-1.980"]
+"universe_change(t)" [pos="3.970,-7.564"]
+"vacancy(t-1)" [pos="4.797,4.379"]
+"vacancy(t-2)" [pos="-4.057,-2.706"]
+Demand [latent,pos="5.721,-1.931"]
+Supply [latent,pos="5.578,-5.821"]
+U1 [latent,pos="7.185,-7.516"]
+U2 [latent,pos="5.466,-0.414"]
+U3 [latent,pos="6.612,4.412"]
+tourism [pos="-1.093,1.345"]
+"FREH(t-1)" -> "rev(t-1)"
+"FREH(t-1)" -> Supply
+"FREH(t-2)" -> "FREH(t-1)"
+"FREH(t-2)" -> "non-FREH(t-1)"
+"Highrise housing stock" -> "Landlord mix"
+"Landlord mix" -> "Rent stickiness"
+"Rent stickiness" -> "rent(t)"
+"income(t-1)" -> Demand
+"non-FREH(t-1)" -> "rev(t-1)"
+"price(t-1)" -> "Rent stickiness"
+"price(t-1)" -> "rev(t-1)"
+"price(t-2)" -> "FREH(t-1)"
+"rent(t-1)" -> "Rent stickiness"
+"rent(t-2)" -> "FREH(t-1)"
+"rent(t-2)" -> "non-FREH(t-1)"
+"rent(t-2)" -> "rent(t-1)"
+"rev(t-1)" -> Demand
+"universe_change(t)" -> Supply
+"vacancy(t-1)" -> "Rent stickiness"
+"vacancy(t-2)" -> "FREH(t-1)"
+"vacancy(t-2)" -> "non-FREH(t-1)"
+Demand -> "rent(t)"
+Supply -> "rent(t)"
+U1 -> Supply
+U2 -> Demand
+U3 -> "Rent stickiness"
+tourism -> "price(t-1)"
+tourism -> "rev(t-1)"
+}

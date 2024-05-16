@@ -191,6 +191,71 @@ dr$no_lag <-
          across(c(rent:tourism_log), \(x) as.numeric(scale(x))), 
          .before = geometry)
 
+# Semi-lag dataset: rent, rent_lag, FREH, rev_lag, price_lag
+dr$semi_lag <-
+  monthly_sept |> 
+  filter(!is.na(rent), !is.na(rent_lag), !is.na(FREH), !is.na(rev_lag), 
+         !is.na(price_lag)) |> 
+  # Select relevant variables
+  select(id, year, CMA, name_CMA, province, rent, rent_lag, FREH, FREH_lag, 
+         rev, rev_lag, price, price_lag, universe, tenant, tourism, vacancy, 
+         universe_change) |> 
+  # Make year a character vector so it is treated as a factor
+  mutate(year = as.character(year)) |> 
+  # Replace zero-values of FREH/rev/price with lowest non-zero values
+  mutate(FREH_dummy = FREH == 0, FREH_lag_dummy = FREH_lag == 0, 
+         rev_dummy = rev == 0, rev_lag_dummy = rev_lag == 0, 
+         .before = rent) |> 
+  mutate(FREH = if_else(FREH == 0, min(FREH[FREH > 0]), FREH),
+         FREH_lag = if_else(FREH_lag == 0, min(FREH_lag[FREH_lag > 0]), 
+                            FREH_lag),
+         rev = if_else(rev == 0, min(rev[rev > 0]), rev),
+         rev_lag = if_else(rev_lag == 0, min(rev_lag[rev_lag > 0]), rev_lag),
+         price = if_else(price == 0, min(price[price > 0]), price),
+         price_lag = if_else(price_lag == 0, min(price_lag[price_lag > 0]), 
+                             price_lag)) |> 
+  # Create logged versions of all variables except for vacancy
+  mutate(across(c(rent:tourism), .fns = list(log = \(x) log(x))), 
+         .before = geometry) |> 
+  # Normalize all variables
+  mutate(across(c(rent:tourism_log), list(raw = \(x) x)),
+         across(c(rent:tourism_log), \(x) as.numeric(scale(x))), 
+         .before = geometry)
+
+# Imputed dataset
+dr$impute <- 
+  monthly_sept |> 
+  # Do imputation
+  impute() |>
+  filter(!is.na(rent), !is.na(rent_lag), !is.na(FREH), !is.na(FREH_lag), 
+         !is.na(rev_lag), !is.na(price_lag)) |> 
+  # Select relevant variables
+  select(id, year, CMA, name_CMA, province, rent, rent_lag, FREH, FREH_lag, 
+         rev, rev_lag, price, price_lag, universe, tenant, tourism, vacancy, 
+         universe_change) |> 
+  # Make year a character vector so it is treated as a factor
+  mutate(year = as.character(year)) |> 
+  # Replace zero-values of FREH/rev/price with lowest non-zero values
+  mutate(FREH_dummy = FREH == 0, FREH_lag_dummy = FREH_lag == 0, 
+         rev_dummy = rev == 0, rev_lag_dummy = rev_lag == 0, 
+         .before = rent) |> 
+  mutate(FREH = if_else(FREH == 0, min(FREH[FREH > 0]), FREH),
+         FREH_lag = if_else(FREH_lag == 0, min(FREH_lag[FREH_lag > 0]), 
+                            FREH_lag),
+         rev = if_else(rev == 0, min(rev[rev > 0]), rev),
+         rev_lag = if_else(rev_lag == 0, min(rev_lag[rev_lag > 0]), rev_lag),
+         price = if_else(price == 0, min(price[price > 0]), price),
+         price_lag = if_else(price_lag == 0, min(price_lag[price_lag > 0]), 
+                             price_lag)) |> 
+  # Create logged versions of all variables except for vacancy
+  mutate(across(c(rent:tourism), .fns = list(log = \(x) log(x))), 
+         .before = geometry) |> 
+  # Normalize all variables
+  mutate(across(c(rent:tourism_log), list(raw = \(x) x)),
+         across(c(rent:tourism_log), \(x) as.numeric(scale(x))), 
+         .before = geometry)
+
+
 # Vacancy dataset
 dr$vacancy <-
   monthly_sept |> 
