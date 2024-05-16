@@ -90,7 +90,8 @@ CSD <- qread("output/CSD.qs", nthreads = availableCores())
 #     longitude = first(longitude)) |>
 #   as_tibble() |>
 #   mutate(across(c(R, A, B, rev), \(x) coalesce(x, 0))) |>
-#   arrange(property_ID, month)
+#   arrange(property_ID, month) |> 
+#   mutate(rev = if_else(R == 0, 0, rev))
 # 
 # 
 # # Convert currency --------------------------------------------------------
@@ -181,6 +182,36 @@ CSD <- qread("output/CSD.qs", nthreads = availableCores())
 #   relocate(CSD, .after = city)
 # 
 # 
+# # Adjust revenue for inflation --------------------------------------------
+# 
+# cpi <-
+#   read_csv("data/CPI.csv") |>
+#   select(REF_DATE, GEO, product = `Products and product groups`, UOM,
+#          value = VALUE)
+# 
+# cpi <-
+#   cpi |>
+#   filter(product %in% c("All-items", "Shelter"), GEO == "Canada",
+#          UOM == "2002=100") |>
+#   mutate(month = yearmonth(REF_DATE)) |>
+#   select(month, product, value) |>
+#   filter(month >= yearmonth("2014-10"))
+# 
+# cpi_income <-
+#   cpi |>
+#   filter(product == "All-items") |>
+#   mutate(value = value / value[month == yearmonth("2022-09")]) |>
+#   select(-product)
+# 
+# monthly <-
+#   monthly |>
+#   inner_join(cpi_income, by = "month") |>
+#   mutate(rev = rev * value) |>
+#   select(-value)
+# 
+# rm(cpi, cpi_income)
+# 
+# 
 # # Save intermediate output ------------------------------------------------
 # 
 # qsave(monthly, file = "output/monthly.qs", nthreads = availableCores())
@@ -203,7 +234,7 @@ monthly <- qread("output/monthly.qs", nthreads = availableCores())
 #   st_join(cmhc_nbhd) |>
 #   arrange(property_ID, id) |>
 #   slice(1, .by = property_ID) |>
-#   select(property_ID, id, province, CMA)
+#   select(property_ID, id, province, CMA, name_CMA)
 # 
 # # Use st_nn for non-intersecting points
 # prop_cmhc_2 <-
@@ -213,7 +244,8 @@ monthly <- qread("output/monthly.qs", nthreads = availableCores())
 #     mutate(id = cmhc_nbhd$id[unlist(nngeo::st_nn(geometry, cmhc_nbhd))]) |>
 #   arrange(property_ID) |>
 #   st_drop_geometry() |>
-#   inner_join(st_drop_geometry(select(cmhc_nbhd, id, province, CMA)), by = "id")
+#   inner_join(st_drop_geometry(
+#     select(cmhc_nbhd, id, province, CMA, name_CMA)), by = "id")
 # 
 # prop_cmhc <-
 #   prop_cmhc |>
@@ -232,7 +264,7 @@ monthly_year <-
   monthly |> 
   mutate(year = year(month)) |>
   inner_join(prop_cmhc, by = "property_ID") |>
-  inner_join(cmhc, by = c("id", "year"))
+  left_join(cmhc, by = c("id", "year"))
   
 
 # Make version for September data -----------------------------------------
@@ -241,12 +273,14 @@ monthly_sept <-
   monthly_year |> 
   filter(month(month) == 9) |> 
   summarize(
+    across(c(rent, rent_rel, vacancy, vacancy_rel, universe), first),
     active_count = sum(A + R) / 30,
     rev_count = sum(rev),
     FREH_count = sum(FREH),
     FREH_3_count = sum(FREH_3),
+    price = sum(rev) / sum(R),
     EH = mean(listing_type == "Entire home/apt"),
-    .by = c(id, year, rent, rent_rel, vacancy, vacancy_rel, universe)) |> 
+    .by = c(id, year)) |> 
   arrange(id, year) |> 
   full_join(select(cmhc, id, year, u2 = universe, r2 = rent, rr2 = rent_rel,
                    v2 = vacancy, vr2 = vacancy_rel), by = c("id", "year")) |> 
@@ -260,79 +294,34 @@ monthly_sept <-
   # Add CMHC geometries, using full join to get all id/years even without data
   full_join((cmhc_nbhd |> 
                rowwise() |> 
-               mutate(year = list(2016:2022)) |> 
+               mutate(year = list(2015:2023)) |> 
                ungroup() |> 
                unnest(year)), by = c("id", "year")) |> 
   arrange(id, year) |> 
-  mutate(across(c(active_count, rev_count, FREH_count, FREH_3_count), 
+  mutate(across(c(active_count, rev_count, FREH_count, FREH_3_count, price), 
                 \(x) coalesce(x, 0))) |> 
   mutate(
     active = active_count / dwellings,
     rev = rev_count / (rent_DA * dwellings * tenant + rev_count),
     FREH = FREH_count / dwellings,
     FREH_3 = FREH_3_count / dwellings,
-    active_u = active_count / universe,
-    rev_u = rev_count / (rent * universe),
-    FREH_u = FREH_count / universe,
-    FREH_3_u = FREH_3_count / universe,
     .after = EH) |> 
   relocate(rent_rel, vacancy_rel, .after = last_col()) |> 
+  arrange(id, year) |> 
   mutate(
-    across(c(rent:FREH_3_u), 
+    # Add YOY change variables
+    across(c(rent:FREH_3), 
            list(change = \(x) slide_dbl(x, \(y) y[2] - y[1], .before = 1))),
+    # Add lag variables
+    across(c(rent:FREH_3, rent_change:FREH_3_change), 
+           list(lag = \(x) slide_dbl(x, \(y) y[1], .before = 1, 
+                                     .complete = TRUE))),
     .by = id) |> 
   st_as_sf() |> 
-  arrange(id, year)
-
-# Housing only
-monthly_sept_housing <-
-  monthly_year |> 
-  filter(month(month) == 9) |> 
-  filter(housing) |> 
-  summarize(
-    active_count = sum(A + R) / 30,
-    rev_count = sum(rev),
-    FREH_count = sum(FREH),
-    FREH_3_count = sum(FREH_3),
-    EH = mean(listing_type == "Entire home/apt"),
-    .by = c(id, year, rent, rent_rel, vacancy, vacancy_rel, universe)) |> 
   arrange(id, year) |> 
-  full_join(select(cmhc, id, year, u2 = universe, r2 = rent, rr2 = rent_rel,
-                   v2 = vacancy, vr2 = vacancy_rel), by = c("id", "year")) |> 
-  mutate(rent = coalesce(rent, r2),
-         rent_rel = coalesce(rent_rel, rr2),
-         # Convert vacancy rate to proper percentage
-         vacancy = coalesce(vacancy, v2) / 100,
-         vacancy_rel = coalesce(vacancy_rel, vr2),
-         universe = coalesce(universe, u2)) |> 
-  select(-c(u2:vr2)) |> 
-  # Add CMHC geometries, using full join to get all id/years even without data
-  full_join((cmhc_nbhd |> 
-               rowwise() |> 
-               mutate(year = list(2016:2022)) |> 
-               ungroup() |> 
-               unnest(year)), by = c("id", "year")) |> 
-  arrange(id, year) |> 
-  mutate(across(c(active_count, rev_count, FREH_count, FREH_3_count), 
-                \(x) coalesce(x, 0))) |> 
-  mutate(
-    active = active_count / dwellings,
-    rev = rev_count / (rent_DA * dwellings * tenant + rev_count),
-    FREH = FREH_count / dwellings,
-    FREH_3 = FREH_3_count / dwellings,
-    active_u = active_count / universe,
-    rev_u = rev_count / (rent * universe),
-    FREH_u = FREH_count / universe,
-    FREH_3_u = FREH_3_count / universe,
-    .after = EH) |> 
-  relocate(rent_rel, vacancy_rel, .after = last_col()) |> 
-  mutate(
-    across(c(rent:FREH_3_u), 
-           list(change = \(x) slide_dbl(x, \(y) y[2] - y[1], .before = 1))),
-    .by = id) |> 
-  st_as_sf() |> 
-  arrange(id, year)
-
+  relocate(geometry, .after = last_col()) |> 
+  # Set 2023 values to zero
+  mutate(across(c(active_count:FREH_3, active_count_change:FREH_3_change),
+                \(x) if_else(year == "2023", NA, x)))
+    
 qsave(monthly_sept, "output/monthly_sept.qs", nthreads = availableCores())
-qsave(monthly_sept_housing, "output/monthly_sept_housing.qs", 
-      nthreads = availableCores())
