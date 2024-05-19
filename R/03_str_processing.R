@@ -108,17 +108,6 @@ CSD <- qread("output/CSD.qs", nthreads = availableCores())
 # rm(exchange_rates)
 # 
 # 
-# # Find housing ------------------------------------------------------------
-# 
-# monthly <-
-#   monthly |>
-#   strr_housing() |>
-#   mutate(housing = if_else(property_type %in% c(
-#     "Home", "condo", "apartment", "house", "townhome", "cottage", "bungalow",
-#     "studio", "Vacation home"), TRUE, housing)) |>
-#   relocate(housing, .after = property_type)
-# 
-# 
 # # Calculate FREH ----------------------------------------------------------
 # 
 # # Add FREH
@@ -129,16 +118,49 @@ CSD <- qread("output/CSD.qs", nthreads = availableCores())
 #     A, R, \(A, R) sum(A) + sum(R) >= 183 & sum(R) > 90, .before = 11),
 #     .by = property_ID, .after = B)
 # 
-# # Add FREH_3
+# # Add non-FREH
+# monthly <- 
+#   monthly |> 
+#   mutate(non_FREH = !FREH & A + R > 0, .after = FREH_active)
+# 
+# 
+# # Adjust revenue for inflation --------------------------------------------
+# 
+# cpi <-
+#   read_csv("data/CPI.csv") |>
+#   select(REF_DATE, GEO, product = `Products and product groups`, UOM,
+#          value = VALUE)
+# 
+# cpi <-
+#   cpi |>
+#   filter(product %in% c("All-items", "Shelter"), GEO == "Canada",
+#          UOM == "2002=100") |>
+#   mutate(month = yearmonth(REF_DATE)) |>
+#   select(month, product, value) |>
+#   filter(month >= yearmonth("2014-10"))
+# 
+# cpi_income <-
+#   cpi |>
+#   filter(product == "All-items") |>
+#   mutate(value = value / value[month == yearmonth("2023-09")]) |>
+#   select(-product)
+# 
 # monthly <-
 #   monthly |>
-#   arrange(property_ID, month) |>
-#   mutate(FREH_3 = listing_type == "Entire home/apt" & slide2_lgl(
-#     A, R, \(A, R) sum(A) + sum(R) >= 46 & sum(R) >= 23, .before = 2),
-#     .by = property_ID, .after = FREH)
+#   inner_join(cpi_income, by = "month") |>
+#   mutate(rev = rev * value) |>
+#   select(-value)
+# 
+# rm(cpi, cpi_income)
 # 
 # 
-# # Get monthly/CSD correspondence ------------------------------------------
+# # Save intermediate output ------------------------------------------------
+# 
+# qsave(monthly, file = "output/monthly.qs", nthreads = availableCores())
+monthly <- qread("output/monthly.qs", nthreads = availableCores())
+
+
+# Get monthly/CSD correspondence ------------------------------------------
 # 
 # # Get intersections with st_join
 # prop_csd <-
@@ -174,48 +196,13 @@ CSD <- qread("output/CSD.qs", nthreads = availableCores())
 #   arrange(property_ID)
 # 
 # qsave(prop_csd, "output/prop_csd.qs", nthreads = availableCores())
-# # prop_csd <- qread("output/prop_csd .qs", nthreads = availableCores())
-# 
-# monthly <-
-#   monthly |>
-#   inner_join(prop_csd, by = "property_ID") |>
-#   relocate(CSD, .after = city)
-# 
-# 
-# # Adjust revenue for inflation --------------------------------------------
-# 
-# cpi <-
-#   read_csv("data/CPI.csv") |>
-#   select(REF_DATE, GEO, product = `Products and product groups`, UOM,
-#          value = VALUE)
-# 
-# cpi <-
-#   cpi |>
-#   filter(product %in% c("All-items", "Shelter"), GEO == "Canada",
-#          UOM == "2002=100") |>
-#   mutate(month = yearmonth(REF_DATE)) |>
-#   select(month, product, value) |>
-#   filter(month >= yearmonth("2014-10"))
-# 
-# cpi_income <-
-#   cpi |>
-#   filter(product == "All-items") |>
-#   mutate(value = value / value[month == yearmonth("2022-09")]) |>
-#   select(-product)
-# 
-# monthly <-
-#   monthly |>
-#   inner_join(cpi_income, by = "month") |>
-#   mutate(rev = rev * value) |>
-#   select(-value)
-# 
-# rm(cpi, cpi_income)
-# 
-# 
-# # Save intermediate output ------------------------------------------------
-# 
-# qsave(monthly, file = "output/monthly.qs", nthreads = availableCores())
-monthly <- qread("output/monthly.qs", nthreads = availableCores())
+prop_csd <- qread("output/prop_csd.qs", nthreads = availableCores())
+
+# Join to monthly
+monthly <-
+  monthly |>
+  inner_join(prop_csd, by = "property_ID") |>
+  relocate(CSD, .after = city)
 
 
 # Get monthly/CMHC correspondence -----------------------------------------
@@ -257,9 +244,7 @@ monthly <- qread("output/monthly.qs", nthreads = availableCores())
 # qsave(prop_cmhc, "output/prop_cmhc.qs", nthreads = availableCores())
 prop_cmhc <- qread("output/prop_cmhc.qs", nthreads = availableCores())
 
-
-# Join to monthly ---------------------------------------------------------
-
+# Join to monthly
 monthly_year <-
   monthly |> 
   mutate(year = year(month)) |>
@@ -271,15 +256,15 @@ monthly_year <-
 
 monthly_sept <-
   monthly_year |> 
-  filter(month(month) == 9) |> 
+  # Filter to only EH listings
+  filter(month(month) == 9, listing_type == "Entire home/apt") |> 
   summarize(
     across(c(rent, rent_rel, vacancy, vacancy_rel, universe), first),
     active_count = sum(A + R) / 30,
     rev_count = sum(rev),
     FREH_count = sum(FREH),
-    FREH_3_count = sum(FREH_3),
+    non_FREH_count = sum(non_FREH),
     price = sum(rev) / sum(R),
-    EH = mean(listing_type == "Entire home/apt"),
     .by = c(id, year)) |> 
   arrange(id, year) |> 
   full_join(select(cmhc, id, year, u2 = universe, r2 = rent, rr2 = rent_rel,
@@ -298,30 +283,28 @@ monthly_sept <-
                ungroup() |> 
                unnest(year)), by = c("id", "year")) |> 
   arrange(id, year) |> 
-  mutate(across(c(active_count, rev_count, FREH_count, FREH_3_count, price), 
+  mutate(across(c(active_count, rev_count, FREH_count, non_FREH_count, price), 
                 \(x) coalesce(x, 0))) |> 
   mutate(
     active = active_count / dwellings,
     rev = rev_count / (rent_DA * dwellings * tenant + rev_count),
     FREH = FREH_count / dwellings,
-    FREH_3 = FREH_3_count / dwellings,
-    .after = EH) |> 
+    non_FREH = non_FREH_count / dwellings,
+    .after = price) |> 
   relocate(rent_rel, vacancy_rel, .after = last_col()) |> 
   arrange(id, year) |> 
   mutate(
     # Add YOY change variables
-    across(c(rent:FREH_3), 
+    across(c(rent:non_FREH), 
            list(change = \(x) slide_dbl(x, \(y) y[2] - y[1], .before = 1))),
     # Add lag variables
-    across(c(rent:FREH_3, rent_change:FREH_3_change), 
-           list(lag = \(x) slide_dbl(x, \(y) y[1], .before = 1, 
-                                     .complete = TRUE))),
+    across(c(rent:non_FREH, rent_change:non_FREH_change), list(lag = lag)),
     .by = id) |> 
   st_as_sf() |> 
   arrange(id, year) |> 
   relocate(geometry, .after = last_col()) |> 
-  # Set 2023 values to zero
-  mutate(across(c(active_count:FREH_3, active_count_change:FREH_3_change),
+  # Set 2023 values to NA
+  mutate(across(c(active_count:non_FREH, active_count_change:non_FREH_change),
                 \(x) if_else(year == "2023", NA, x)))
-    
+
 qsave(monthly_sept, "output/monthly_sept.qs", nthreads = availableCores())
