@@ -121,7 +121,7 @@ CSD <- qread("output/CSD.qs", nthreads = availableCores())
 # # Add non-FREH
 # monthly <- 
 #   monthly |> 
-#   mutate(non_FREH = !FREH & A + R > 0, .after = FREH_active)
+#   mutate(non_FREH = !FREH & A + R > 0, .after = FREH)
 # 
 # 
 # # Adjust revenue for inflation --------------------------------------------
