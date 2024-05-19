@@ -1,49 +1,50 @@
 dag {
 bb="-7.54,-8.016,8.841,7.107"
 "FREH(t-1)" [exposure,pos="2.489,-6.644"]
-"FREH(t-2)" [pos="-3.590,-6.504"]
-"Highrise housing stock" [pos="3.826,-0.398"]
 "Landlord mix" [latent,pos="4.447,0.796"]
-"Rent stickiness" [latent,pos="5.737,1.958"]
-"income(t-1)" [pos="3.826,-4.078"]
-"non-FREH(t-1)" [pos="1.956,-4.665"]
-"price(t-1)" [pos="2.871,3.702"]
-"price(t-2)" [pos="-3.926,3.508"]
+"Owner occupiers" [latent,pos="-0.859,-2.891"]
+"Rent stickiness" [latent,pos="6.134,1.967"]
+"highrise(t-1)" [pos="3.365,-0.337"]
+"income(t-1)" [pos="3.287,-3.675"]
+"non-FREH(t-1)" [pos="1.096,-3.863"]
+"price(t-1)" [pos="2.661,1.497"]
+"price(t-2)" [pos="-4.004,1.991"]
 "rent(t)" [outcome,pos="8.077,-1.915"]
-"rent(t-1)" [pos="2.839,1.813"]
-"rent(t-2)" [pos="-4.038,0.796"]
+"rent(t-1)" [pos="2.630,2.938"]
+"rent(t-2)" [pos="-3.988,-0.212"]
 "rev(t-1)" [pos="2.744,-1.980"]
-"universe_change(t)" [pos="3.970,-7.564"]
-"vacancy(t-1)" [pos="4.797,4.379"]
+"universe_change(t)" [pos="3.287,-7.609"]
+"vacancy(t-1)" [pos="2.426,5.352"]
 "vacancy(t-2)" [pos="-4.057,-2.706"]
-Demand [latent,pos="5.721,-1.931"]
-Supply [latent,pos="5.578,-5.821"]
-U1 [latent,pos="7.185,-7.516"]
-U2 [latent,pos="5.466,-0.414"]
+Demand [latent,pos="6.119,-1.794"]
+Landlords [latent,pos="-0.969,-5.383"]
+Supply [latent,pos="5.915,-5.305"]
+U1 [latent,pos="6.338,-7.420"]
+U2 [latent,pos="4.789,-1.152"]
 U3 [latent,pos="6.612,4.412"]
-tourism [pos="-1.093,1.345"]
+tourism [pos="-0.765,-0.008"]
 "FREH(t-1)" -> "rev(t-1)"
 "FREH(t-1)" -> Supply
-"FREH(t-2)" -> "FREH(t-1)"
-"FREH(t-2)" -> "non-FREH(t-1)"
-"Highrise housing stock" -> "Landlord mix"
 "Landlord mix" -> "Rent stickiness"
+"Owner occupiers" -> "non-FREH(t-1)"
 "Rent stickiness" -> "rent(t)"
+"highrise(t-1)" -> "Landlord mix"
 "income(t-1)" -> Demand
 "non-FREH(t-1)" -> "rev(t-1)"
 "price(t-1)" -> "Rent stickiness"
 "price(t-1)" -> "rev(t-1)"
-"price(t-2)" -> "FREH(t-1)"
+"price(t-2)" -> "Owner occupiers"
+"price(t-2)" -> Landlords
 "rent(t-1)" -> "Rent stickiness"
-"rent(t-2)" -> "FREH(t-1)"
-"rent(t-2)" -> "non-FREH(t-1)"
+"rent(t-2)" -> "Owner occupiers"
 "rent(t-2)" -> "rent(t-1)"
+"rent(t-2)" -> Landlords
 "rev(t-1)" -> Demand
 "universe_change(t)" -> Supply
 "vacancy(t-1)" -> "Rent stickiness"
-"vacancy(t-2)" -> "FREH(t-1)"
-"vacancy(t-2)" -> "non-FREH(t-1)"
+"vacancy(t-2)" -> Landlords
 Demand -> "rent(t)"
+Landlords -> "FREH(t-1)"
 Supply -> "rent(t)"
 U1 -> Supply
 U2 -> Demand
