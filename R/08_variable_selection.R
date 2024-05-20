@@ -49,14 +49,14 @@ monthly_sept |>
   ggplot(aes(rent_log)) +
   geom_histogram()
 
-# Now very mild negative skew
+# Now very mild positive skew
 monthly_sept |>
   # impute() |>
   mutate(rent_log = log(rent)) |> 
   pull(rent_log) |> 
   skew()
 
-# Actually a bit worse with rent < 2500
+# A bit better with rent < 2500
 monthly_sept |> 
   # impute() |>
   filter(rent < 2500) |> 
@@ -64,7 +64,7 @@ monthly_sept |>
   ggplot(aes(rent_log)) +
   geom_histogram()
 
-# Skew increases
+# Skew decreases a small amount
 monthly_sept |>
   # impute() |>
   filter(rent < 2500) |>
@@ -105,76 +105,73 @@ monthly_sept |>
 # To preserve zero values, shift all zero values to the minimum non-zero value,
 # and add dummy
 monthly_sept |> 
-  mutate(FREH = if_else(FREH == 0, min(FREH[FREH > 0]), FREH)) |>
-  mutate(FREH_log = log(FREH)) |> 
+  mutate(FREH = if_else(FREH == 0, min(FREH[FREH > 0], na.rm = TRUE), FREH)) |>
   ggplot(aes(FREH_log)) +
   geom_histogram()
 
 
-# `FREH_3` ----------------------------------------------------------------
+# `non_FREH` --------------------------------------------------------------
 
-# FREH_3 has extreme positive skew
+# non_FREH has extreme positive skew
 monthly_sept |> 
-  ggplot(aes(FREH_3)) +
+  ggplot(aes(non_FREH)) +
   geom_histogram()
 
 monthly_sept |> 
-  pull(FREH_3) |> 
+  pull(non_FREH) |> 
   skew()
 
-# But FREH_3 is log normal
+# But non_FREH is log normal
 monthly_sept |> 
-  mutate(FREH_3_log = log(FREH_3)) |> 
-  ggplot(aes(FREH_3_log)) +
+  mutate(non_FREH_log = log(non_FREH)) |> 
+  ggplot(aes(non_FREH_log)) +
   geom_histogram()
 
 # Now with mild positive skew
 monthly_sept |> 
-  mutate(FREH_3_log = log(FREH_3)) |> 
-  filter(!is.infinite(FREH_3_log)) |> 
-  pull(FREH_3_log) |> 
+  mutate(non_FREH_log = log(non_FREH)) |> 
+  filter(!is.infinite(non_FREH_log)) |> 
+  pull(non_FREH_log) |> 
   skew()
 
 # To preserve zero values, shift all zero values to the minimum non-zero value,
 # and add dummy
 monthly_sept |> 
-  mutate(FREH_3 = if_else(FREH_3 == 0, min(FREH_3[FREH_3 > 0]), FREH_3)) |>
-  mutate(FREH_3_log = log(FREH_3)) |> 
-  ggplot(aes(FREH_3_log)) +
+  mutate(non_FREH = if_else(non_FREH == 0, min(
+    non_FREH[non_FREH > 0], na.rm = TRUE), non_FREH)) |>
+  mutate(non_FREH_log = log(non_FREH)) |> 
+  ggplot(aes(non_FREH_log)) +
   geom_histogram()
 
 
-# `FREH` vs. `rent` -------------------------------------------------------
+# `FREH_lag` vs. `rent` ---------------------------------------------------
 
-# No serious outliers in rent, but arguably could remove rent_log > 7.9, when 
-# examined in a bivariate relationship with FREH
+# No serious outliers in rent or FREH_lag
 monthly_sept |> 
-  mutate(FREH = if_else(FREH == 0, min(FREH[FREH > 0]), FREH)) |>
-  mutate(FREH_log = log(FREH),
+  mutate(FREH_lag = if_else(FREH_lag == 0, min(
+    FREH_lag[FREH_lag > 0], na.rm = TRUE), FREH_lag)) |>
+  mutate(FREH_lag_log = log(FREH_lag),
          rent_log = log(rent)) |>
-  filter(!is.na(rent_log)) |> 
-  filter(rent_log < 7.9) |> 
-  ggplot(aes(FREH_log, rent_log)) +
+  filter(!is.na(rent_log)) |>
+  filter(rent_log < 7.9) |>
+  ggplot(aes(FREH_lag_log, rent_log)) +
   geom_point() +
   geom_smooth(method = "lm")
 
-# Use FREH_log
 
-
-# `FREH_3` vs. `rent` -----------------------------------------------------
+# `non_FREH` vs. `rent` ---------------------------------------------------
 
 # No serious outliers in rent, but arguably could remove rent_log > 7.9, when 
-# examined in a bivariate relationship with FREH_3
+# examined in a bivariate relationship with non_FREH
 monthly_sept |> 
-  mutate(FREH_3 = if_else(FREH_3 == 0, min(FREH_3[FREH_3 > 0]), FREH_3)) |>
-  mutate(FREH_3_log = log(FREH_3), rent_log = log(rent)) |>
+  mutate(non_FREH = if_else(non_FREH == 0, min(
+    non_FREH[non_FREH > 0], na.rm = TRUE), non_FREH)) |>
+  mutate(non_FREH_log = log(non_FREH), rent_log = log(rent)) |> 
   filter(!is.na(rent_log)) |>
-  filter(rent_log < 7.9) |> 
-  ggplot(aes(FREH_3_log, rent_log)) +
+  # filter(rent_log < 7.9) |> 
+  ggplot(aes(non_FREH_log, rent_log)) +
   geom_point() +
   geom_smooth(method = "lm")
-
-# Use FREH_3_log
 
 
 # `rev` -------------------------------------------------------------------
