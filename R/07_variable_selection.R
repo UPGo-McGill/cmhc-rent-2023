@@ -1,4 +1,4 @@
-#### 07 VARIABLE SELECTION #####################################################
+#### 08 VARIABLE SELECTION #####################################################
 
 source("R/01_startup.R")
 qload("output/cmhc.qsm", nthreads = availableCores())
@@ -9,51 +9,7 @@ skew <- function(x) mean(scale(x) ^ 3, na.rm = TRUE)
 
 ## Impute missing rent values for spatial panel ################################
 
-# nn <- nngeo::st_nn(cmhc_nbhd, cmhc_nbhd, k = 6, maxdist = 50000)
-# qsave(nn, file = "output/nn.qs")
-nn <- qread("output/nn.qs")
-
-nn_join <-
-  cmhc_nbhd |> 
-  st_drop_geometry() |> 
-  select(id) |> 
-  mutate(nn = !!nn) |> 
-  mutate(nn = map(nn, \(x) cmhc_nbhd$id[x])) |> 
-  mutate(nn = map2(nn, id, \(x, y) x[x != y]))
-
-monthly_impute <- 
-  monthly_sept |> 
-  inner_join(nn_join, by = "id") |> 
-  relocate(nn, .after = rent)
-
-monthly_impute <-
-  monthly_impute |> 
-  mutate(rent_nn = map2_dbl(nn, year, \(x, y) {
-    monthly_impute |> 
-      filter(id %in% x, year == y) |> 
-      pull(rent) |> 
-      mean(na.rm = TRUE)
-  }), .before = nn) |> 
-  mutate(univ_nn = map2_dbl(nn, year, \(x, y) {
-    monthly_impute |> 
-      filter(id %in% x, year == y) |> 
-      pull(universe) |> 
-      mean(na.rm = TRUE)
-  }), .before = nn)
-
-monthly_impute <- 
-  monthly_impute |> 
-  mutate(rent_ratio = rent / rent_nn, .after = rent_nn) |> 
-  mutate(rent_ratio = mean(rent_ratio, na.rm = TRUE), .by = id) |> 
-  mutate(univ_ratio = universe / univ_nn, .after = univ_nn) |> 
-  mutate(univ_ratio = mean(univ_ratio, na.rm = TRUE), .by = id)
-
-monthly_impute <- 
-  monthly_impute |> 
-  mutate(rent_new = coalesce(rent, rent_nn * rent_ratio)) |> 
-  mutate(univ_new = coalesce(universe, univ_nn * univ_ratio)) |> 
-  select(id, year, rent, rent_new, universe, univ_new) |> 
-  st_drop_geometry()
+source("R/07_imputation.R")
 
 
 ## Rent model dependent variables ##############################################
