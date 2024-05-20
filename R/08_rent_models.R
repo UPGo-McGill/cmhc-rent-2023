@@ -4,7 +4,18 @@ source("R/06_data_for_models.R")
 
 fr <- list()
 mr <- list()
-er <- list()
+
+
+# Prepare eigenvectors for spatial regressions ----------------------------
+
+er <- map(dr, \(x) {
+  x |> 
+    st_transform(4326) |> 
+    st_set_agr("constant") |> 
+    st_centroid() |> 
+    st_coordinates() |> 
+    meigen(s_id = x$id)
+})
 
 
 # Legend ------------------------------------------------------------------
@@ -105,16 +116,10 @@ mr$l_year_vacancy <-
   map(2016:2022, \(x) lm(fr$year_vacancy, data = filter(dr$vacancy, year == x)))
 
 
-# Prepare eigenvectors for spatial regressions ----------------------------
 
-er <- map(dr, \(x) {
-  x |> 
-    st_transform(4326) |> 
-    st_set_agr("constant") |> 
-    st_centroid() |> 
-    st_coordinates() |> 
-    meigen(s_id = x$id)
-})
+
+
+
 
 er$year <- map(2016:2022, \(x) {
   dr$main |> 
