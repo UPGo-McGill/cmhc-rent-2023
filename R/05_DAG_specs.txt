@@ -1,4 +1,4 @@
-#### DAG specifications ########################################################
+#### 05 DAG SPECIFICATIONS #####################################################
 
 # These can be pasted into https://www.dagitty.net/dags.html to generate DAGs
 

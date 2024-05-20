@@ -1,4 +1,4 @@
-#### STR OVERVIEW ##############################################################
+#### 04 STR OVERVIEW ###########################################################
 
 source("R/01_startup.R")
 monthly <- qread("output/monthly.qs", nthreads = availableCores())
