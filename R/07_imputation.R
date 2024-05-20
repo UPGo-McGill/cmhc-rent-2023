@@ -129,3 +129,9 @@ monthly_impute <-
   mutate(vac_new = coalesce(vacancy, vac_new)) |> 
   select(id, year, rent, rent_new, universe, univ_new, vacancy, vac_new) |> 
   st_drop_geometry() 
+
+
+# Clean up ----------------------------------------------------------------
+
+rm(nn, nn_join, special_cases, monthly_impute_rent, monthly_impute_univ,
+   monthly_impute_vac)
