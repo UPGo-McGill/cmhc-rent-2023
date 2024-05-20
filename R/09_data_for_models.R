@@ -1,4 +1,4 @@
-#### DATA FOR MODELS ###########################################################
+#### 09 DATA FOR MODELS ########################################################
 
 source("R/01_startup.R")
 monthly_sept <- qread("output/monthly_sept.qs")
@@ -28,21 +28,15 @@ dr$main <-
   # Make year a character vector so it is treated as a factor
   mutate(year = as.character(year)) |> 
   # Replace zero-values of FREH/rev/price with lowest non-zero values
-  mutate(FREH_dummy = FREH == 0, FREH_lag_dummy = FREH_lag == 0, 
-         non_FREH_dummy = non_FREH == 0, non_FREH_lag_dummy = non_FREH_lag == 0, 
-         rev_dummy = rev == 0, rev_lag_dummy = rev_lag == 0, 
+  mutate(FREH_lag_dummy = FREH_lag == 0, 
+         non_FREH_lag_dummy = non_FREH_lag == 0, 
+         rev_lag_dummy = rev_lag == 0, 
          .before = rent) |> 
-  mutate(FREH = if_else(FREH == 0, min(FREH[FREH > 0]), FREH),
-         FREH_lag = if_else(FREH_lag == 0, min(FREH_lag[FREH_lag > 0]), 
+  mutate(FREH_lag = if_else(FREH_lag == 0, min(FREH_lag[FREH_lag > 0]), 
                             FREH_lag),
-         non_FREH = if_else(non_FREH == 0, min(non_FREH[non_FREH > 0]), 
-                            non_FREH),
-         non_FREH_lag = if_else(non_FREH_lag == 0, 
-                                min(non_FREH_lag[non_FREH_lag > 0]), 
-                                non_FREH_lag),
-         rev = if_else(rev == 0, min(rev[rev > 0]), rev),
+         non_FREH_lag = if_else(non_FREH_lag == 0, min(
+           non_FREH_lag[non_FREH_lag > 0]), non_FREH_lag),
          rev_lag = if_else(rev_lag == 0, min(rev_lag[rev_lag > 0]), rev_lag),
-         price = if_else(price == 0, min(price[price > 0]), price),
          price_lag = if_else(price_lag == 0, min(price_lag[price_lag > 0]), 
                              price_lag)) |> 
   # Create logged versions of all variables except for vacancy
@@ -64,23 +58,13 @@ dr$no_lag <-
   # Make year a character vector so it is treated as a factor
   mutate(year = as.character(year)) |> 
   # Replace zero-values of FREH/rev/price with lowest non-zero values
-  mutate(FREH_dummy = FREH == 0, FREH_lag_dummy = FREH_lag == 0, 
-         non_FREH_dummy = non_FREH == 0, non_FREH_lag_dummy = non_FREH_lag == 0, 
-         rev_dummy = rev == 0, rev_lag_dummy = rev_lag == 0, 
-         .before = rent) |> 
+  mutate(FREH_dummy = FREH == 0, non_FREH_dummy = non_FREH == 0, 
+         rev_dummy = rev == 0, .before = rent) |> 
   mutate(FREH = if_else(FREH == 0, min(FREH[FREH > 0]), FREH),
-         FREH_lag = if_else(FREH_lag == 0, min(FREH_lag[FREH_lag > 0]), 
-                            FREH_lag),
          non_FREH = if_else(non_FREH == 0, min(non_FREH[non_FREH > 0]), 
                             non_FREH),
-         non_FREH_lag = if_else(non_FREH_lag == 0, 
-                                min(non_FREH_lag[non_FREH_lag > 0]), 
-                                non_FREH_lag),
          rev = if_else(rev == 0, min(rev[rev > 0]), rev),
-         rev_lag = if_else(rev_lag == 0, min(rev_lag[rev_lag > 0]), rev_lag),
-         price = if_else(price == 0, min(price[price > 0]), price),
-         price_lag = if_else(price_lag == 0, min(price_lag[price_lag > 0]), 
-                             price_lag)) |> 
+         price = if_else(price == 0, min(price[price > 0]), price)) |> 
   # Create logged versions of all variables except for vacancy
   mutate(across(c(rent:tourism), .fns = list(log = \(x) log(x))), 
          .before = geometry) |> 
