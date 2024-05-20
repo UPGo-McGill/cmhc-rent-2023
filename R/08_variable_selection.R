@@ -485,7 +485,7 @@ monthly_sept |>
   filter(!is.na(rent), !is.na(rent_lag), !is.na(FREH_lag), !is.na(rev_lag),
          !is.na(price_lag)) |> 
   filter(rent < 2700, rev_lag > 2.753645e-05, price_lag > 29.9641, 
-         price_lag < 665.1416)
+         price_lag < 665.1416, abs(universe_change) < 1)
 
 # Choose variables
 # id, year, rent_log, rent_lag_log, FREH_lag_log, rev_lag_log, price_lag_log,
