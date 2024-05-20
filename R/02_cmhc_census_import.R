@@ -27,7 +27,12 @@ source("R/01_startup.R")
 #                          owners = "v_CA21_4305",
 #                          entertainment = "v_CA21_6657",
 #                          accommodation = "v_CA21_6660",
-#                          tourism_parent = "v_CA21_6606"),
+#                          tourism_parent = "v_CA21_6606",
+#                          apart_small = "v_CA21_439",
+#                          apart_big = "v_CA21_440",
+#                          apart_parent = "v_CA21_434",
+#                          income = "v_CA21_915",
+#                          income_parent = "v_CA21_914"),
 #              geo_format = "sf") |>
 #   as_tibble() |>
 #   st_as_sf() |>
@@ -37,7 +42,7 @@ source("R/01_startup.R")
 #   CSD |>
 #   select(CSD = GeoUID, name_CSD = name, CMA = CMA_UID, pop_CSD = Population,
 #          households_CSD = Households, dwellings_CSD = Dwellings,
-#          rent:tourism_parent, geometry) |>
+#          rent:income_parent, geometry) |>
 #   mutate(name_CSD = str_remove(name_CSD, " \\(.*\\)")) |>
 #   mutate(province_ID = substr(CSD, 1, 2)) |>
 #   inner_join(st_drop_geometry(province), by = "province_ID") |>
@@ -49,8 +54,10 @@ source("R/01_startup.R")
 #          .after = dwellings_CSD) |>
 #   mutate(tenant = tenants / (tenants + owners), .after = tenants) |>
 #   rename(tenant_count = tenants) |>
-#   select(-owners, -entertainment, -accommodation, -tourism_parent)
-# 
+#   mutate(apart = (apart_small + apart_big) / apart_parent,
+#          .after = apart_parent) |> 
+#   select(-c(owners, entertainment, accommodation, tourism_parent, apart_small,
+#             apart_big, apart_parent, income_parent))
 # DA <-
 #   map(c(35, 24, 59, 48, 46, 47, 12, 13, 10, 11, 61, 60, 62), \(x) {
 #     get_census("CA21", regions = list(PR = x), level = "DA",
@@ -59,7 +66,12 @@ source("R/01_startup.R")
 #                            owners = "v_CA21_4305",
 #                            entertainment = "v_CA21_6657",
 #                            accommodation = "v_CA21_6660",
-#                            tourism_parent = "v_CA21_6606"), 
+#                            tourism_parent = "v_CA21_6606",
+#                            apart_small = "v_CA21_439",
+#                            apart_big = "v_CA21_440",
+#                            apart_parent = "v_CA21_434",
+#                            income = "v_CA21_915",
+#                            income_parent = "v_CA21_914"),
 #                geo_format = "sf")})
 # 
 # # Combine output and add area
@@ -70,9 +82,11 @@ source("R/01_startup.R")
 #   st_as_sf() |>
 #   st_transform(3347) |>
 #   mutate(tourism = entertainment + accommodation) |>
+#   mutate(apart = apart_small + apart_big) |> 
 #   select(DA = GeoUID, CMA = CMA_UID, pop = Population, dwellings = Dwellings,
-#          tourism, tourism_parent, rent, tenants, owners) |>
-#   mutate(area_DA = units::drop_units(st_area(geometry)), 
+#          tourism, tourism_parent, rent, tenants, owners, apart, apart_parent,
+#          income, income_parent) |>
+#   mutate(area_DA = units::drop_units(st_area(geometry)),
 #          .before = geometry) |>
 #   st_set_agr("constant")
 # 
@@ -144,8 +158,8 @@ cmhc_int <-
   cmhc_nbhd_2016 |> 
   mutate(area_2016 = as.numeric(st_area(geometry))) |> 
   st_set_agr("constant") |> 
-  st_intersection(mutate(cmhc_nbhd, area_2022 = as.numeric(
-    st_area(geometry)))) |> 
+  st_intersection(st_set_agr(mutate(cmhc_nbhd, area_2022 = as.numeric(
+    st_area(geometry))), "constant")) |> 
   mutate(area = as.numeric(st_area(geometry))) |> 
   filter(area == max(area), .by = id.1)
   
@@ -207,20 +221,24 @@ cmhc_DA <-
     dwellings = sum(dwellings * area_int / area_DA, na.rm = TRUE),
     tourism = sum(tourism * area_int / area_DA, na.rm = TRUE),
     tourism_parent = sum(tourism_parent * area_int / area_DA, na.rm = TRUE),
+    apart = sum(apart * area_int / area_DA, na.rm = TRUE),
+    apart_parent = sum(apart_parent * area_int / area_DA, na.rm = TRUE),
+    income = sum(income * income_parent * area_int / area_DA, na.rm = TRUE) / 
+      sum(income_parent * area_int / area_DA, na.rm = TRUE),
     rent_DA = sum(rent * tenants * area_int / area_DA, na.rm = TRUE) / 
-      sum(tenants + area_int / area_DA, na.rm = TRUE),
+      sum(tenants * area_int / area_DA, na.rm = TRUE),
     tenants_DA = sum(tenants + area_int / area_DA, na.rm = TRUE),
     owners_DA = sum(owners + area_int / area_DA, na.rm = TRUE),
-    .by = c(id, name, province, CMA)
-  )
+    .by = c(id, name, province, CMA))
 
 cmhc_DA <- 
   cmhc_DA |> 
   mutate(
     tourism = tourism / tourism_parent,
-    tenant = tenants_DA / (tenants_DA + owners_DA)) |>
+    tenant = tenants_DA / (tenants_DA + owners_DA),
+    apart = apart / apart_parent) |>
   rename(tenant_count = tenants_DA) |> 
-  select(-tourism_parent, -owners_DA)
+  select(-tourism_parent, -owners_DA, -apart_parent)
 
 cmhc_nbhd <- 
   cmhc_nbhd |> 
@@ -1209,12 +1227,13 @@ cmhc_nbhd_csd <-
   CSD |> 
   filter(CSD %in% cmhc_csd_geom$GeoUID) |> 
   select(CSD, name = name_CSD, province, CMA, pop = pop_CSD, 
-         dwellings = dwellings_CSD, tourism, rent_DA = rent,
+         dwellings = dwellings_CSD, tourism, apart, income, rent_DA = rent,
          tenant_count, tenant, geometry)
 
 # Remove overlap with existing neighbourhoods
 cmhc_nbhd_csd <- 
   cmhc_nbhd_csd |> 
+  st_set_agr("constant") |> 
   st_difference(st_intersection(st_union(cmhc_nbhd)))
 
 
@@ -1257,7 +1276,8 @@ cmhc_nbhd <-
 cpi <- 
   read_csv("data/CPI.csv", show_col_types = FALSE) |> 
   select(REF_DATE, GEO, product = `Products and product groups`, UOM, 
-         value = VALUE)
+         value = VALUE) |> 
+  suppressWarnings()
 
 cpi <- 
   cpi |> 
@@ -1271,7 +1291,7 @@ cpi_rent <-
   filter(month(month) == 10) |> 
   mutate(year = year(month)) |> 
   select(year, value) |> 
-  mutate(value = value / value[year == 2022])
+  mutate(value = value / value[year == 2023])
 
 cmhc <- 
   cmhc |> 

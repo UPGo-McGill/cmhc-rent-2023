@@ -303,7 +303,7 @@ monthly_sept <-
   st_as_sf() |> 
   arrange(id, year) |> 
   relocate(geometry, .after = last_col()) |> 
-  # Set 2023 values to NA
+  # Set 2023 STR values to NA
   mutate(across(c(active_count:non_FREH, active_count_change:non_FREH_change),
                 \(x) if_else(year == "2023", NA, x)))
 
