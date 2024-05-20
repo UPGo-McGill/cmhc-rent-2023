@@ -216,7 +216,7 @@ monthly_sept |>
   ggplot(aes(rev_log)) +
   geom_histogram()
 
-# Skew is worse after removing outliers
+# Skew is slightly worse after removing outliers
 monthly_sept |> 
   filter(rev < 0.5) |>
   mutate(rev_log = log(rev)) |> 
@@ -227,7 +227,7 @@ monthly_sept |>
 # To preserve zero values, shift all zero values to the minimum non-zero value,
 # and add dummy
 monthly_sept |> 
-  mutate(rev = if_else(rev == 0, min(rev[rev > 0]), rev)) |>
+  mutate(rev = if_else(rev == 0, min(rev[rev > 0], na.rm = TRUE), rev)) |>
   mutate(rev_log = log(rev)) |> 
   ggplot(aes(rev_log)) +
   geom_histogram()
@@ -235,69 +235,106 @@ monthly_sept |>
 
 # `rev` vs. `rent` --------------------------------------------------------
 
-# Arguably could remove rent_log > 7.9 and rent_log < 6, and rev_log < -9.9,
+# Arguably could remove rent_log > 7.9 and rev_log < -10.5,
 # when examining a bivariate relationship of rent_log vs. rev_log
 monthly_sept |> 
-  mutate(rev = if_else(rev == 0, min(rev[rev > 0]), rev)) |>
-  mutate(rev_log = log(rev),
-         rent_log = log(rent)) |>
-  filter(rent_log < 7.9, rent_log > 6, rev_log > -9.9) |>
+  mutate(rev = if_else(rev == 0, min(rev[rev > 0], na.rm = TRUE), rev)) |>
+  mutate(rev_log = log(rev), rent_log = log(rent)) |>
+  filter(rent_log < 7.9, rev_log > -10.5) |>
   filter(!is.infinite(rev_log), !is.na(rent_log)) |>
   ggplot(aes(rev_log, rent_log)) +
   geom_point() +
   geom_smooth(method = "lm")
 
-# Use rev_log
+
+# `price` -----------------------------------------------------------------
+
+# price has moderate positive skew
+monthly_sept |> 
+  ggplot(aes(price)) +
+  geom_histogram()
+
+monthly_sept |> 
+  pull(price) |> 
+  skew()
+
+# But price is log normal
+monthly_sept |> 
+  mutate(price_log = log(price)) |> 
+  ggplot(aes(price_log)) +
+  geom_histogram()
+
+# Now with mild negative skew
+monthly_sept |> 
+  mutate(price_log = log(price)) |> 
+  filter(!is.infinite(price_log)) |> 
+  pull(price_log) |> 
+  skew()
+
+# To preserve zero values, shift all zero values to the minimum non-zero value,
+# and add dummy
+monthly_sept |> 
+  mutate(price = if_else(price == 0, min(price[price > 0], na.rm = TRUE), 
+                         price)) |>
+  mutate(price_log = log(price)) |> 
+  ggplot(aes(price_log)) +
+  geom_histogram()
 
 
-# FREH and rev together? --------------------------------------------------
+# `price` vs. `rent` ------------------------------------------------------
+
+# Arguably could remove rent_log > 7.9 and price_log < 3.4 and > 6.5,
+# when examining a bivariate relationship of rent_log vs. rev_log
+monthly_sept |> 
+  mutate(price = if_else(price == 0, min(price[price > 0], na.rm = TRUE), 
+                         price)) |>
+  mutate(price_log = log(price), rent_log = log(rent)) |>
+  # filter(rent_log < 7.9, price_log > 3.4, price_log < 6.5) |>
+  filter(!is.infinite(price_log), !is.na(rent_log)) |>
+  ggplot(aes(price_log, rent_log)) +
+  geom_point() +
+  geom_smooth(method = "lm")
+
+
+
+# FREH, rev and price together? -------------------------------------------
 
 monthly_sept |> 
   st_drop_geometry() |> 
-  select(FREH, rev) |> 
-  mutate(FREH_log = log(FREH), rev_log = log(rev)) |> 
-  filter(!is.infinite(FREH_log), !is.infinite(rev_log)) |> 
+  select(FREH, rev, price) |> 
+  mutate(FREH_log = log(FREH), rev_log = log(rev), price_log = log(price)) |> 
+  filter(!is.infinite(FREH_log), !is.infinite(rev_log), 
+         !is.infinite(price_log)) |> 
   cor(use = "complete.obs")
 
-# Low correlation between FREH and rev, and reasonably low correlation between 
-# FREH_log and rev_log, so (pending VIF) safe to use both variables together
+# Low correlation between unlogged variables, and reasonably low correlation 
+# between logged ones, so (pending VIF) safe to use all variables together
 
 
 # DV/IV outlier removal ---------------------------------------------------
 
-# Remove rent where rent_log > 7.9 or rent_log < 6, which is > 2700 or < 400
-exp(7.9); exp(6)
+# Remove rent where rent_log > 7.9, which is > 2700
+exp(7.9)
 
 # Remove FREH > 1
-# Remove FREH_3 > 1
 
-# Remove rev where rev_log < -9.9, which is 5.017468e-05
-exp(-9.9)
+# Remove rev where rev_log < -10.5, which is 2.753645e-05
+exp(-10.5)
 
-# Final filter? From 6192 complete obs to 6042, so 150 dropped obs (2.4%)
+# Remove price where price_log < 3.4 or > 6.5, which are 29.9641 and 665.1416
+exp(3.4); exp(6.5)
+
+# Final filter? From 7909 complete obs to 6804, so 1105 dropped obs (14.0%)
 monthly_sept |> 
-  filter(!is.na(rent), !is.na(FREH), !is.na(rev)) |> 
-  filter(rent < 2700, rent > 400, rev > 5.017468e-05)
+  filter(!is.na(rent), !is.na(rent_lag), !is.na(FREH_lag), !is.na(rev_lag),
+         !is.na(price_lag)) |> 
+  filter(rent < 2700, rev_lag > 2.753645e-05, price_lag > 29.9641, 
+         price_lag < 665.1416)
 
 # Use this as an alternate specification, and default to no outlier removal
   
 
 ## Rent model control variables ################################################
-
-# `EH` --------------------------------------------------------------------
-
-# EH roughly normal, with inflated incidences at 0 and 1
-monthly_sept |> 
-  ggplot(aes(EH)) +
-  geom_histogram()
-
-# Moderate negative skew
-monthly_sept |> 
-  pull(EH) |> 
-  skew()
-
-# Use EH, no outliers
-
 
 # `universe` --------------------------------------------------------------
 
