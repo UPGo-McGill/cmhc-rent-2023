@@ -336,57 +336,33 @@ monthly_sept |>
 
 ## Rent model control variables ################################################
 
-# `universe` --------------------------------------------------------------
+# `universe_change` -------------------------------------------------------
 
-# universe has extreme positive skew
+# universe_change has extreme outliers
 monthly_sept |> 
-  ggplot(aes(universe)) +
+  ggplot(aes(universe_change)) +
   geom_histogram()
 
+# Extreme negative skew
 monthly_sept |> 
-  pull(universe) |> 
+  pull(universe_change) |> 
   skew()
 
-# But universe is log normal
+# Zero-centered, so no possibility of log transformation
+
+# Outliers?
 monthly_sept |> 
-  mutate(universe_log = log(universe)) |> 
-  ggplot(aes(universe_log)) +
+  filter(abs(universe_change) < 1) |> 
+  ggplot(aes(universe_change)) +
   geom_histogram()
 
-# Now with mild negative skew
+# Only 7 with abs(universe_change) > 1, so not terrible to remove
 monthly_sept |> 
-  mutate(universe_log = log(universe)) |> 
-  pull(universe_log) |> 
-  skew()
+  filter(abs(universe_change) >= 1) |> 
+  filter(!is.na(rent), !is.na(rent_lag), !is.na(FREH_lag), !is.na(rev_lag),
+         !is.na(price_lag), !is.na(non_FREH_lag))
 
-# Use universe_log, and no obvious outliers to remove
-
-
-# `tenant` ----------------------------------------------------------------
-
-# tenant is very roughly normal
-monthly_sept |> 
-  ggplot(aes(tenant)) +
-  geom_histogram()
-
-# With minor positive skew
-monthly_sept |> 
-  pull(tenant) |> 
-  skew()
-
-# Not really log normal
-monthly_sept |> 
-  mutate(tenant_log = log(tenant)) |> 
-  ggplot(aes(tenant_log)) +
-  geom_histogram()
-
-# Now with negative skew
-monthly_sept |> 
-  mutate(tenant_log = log(tenant)) |> 
-  pull(tenant_log) |> 
-  skew()
-
-# Use tenant, and no outliers to remove
+# Use universe_change, remove outliers for alternate specification
 
 
 # `tourism` ---------------------------------------------------------------
@@ -422,30 +398,6 @@ monthly_sept |>
 # Use tourism_log, and no outliers to remove
 
 
-# `pop_CMA_log` -----------------------------------------------------------
-
-# pop_CMA is discontinuous at the zone scale
-monthly_sept |> 
-  ggplot(aes(pop_CMA)) +
-  geom_histogram()
-
-# And even at the CMA scale it is not much better
-monthly_sept |> 
-  slice(1, .by = CMA) |> 
-  ggplot(aes(pop_CMA)) +
-  geom_histogram() +
-  scale_x_log10()
-
-# Log doesn't help much
-monthly_sept |> 
-  slice(1, .by = CMA) |> 
-  ggplot(aes(pop_CMA)) +
-  geom_histogram() +
-  scale_x_log10()
-
-# Best to exclude pop_CMA
-
-
 # `vacancy` ---------------------------------------------------------------
 
 # vacancy is roughly normal with positive skew
@@ -470,17 +422,72 @@ monthly_sept |>
             bad = sum(vacancy_rel == "d"),
             good = n() - missing - bad)
 
-# So don't include vacancy in main models
+# So don't include vacancy in main models, or only when imputing values
+
+
+# `income` ----------------------------------------------------------------
+
+# income is very roughly normal with positive skew
+monthly_sept |> 
+  ggplot(aes(income)) +
+  geom_histogram()
+
+monthly_sept |> 
+  pull(income) |> 
+  skew()
+
+# But income is log normal
+monthly_sept |> 
+  mutate(income_log = log(income)) |> 
+  ggplot(aes(income_log)) +
+  geom_histogram()
+
+# Still with a bit of positive skew
+monthly_sept |> 
+  mutate(income_log = log(income)) |> 
+  pull(income_log) |> 
+  skew()
+
+# Skew diminishes with removal of positive outliers, but it is already minor
+monthly_sept |> 
+  mutate(income_log = log(income)) |> 
+  filter(income_log < 12.5) |> 
+  pull(income_log) |> 
+  skew()
+
+# Use income_log, and no outliers to remove
+
+
+# `apart` -----------------------------------------------------------------
+
+# apart is very roughly normal with positive skew
+monthly_sept |> 
+  ggplot(aes(apart)) +
+  geom_histogram()
+
+monthly_sept |> 
+  pull(apart) |> 
+  skew()
+
+# Log doesn't improve normality
+monthly_sept |> 
+  mutate(apart_log = log(apart)) |> 
+  ggplot(aes(apart_log)) +
+  geom_histogram()
+
+# Use apart, and no outliers to remove
 
 
 ## Full variable specification for rent model ##################################
 
 # Remove outliers
 monthly_sept |> 
-  filter(rent < 2700, rent > 400, FREH < 1, FREH_3 < 1, rev < 5, 
-         rev > 1.67017e-05)
+  filter(!is.na(rent), !is.na(rent_lag), !is.na(FREH_lag), !is.na(rev_lag),
+         !is.na(price_lag)) |> 
+  filter(rent < 2700, rev_lag > 2.753645e-05, price_lag > 29.9641, 
+         price_lag < 665.1416)
 
 # Choose variables
-# id, year, rent_log, FREH_log, FREH_3_log, rev_log, universe_log, tenant, 
-# tourism_log
+# id, year, rent_log, rent_lag_log, FREH_lag_log, rev_lag_log, price_lag_log,
+# universe_change, tourism_log, income_log, apart
 
