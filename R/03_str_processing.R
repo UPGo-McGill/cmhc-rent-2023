@@ -300,6 +300,8 @@ monthly_sept <-
     # Add lag variables
     across(c(rent:non_FREH, rent_change:non_FREH_change), list(lag = lag)),
     .by = id) |> 
+  # Normalize universe_change by total number of rental units
+  mutate(universe_change = universe_change / universe) |> 
   st_as_sf() |> 
   arrange(id, year) |> 
   relocate(geometry, .after = last_col()) |> 
