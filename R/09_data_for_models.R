@@ -207,5 +207,4 @@ dr$no_zero <-
 
 # Clean up ----------------------------------------------------------------
 
-rm(cmhc, cmhc_nbhd, monthly_impute, monthly_impute_rent, monthly_impute_univ,
-   monthly_impute_vac, nn, nn_join, rent_vars, special_cases)
+rm(cmhc, cmhc_nbhd, monthly_impute, rent_vars)
