@@ -178,7 +178,7 @@ monthly <- qread("output/monthly.qs", nthreads = availableCores())
 #   prop_csd |>
 #     filter(is.na(CSD)) |>
 #     select(property_ID, geometry) |>
-#     nngeo::st_nn(CSD, maxdist = 250, parallel = 9)
+#     nngeo::st_nn(CSD, maxdist = 250, parallel = availableCores())
 # 
 # prop_csd_2 <-
 #   prop_csd |>

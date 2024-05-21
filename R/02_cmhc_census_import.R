@@ -58,6 +58,7 @@ source("R/01_startup.R")
 #          .after = apart_parent) |> 
 #   select(-c(owners, entertainment, accommodation, tourism_parent, apart_small,
 #             apart_big, apart_parent, income_parent))
+# 
 # DA <-
 #   map(c(35, 24, 59, 48, 46, 47, 12, 13, 10, 11, 61, 60, 62), \(x) {
 #     get_census("CA21", regions = list(PR = x), level = "DA",
