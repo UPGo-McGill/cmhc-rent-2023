@@ -99,6 +99,7 @@ fr$lm_rev_vac <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy +
   rev_lag_log + rev_lag_dummy + price_lag_log + universe_change + 
   tourism_log + income_log + apart + vacancy + CMA:year + id
 
+# Rev RESF
 fr$resf_rev <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
                  "rev_lag_log", "rev_lag_dummy", "price_lag_log", 
                  "universe_change", "tourism_log", "income_log", "apart")
@@ -111,6 +112,7 @@ fr$resf_rev_vac <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy",
                      "universe_change", "tourism_log", "income_log", "apart",
                      "vacancy")
 
+# Rev BRM
 fr$brm_rev <- rent_log ~ ar(gr = id) + car(adj_mat, gr = id, type = "icar") + 
   FREH_lag_log + FREH_lag_dummy + rev_lag_log + rev_lag_dummy + price_lag_log + 
   universe_change + tourism_log + income_log + apart + (1 | id) + 
@@ -137,6 +139,7 @@ fr$lm_price_vac <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy +
   rev_lag_dummy + price_lag_log + universe_change + income_log + apart + 
   vacancy + CMA:year + id
 
+# Price RESF
 fr$resf_price <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
                    "rev_lag_dummy", "price_lag_log", "universe_change", 
                    "income_log", "apart")
@@ -147,6 +150,7 @@ fr$resf_price_vac <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy",
                        "rev_lag_dummy", "price_lag_log", "universe_change", 
                        "income_log", "apart", "vacancy")
 
+# Price BRM
 fr$brm_price <- rent_log ~ ar(gr = id) + car(adj_mat, gr = id, type = "icar") + 
   FREH_lag_log + FREH_lag_dummy + rev_lag_dummy + price_lag_log + 
   universe_change + income_log + apart + (1 | id) + (1 | CMA:year)
@@ -301,65 +305,65 @@ mr$sn_FREH_vac <- resf_vc(
   y = dr$vacancy$rent_log, x = st_drop_geometry(dr$vacancy[fr$resf_FREH_vac]),
   meig = er$vacancy, xgroup = gr$vacancy, x_nvc = TRUE)
 
-mr$sn_FREH_imp <- resf_vc
+mr$sn_FREH_imp <- resf_vc(
   y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_FREH]),
   meig = er$impute, xgroup = gr$impute, x_nvc = TRUE)
 
-mr$sn_FREH_min_imp <- resf_vc
+mr$sn_FREH_min_imp <- resf_vc(
   y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_FREH_min]),
   meig = er$impute, xgroup = gr$impute, x_nvc = TRUE)
 
-mr$sn_FREH_vac_imp <- resf_vc
+mr$sn_FREH_vac_imp <- resf_vc(
   y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_FREH_vac]),
   meig = er$impute, xgroup = gr$impute, x_nvc = TRUE)
 
 # Rev
-mr$sn_rev <- resf_vc
+mr$sn_rev <- resf_vc(
   y = dr$main$rent_log, x = st_drop_geometry(dr$main[fr$resf_rev]),
   meig = er$main, xgroup = gr$main, x_nvc = TRUE)
 
-mr$sn_rev_min <- resf_vc
+mr$sn_rev_min <- resf_vc(
   y = dr$main$rent_log, x = st_drop_geometry(dr$main[fr$resf_rev_min]),
   meig = er$main, xgroup = gr$main, x_nvc = TRUE)
 
-mr$sn_rev_vac <- resf_vc
+mr$sn_rev_vac <- resf_vc(
   y = dr$vacancy$rent_log, x = st_drop_geometry(dr$vacancy[fr$resf_rev_vac]),
   meig = er$vacancy, xgroup = gr$vacancy, x_nvc = TRUE)
 
-mr$sn_rev_imp <- resf_vc
+mr$sn_rev_imp <- resf_vc(
   y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_rev]),
   meig = er$impute, xgroup = gr$impute, x_nvc = TRUE)
 
-mr$sn_rev_min_imp <- resf_vc
+mr$sn_rev_min_imp <- resf_vc(
   y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_rev_min]),
   meig = er$impute, xgroup = gr$impute, x_nvc = TRUE)
 
-mr$sn_rev_vac_imp <- resf_vc
+mr$sn_rev_vac_imp <- resf_vc(
   y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_rev_vac]),
   meig = er$impute, xgroup = gr$impute, x_nvc = TRUE)
 
 # Price
-mr$sn_price <- resf_vc
+mr$sn_price <- resf_vc(
   y = dr$main$rent_log, x = st_drop_geometry(dr$main[fr$resf_price]),
   meig = er$main, xgroup = gr$main, x_nvc = TRUE)
 
-mr$sn_price_min <- resf_vc
+mr$sn_price_min <- resf_vc(
   y = dr$main$rent_log, x = st_drop_geometry(dr$main[fr$resf_price_min]),
   meig = er$main, xgroup = gr$main, x_nvc = TRUE)
 
-mr$sn_price_vac <- resf_vc
+mr$sn_price_vac <- resf_vc(
   y = dr$vacancy$rent_log, x = st_drop_geometry(dr$vacancy[fr$resf_price_vac]),
   meig = er$vacancy, xgroup = gr$vacancy, x_nvc = TRUE)
 
-mr$sn_price_imp <- resf_vc
+mr$sn_price_imp <- resf_vc(
   y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_price]),
   meig = er$impute, xgroup = gr$impute, x_nvc = TRUE)
 
-mr$sn_price_min_imp <- resf_vc
+mr$sn_price_min_imp <- resf_vc(
   y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_price_min]),
   meig = er$impute, xgroup = gr$impute, x_nvc = TRUE)
 
-mr$sn_price_vac_imp <- resf_vc
+mr$sn_price_vac_imp <- resf_vc(
   y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_price_vac]),
   meig = er$impute, xgroup = gr$impute, x_nvc = TRUE)
 
@@ -368,6 +372,7 @@ mr$sn_price_vac_imp <- resf_vc
 
 pr <- list()
 
+# FREH
 pr$FREH <- get_prior(fr$brm_FREH, data = dr$main, 
                      data2 = list(adj_mat = ar$main))
 pr$FREH$prior[c(5, 6, 8, 9, 11, 12)] <- "normal(0, 1)"
@@ -379,6 +384,23 @@ pr$FREH_min$prior[c(4, 6)] <- "normal(0, 1)"
 pr$FREH_vac <- get_prior(fr$brm_FREH_vac, data = dr$vacancy, 
                      data2 = list(adj_mat = ar$vacancy))
 pr$FREH_vac$prior[c(5, 6, 8, 9, 11, 12, 13)] <- "normal(0, 1)"
+
+pr$FREH_imp <- get_prior(fr$brm_FREH, data = dr$impute, 
+                     data2 = list(adj_mat = ar$impute))
+pr$FREH_imp$prior[c(5, 6, 8, 9, 11, 12)] <- "normal(0, 1)"
+
+pr$FREH_min_imp <- get_prior(fr$brm_FREH_min, data = dr$impute, 
+                         data2 = list(adj_mat = ar$impute))
+pr$FREH_min_imp$prior[c(4, 6)] <- "normal(0, 1)"
+
+pr$FREH_vac_imp <- get_prior(fr$brm_FREH_vac, data = dr$impute, 
+                         data2 = list(adj_mat = ar$impute))
+pr$FREH_vac_imp$prior[c(5, 6, 8, 9, 11, 12, 13)] <- "normal(0, 1)"
+
+# Rev
+
+# Price
+
 
 chains <- 10
 cores <- 10
