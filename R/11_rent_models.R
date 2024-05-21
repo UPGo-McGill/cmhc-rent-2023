@@ -398,6 +398,29 @@ pr$FREH_vac_imp <- get_prior(fr$brm_FREH_vac, data = dr$impute,
 pr$FREH_vac_imp$prior[c(5, 6, 8, 9, 11, 12, 13)] <- "normal(0, 1)"
 
 # Rev
+pr$rev <- get_prior(fr$brm_rev, data = dr$main, 
+                     data2 = list(adj_mat = ar$main))
+pr$rev$prior[c(5, 6, 7, 8, 9, 10, 11)] <- "normal(0, 1)"
+
+pr$rev_min <- get_prior(fr$brm_rev_min, data = dr$main, 
+                         data2 = list(adj_mat = ar$main))
+pr$rev_min$prior[c(4, 5, 7)] <- "normal(0, 1)"
+
+pr$rev_vac <- get_prior(fr$brm_rev_vac, data = dr$vacancy, 
+                         data2 = list(adj_mat = ar$vacancy))
+pr$rev_vac$prior[c(5, 6, 7, 9, 10, 11, 12)] <- "normal(0, 1)"
+
+pr$rev_imp <- get_prior(fr$brm_rev, data = dr$impute, 
+                         data2 = list(adj_mat = ar$impute))
+pr$rev_imp$prior[c(5, 6, 7, 8, 9, 10, 11)] <- "normal(0, 1)"
+
+pr$rev_min_imp <- get_prior(fr$brm_rev_min, data = dr$impute, 
+                             data2 = list(adj_mat = ar$impute))
+pr$rev_min_imp$prior[c(4, 5, 7)] <- "normal(0, 1)"
+
+pr$rev_vac_imp <- get_prior(fr$brm_rev_vac, data = dr$impute, 
+                             data2 = list(adj_mat = ar$impute))
+pr$rev_vac_imp$prior[c(5, 6, 7, 8, 9, 10, 11)] <- "normal(0, 1)"
 
 # Price
 
