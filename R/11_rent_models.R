@@ -228,9 +228,17 @@ mr$sn_FREH_vac_imp <- resf_vc(
 
 pr <- list()
 
-pr$FREH
-pr$FREH_min
-pr$FREH_vac
+pr$FREH <- get_prior(fr$brm_FREH, data = dr$main, 
+                     data2 = list(adj_mat = ar$main))
+pr$FREH$prior[c(5, 6, 8, 9, 11, 12)] <- "normal(0, 1)"
+
+pr$FREH_min <- get_prior(fr$brm_FREH_min, data = dr$main, 
+                         data2 = list(adj_mat = ar$main))
+pr$FREH_min$prior[c(4, 6)] <- "normal(0, 1)"
+
+pr$FREH_vac <- get_prior(fr$brm_FREH_vac, data = dr$vacancy, 
+                     data2 = list(adj_mat = ar$vacancy))
+pr$FREH_vac$prior[c(5, 6, 8, 9, 11, 12, 13)] <- "normal(0, 1)"
 
 chains <- 10
 cores <- 10
