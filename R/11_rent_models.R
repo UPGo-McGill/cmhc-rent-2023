@@ -1,8 +1,7 @@
-#### RENT MODELS ###############################################################
+#### 11 RENT MODELS ############################################################
 
-source("R/06_data_for_models.R")
+source("R/09_data_for_models.R")
 
-fr <- list()
 mr <- list()
 
 
@@ -34,66 +33,56 @@ er <- map(dr, \(x) {
 
 # Formulas ----------------------------------------------------------------
 
-fr$FREH <- rent_log ~ FREH_log + FREH_dummy + universe_log + tenant + 
-  tourism_log + CMA:year
+fr <- list()
 
-fr$rev <- rent_log ~ rev_log + rev_dummy + universe_log + tenant + 
-  tourism_log + CMA:year
+fr$lm_FREH <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
+  non_FREH_lag_log + non_FREH_lag_dummy + price_lag_log + rev_lag_dummy + 
+  universe_change + tourism_log + income_log + apart + CMA:year + id
 
-fr$both <- rent_log ~ FREH_log + FREH_dummy + rev_log + rev_dummy + 
-  universe_log + tenant + tourism_log + CMA:year
+fr$lm_FREH_min <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
+  non_FREH_lag_log + non_FREH_lag_dummy + CMA:year + id
 
-fr$vacancy <- rent_log ~ FREH_log + FREH_dummy + rev_log + rev_dummy + 
-  universe_log + vacancy + tenant + tourism_log + CMA:year
+fr$lm_FREH_vac <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
+  non_FREH_lag_log + non_FREH_lag_dummy + price_lag_log + rev_lag_dummy + 
+  universe_change + tourism_log + income_log + apart + vacancy + CMA:year + id
 
-fr$outliers <- rent_log ~ FREH_log + FREH_dummy + rev_log + universe_log + 
-  tenant + tourism_log + CMA:year
+fr$resf_FREH <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
+                  "non_FREH_lag_log", "non_FREH_lag_dummy", "price_lag_log",
+                  "rev_lag_dummy", "universe_change", "tourism_log", 
+                  "income_log", "apart")
 
-fr$no_zero <- rent_log ~ FREH_log + rev_log + universe_log + tenant + 
-  tourism_log + CMA:year
+fr$resf_FREH_min <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
+                      "non_FREH_lag_log", "non_FREH_lag_dummy")
 
-fr$year_FREH <- rent_log ~ FREH_log + FREH_dummy + universe_log + tenant + 
-  tourism_log + CMA
+fr$resf_FREH_vac <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
+                      "non_FREH_lag_log", "non_FREH_lag_dummy", "price_lag_log",
+                      "rev_lag_dummy", "universe_change", "tourism_log", 
+                      "income_log", "apart", "vacancy")
 
-fr$year_rev <- rent_log ~ rev_log + rev_dummy + universe_log + tenant + 
-  tourism_log + CMA
+fr$brm_FREH <- rent_log ~ ar(gr = id) + car(adj_mat, gr = id, type = "icar") + 
+  FREH_lag_log + FREH_lag_dummy + non_FREH_lag_log + non_FREH_lag_dummy + 
+  price_lag_log + rev_lag_dummy + universe_change + tourism_log + income_log + 
+  apart + (1 | id) + (1 | CMA:year)
 
-fr$year_both <- rent_log ~ FREH_log + FREH_dummy + rev_log + rev_dummy + 
-  universe_log + tenant + tourism_log + CMA
+fr$brm_FREH_min <- rent_log ~ ar(gr = id) + 
+  car(adj_mat, gr = id, type = "icar") + FREH_lag_log + FREH_lag_dummy + 
+  non_FREH_lag_log + non_FREH_lag_dummy + (1 | id) + (1 | CMA:year)
 
-fr$year_vacancy <- rent_log ~ FREH_log + FREH_dummy + rev_log + rev_dummy + 
-  universe_log + vacancy + tenant + tourism_log + CMA
-
-fr$s_FREH <- c("FREH_log", "FREH_dummy", "universe_log", "tenant", 
-               "tourism_log")
-
-fr$s_rev <- c("rev_log", "rev_dummy", "universe_log", "tenant", "tourism_log")
-
-fr$s_both <- c("FREH_log", "FREH_dummy", "rev_log", "rev_dummy", "universe_log", 
-               "tenant", "tourism_log")
-
-fr$s_vacancy <- c("FREH_log", "FREH_dummy", "rev_log", "rev_dummy", 
-                  "universe_log", "tenant", "tourism_log", "vacancy")
-
-fr$s_outliers <- c("FREH_log", "FREH_dummy", "rev_log", "universe_log", 
-                   "tenant", "tourism_log")
-
-fr$s_no_zero <- c("FREH_log", "rev_log", "universe_log", "tenant", 
-                  "tourism_log")
+fr$brm_FREH_vac <- rent_log ~ ar(gr = id) + 
+  car(adj_mat, gr = id, type = "icar") + FREH_lag_log + FREH_lag_dummy + 
+  non_FREH_lag_log + non_FREH_lag_dummy + price_lag_log + rev_lag_dummy + 
+  universe_change + tourism_log + income_log + apart + vacancy + (1 | id) + 
+  (1 | CMA:year)
 
 
 # Linear models -----------------------------------------------------------
 
-mr$l_FREH <- lm(fr$FREH, data = dr$main)
-mr$l_rev <- lm(fr$rev, data = dr$main)
-mr$l_both <- lm(fr$both, data = dr$main)
-mr$l_vacancy <- lm(fr$vacancy, data = dr$vacancy)
-mr$l_outliers <- lm(fr$outliers, data = dr$outliers)
-mr$l_no_zero <- lm(fr$no_zero, data = dr$no_zero)
-mr$l_impute <- lm(fr$both, data = dr$impute)
-mr$l_impute_vacancy <- lm(fr$vacancy, data = dr$impute)
-mr$l_alt <- lm(fr$both, data = dr$alt)
-mr$l_housing <- lm(fr$both, data = dr$housing)
+mr$l_FREH <- lm(fr$lm_FREH, data = dr$main)
+mr$l_FREH_min <- lm(fr$lm_FREH_min, data = dr$main)
+mr$l_FREH_vac <- lm(fr$lm_FREH_vac, data = dr$vacancy)
+mr$l_FREH_imp <- lm(fr$lm_FREH, data = dr$impute)
+mr$l_FREH_min_imp <- lm(fr$lm_FREH_min, data = dr$impute)
+mr$l_FREH_vac_imp <- lm(fr$lm_FREH_vac, data = dr$impute)
 
 # Models by province
 mr$l_p <- map(list(
@@ -146,75 +135,45 @@ er$year_vacancy <- map(2016:2022, \(x) {
 
 mr$sf_FREH <- resf(
   y = dr$main$rent_log,
-  x = st_drop_geometry(dr$main[fr$s_FREH]),
+  x = st_drop_geometry(dr$main[fr$resf_FREH]),
   meig = er$main,
-  xgroup = st_drop_geometry(dr$main[c("CMA", "year")]))
+  xgroup = bind_cols(id = dr$main$id, 
+                     CMA_year = paste0(dr$main$CMA, dr$main$year)))
 
-mr$sf_rev <- resf(
+mr$sf_FREH_min <- resf(
   y = dr$main$rent_log,
-  x = st_drop_geometry(dr$main[fr$s_rev]),
+  x = st_drop_geometry(dr$main[fr$resf_FREH_min]),
   meig = er$main,
-  xgroup = st_drop_geometry(dr$main[c("CMA", "year")]))
+  xgroup = bind_cols(id = dr$main$id, 
+                     CMA_year = paste0(dr$main$CMA, dr$main$year)))
 
-mr$sf_both <- resf(
-  y = dr$main$rent_log,
-  x = st_drop_geometry(dr$main[fr$s_both]),
-  meig = er$main,
-  xgroup = st_drop_geometry(dr$main[c("CMA", "year")]))
-
-mr$sf_vacancy <- resf(
+mr$sf_FREH_vac <- resf(
   y = dr$vacancy$rent_log,
-  x = st_drop_geometry(dr$vacancy[fr$s_vacancy]),
+  x = st_drop_geometry(dr$vacancy[fr$resf_FREH_vac]),
   meig = er$vacancy,
-  xgroup = st_drop_geometry(dr$vacancy[c("CMA", "year")]))
+  xgroup = bind_cols(id = dr$vacancy$id, 
+                     CMA_year = paste0(dr$vacancy$CMA, dr$vacancy$year)))
 
-mr$sf_outliers <- resf(
-  y = dr$outliers$rent_log,
-  x = st_drop_geometry(dr$outliers[fr$s_outliers]),
-  meig = er$outliers,
-  xgroup = st_drop_geometry(dr$outliers[c("CMA", "year")]))
-
-mr$sf_no_zero <- resf(
-  y = dr$no_zero$rent_log,
-  x = st_drop_geometry(dr$no_zero[fr$s_no_zero]),
-  meig = er$no_zero,
-  xgroup = st_drop_geometry(dr$no_zero[c("CMA", "year")]))
-
-mr$sf_impute <- resf(
+mr$sf_FREH_imp <- resf(
   y = dr$impute$rent_log,
-  x = st_drop_geometry(dr$impute[fr$s_both]),
+  x = st_drop_geometry(dr$impute[fr$resf_FREH]),
   meig = er$impute,
-  xgroup = st_drop_geometry(dr$impute[c("CMA", "year")]))
+  xgroup = bind_cols(id = dr$impute$id, 
+                     CMA_year = paste0(dr$impute$CMA, dr$impute$year)))
 
-mr$sf_impute_vacancy <- resf(
+mr$sf_FREH_min_imp <- resf(
   y = dr$impute$rent_log,
-  x = st_drop_geometry(dr$impute[fr$s_vacancy]),
+  x = st_drop_geometry(dr$impute[fr$resf_FREH_min]),
   meig = er$impute,
-  xgroup = st_drop_geometry(dr$impute[c("CMA", "year")]))
+  xgroup = bind_cols(id = dr$impute$id, 
+                     CMA_year = paste0(dr$impute$CMA, dr$impute$year)))
 
-mr$sf_alt <- resf(
-  y = dr$alt$rent_log,
-  x = st_drop_geometry(dr$alt[fr$s_both]),
-  meig = er$alt,
-  xgroup = st_drop_geometry(dr$alt[c("CMA", "year")]))
-
-mr$sf_housing <- resf(
-  y = dr$housing$rent_log,
-  x = st_drop_geometry(dr$housing[fr$s_both]),
-  meig = er$housing,
-  xgroup = st_drop_geometry(dr$housing[c("CMA", "year")]))
-
-mr$sf_year <- map(as.character(2016:2022), \(x) resf(
-  y = dr$main$rent_log[dr$main$year == x],
-  x = st_drop_geometry(dr$main[dr$main$year == x, fr$s_both]),
-  meig = er$year[[x]],
-  xgroup = st_drop_geometry(dr$main[dr$main$year == x, "CMA"])))
-
-mr$sf_year_vacancy <- map(as.character(2016:2022), \(x) resf(
-  y = dr$vacancy$rent_log[dr$vacancy$year == x],
-  x = st_drop_geometry(dr$vacancy[dr$vacancy$year == x, fr$s_vacancy]),
-  meig = er$year_vacancy[[x]],
-  xgroup = st_drop_geometry(dr$vacancy[dr$vacancy$year == x, "CMA"])))
+mr$sf_FREH_vac_imp <- resf(
+  y = dr$impute$rent_log,
+  x = st_drop_geometry(dr$impute[fr$resf_FREH_vac]),
+  meig = er$impute,
+  xgroup = bind_cols(id = dr$impute$id, 
+                     CMA_year = paste0(dr$impute$CMA, dr$impute$year)))
 
 
 # S&NVC -------------------------------------------------------------------
