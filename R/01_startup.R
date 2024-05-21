@@ -28,6 +28,8 @@ library(spdep)
 library(ggfortify)
 library(modelsummary)
 library(dagitty)
+library(brms)
+library(bayesplot)
 plan(multisession)
 handlers(global = TRUE)
 

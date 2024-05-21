@@ -5,7 +5,7 @@ source("R/09_data_for_models.R")
 mr <- list()
 
 
-# Prepare eigenvectors for spatial regressions ----------------------------
+# Prepare eigenvectors/adjacency matrices for spatial regressions ---------
 
 er <- map(dr, \(x) {
   x |> 
@@ -14,6 +14,29 @@ er <- map(dr, \(x) {
     st_centroid() |> 
     st_coordinates() |> 
     meigen(s_id = x$id)
+})
+
+ar <- map(dr, \(x) {
+  
+  adj_mat <- 
+    x |> 
+    slice(1, .by = id) |> 
+    select(id) |> 
+    poly2nb() |> 
+    nb2mat(style = "B", zero.policy = TRUE)
+  
+  rownames(adj_mat) <- 
+    x |> 
+    slice(1, .by = id) |> 
+    pull(id)
+  
+  colnames(adj_mat) <- 
+    x |> 
+    slice(1, .by = id) |> 
+    pull(id)
+  
+  adj_mat
+  
 })
 
 
@@ -84,51 +107,25 @@ mr$l_FREH_imp <- lm(fr$lm_FREH, data = dr$impute)
 mr$l_FREH_min_imp <- lm(fr$lm_FREH_min, data = dr$impute)
 mr$l_FREH_vac_imp <- lm(fr$lm_FREH_vac, data = dr$impute)
 
-# Models by province
-mr$l_p <- map(list(
-  "British Columbia", c("Alberta", "Saskatchewan", "Manitoba"),
-  "Ontario", "Quebec", c("New Brunswick", "Nova Scotia", "Prince Edward Island", 
-                         "Newfoundland and Labrador")), 
-  \(x) lm(fr$both, data = filter(dr$main, province %in% x)))
-
-# Models by year
-mr$l_year_FREH <- 
-  map(2016:2022, \(x) lm(fr$year_FREH, data = filter(dr$main, year == x)))
-
-mr$l_year_rev <- 
-  map(2016:2022, \(x) lm(fr$year_rev, data = filter(dr$main, year == x)))
-
-mr$l_year_both <- 
-  map(2016:2022, \(x) lm(fr$year_both, data = filter(dr$main, year == x)))
-
-mr$l_year_vacancy <- 
-  map(2016:2022, \(x) lm(fr$year_vacancy, data = filter(dr$vacancy, year == x)))
-
-
-
-
-
-
-
-er$year <- map(2016:2022, \(x) {
-  dr$main |> 
-    filter(year == x) |> 
-    st_transform(4326) |> 
-    st_set_agr("constant") |> 
-    st_centroid() |> 
-    st_coordinates() |> 
-    meigen()}) |> 
-  set_names(2016:2022)
-
-er$year_vacancy <- map(2016:2022, \(x) {
-  dr$vacancy |> 
-    filter(year == x) |> 
-    st_transform(4326) |> 
-    st_set_agr("constant") |> 
-    st_centroid() |> 
-    st_coordinates() |> 
-    meigen()}) |> 
-  set_names(2016:2022)
+# # Models by province
+# mr$l_p <- map(list(
+#   "British Columbia", c("Alberta", "Saskatchewan", "Manitoba"),
+#   "Ontario", "Quebec", c("New Brunswick", "Nova Scotia", "Prince Edward Island", 
+#                          "Newfoundland and Labrador")), 
+#   \(x) lm(fr$both, data = filter(dr$main, province %in% x)))
+# 
+# # Models by year
+# mr$l_year_FREH <- 
+#   map(2016:2022, \(x) lm(fr$year_FREH, data = filter(dr$main, year == x)))
+# 
+# mr$l_year_rev <- 
+#   map(2016:2022, \(x) lm(fr$year_rev, data = filter(dr$main, year == x)))
+# 
+# mr$l_year_both <- 
+#   map(2016:2022, \(x) lm(fr$year_both, data = filter(dr$main, year == x)))
+# 
+# mr$l_year_vacancy <- 
+#   map(2016:2022, \(x) lm(fr$year_vacancy, data = filter(dr$vacancy, year == x)))
 
 
 # RE-ESF ------------------------------------------------------------------
@@ -180,70 +177,74 @@ mr$sf_FREH_vac_imp <- resf(
 
 mr$sn_FREH <- resf_vc(
   y = dr$main$rent_log,
-  x = st_drop_geometry(dr$main[fr$s_FREH]),
+  x = st_drop_geometry(dr$main[fr$resf_FREH]),
   meig = er$main,
-  xgroup = st_drop_geometry(dr$main[c("CMA", "year")]),
+  xgroup = bind_cols(id = dr$main$id, 
+                     CMA_year = paste0(dr$main$CMA, dr$main$year)),
   x_nvc = TRUE)
 
-mr$sn_rev <- resf_vc(
+mr$sn_FREH_min <- resf_vc(
   y = dr$main$rent_log,
-  x = st_drop_geometry(dr$main[fr$s_rev]),
+  x = st_drop_geometry(dr$main[fr$resf_FREH_min]),
   meig = er$main,
-  xgroup = st_drop_geometry(dr$main[c("CMA", "year")]),
+  xgroup = bind_cols(id = dr$main$id, 
+                     CMA_year = paste0(dr$main$CMA, dr$main$year)),
   x_nvc = TRUE)
 
-mr$sn_both <- resf_vc(
-  y = dr$main$rent_log,
-  x = st_drop_geometry(dr$main[fr$s_both]),
-  meig = er$main,
-  xgroup = st_drop_geometry(dr$main[c("CMA", "year")]),
-  x_nvc = TRUE)
-
-mr$sn_vacancy <- resf_vc(
+mr$sn_FREH_vac <- resf_vc(
   y = dr$vacancy$rent_log,
-  x = st_drop_geometry(dr$vacancy[fr$s_vacancy]),
+  x = st_drop_geometry(dr$vacancy[fr$resf_FREH_vac]),
   meig = er$vacancy,
-  xgroup = st_drop_geometry(dr$vacancy[c("CMA", "year")]),
+  xgroup = bind_cols(id = dr$vacancy$id, 
+                     CMA_year = paste0(dr$vacancy$CMA, dr$vacancy$year)),
   x_nvc = TRUE)
 
-mr$sn_outliers <- resf_vc(
-  y = dr$outliers$rent_log,
-  x = st_drop_geometry(dr$outliers[fr$s_outliers]),
-  meig = er$outliers,
-  xgroup = st_drop_geometry(dr$outliers[c("CMA", "year")]),
-  x_nvc = TRUE)
-
-mr$sn_no_zero <- resf_vc(
-  y = dr$no_zero$rent_log,
-  x = st_drop_geometry(dr$no_zero[fr$s_no_zero]),
-  meig = er$no_zero,
-  xgroup = st_drop_geometry(dr$no_zero[c("CMA", "year")]),
-  x_nvc = TRUE)
-
-mr$sn_impute <- resf_vc(
+mr$sn_FREH_imp <- resf_vc(
   y = dr$impute$rent_log,
-  x = st_drop_geometry(dr$impute[fr$s_both]),
+  x = st_drop_geometry(dr$impute[fr$resf_FREH]),
   meig = er$impute,
-  xgroup = st_drop_geometry(dr$impute[c("CMA", "year")]),
+  xgroup = bind_cols(id = dr$impute$id, 
+                     CMA_year = paste0(dr$impute$CMA, dr$impute$year)),
   x_nvc = TRUE)
 
-mr$sn_impute_vacancy <- resf_vc(
+mr$sn_FREH_min_imp <- resf_vc(
   y = dr$impute$rent_log,
-  x = st_drop_geometry(dr$impute[fr$s_vacancy]),
+  x = st_drop_geometry(dr$impute[fr$resf_FREH_min]),
   meig = er$impute,
-  xgroup = st_drop_geometry(dr$impute[c("CMA", "year")]),
+  xgroup = bind_cols(id = dr$impute$id, 
+                     CMA_year = paste0(dr$impute$CMA, dr$impute$year)),
   x_nvc = TRUE)
 
-mr$sn_alt <- resf_vc(
-  y = dr$alt$rent_log,
-  x = st_drop_geometry(dr$alt[fr$s_both]),
-  meig = er$alt,
-  xgroup = st_drop_geometry(dr$alt[c("CMA", "year")]),
+mr$sn_FREH_vac_imp <- resf_vc(
+  y = dr$impute$rent_log,
+  x = st_drop_geometry(dr$impute[fr$resf_FREH_vac]),
+  meig = er$impute,
+  xgroup = bind_cols(id = dr$impute$id, 
+                     CMA_year = paste0(dr$impute$CMA, dr$impute$year)),
   x_nvc = TRUE)
 
-mr$sn_housing <- resf_vc(
-  y = dr$housing$rent_log,
-  x = st_drop_geometry(dr$housing[fr$s_both]),
-  meig = er$housing,
-  xgroup = st_drop_geometry(dr$housing[c("CMA", "year")]),
-  x_nvc = TRUE)
+
+# Bayesian models ---------------------------------------------------------
+
+pr <- list()
+
+pr$FREH
+pr$FREH_min
+pr$FREH_vac
+
+chains <- 10
+cores <- 10
+iter <- 10000
+
+mr$b_FREH <- brm(fr$lm_FREH, data = dr$main, prior = pr$FREH, 
+                 chains = chains, cores = cores, iter = iter)
+mr$b_FREH_min <- brm(fr$lm_FREH_min, data = dr$main, prior = pr$FREH_min, 
+                     chains = chains, cores = cores, iter = iter)
+mr$b_FREH_vac <- brm(fr$lm_FREH_vac, data = dr$vacancy, prior = pr$FREH_vac, 
+                     chains = chains, cores = cores, iter = iter)
+mr$b_FREH_imp <- brm(fr$lm_FREH, data = dr$impute, prior = pr$FREH, 
+                     chains = chains, cores = cores, iter = iter)
+mr$b_FREH_min_imp <- brm(fr$lm_FREH_min, data = dr$impute, prior = pr$FREH_min, 
+                         chains = chains, cores = cores, iter = iter)
+mr$b_FREH_vac_imp <- brm(fr$lm_FREH_vac, data = dr$impute, prior = pr$FREH_vac, 
+                         chains = chains, cores = cores, iter = iter)
