@@ -439,6 +439,78 @@ cmhc_2015 <-
   arrange(CMA, name)
 
 
+# Manually add Halifax and Windsor (missing from HMIP) --------------------
+
+rent_halifax <-
+  readxl::read_xlsx("data/cmhc_Halifax_2015.xlsx", skip = 2) |> 
+  slice(1:26) |> 
+  select(1, 10:11) |> 
+  set_names(c("name", "rent", "rent_rel")) |> 
+  mutate(CMA = "12205", year = 2015, .after = name) |> 
+  mutate(rent = as.numeric(rent)) |> 
+  mutate(rent_rel = if_else(rent_rel %in% c("a", "b", "c", "d"), rent_rel, NA))
+
+vac_halifax <- 
+  readxl::read_xlsx("data/cmhc_Halifax_2015.xlsx", sheet = 4, skip = 2) |> 
+  slice(1:26) |> 
+  select(1, 10:11) |> 
+  set_names(c("name", "vacancy", "vacancy_rel")) |> 
+  mutate(CMA = "12205", year = 2015, .after = name) |> 
+  mutate(vacancy = as.numeric(vacancy)) |> 
+  mutate(vacancy_rel = if_else(vacancy_rel %in% c("a", "b", "c", "d"), 
+                               vacancy_rel, NA))
+
+univ_halifax <- 
+  readxl::read_xlsx("data/cmhc_Halifax_2015.xlsx", sheet = 7, skip = 2) |> 
+  slice(1:26) |> 
+  select(1, 6) |> 
+  set_names(c("name", "universe")) |> 
+  mutate(CMA = "12205", year = 2015, .after = name)
+
+cmhc_halifax <- 
+  rent_halifax |> 
+  inner_join(vac_halifax, by = c("name", "CMA", "year")) |> 
+  inner_join(univ_halifax, by = c("name", "CMA", "year"))
+
+rent_windsor <- 
+  readxl::read_xlsx("data/cmhc_Windsor_2015.xlsx", skip = 2) |> 
+  slice(1:15) |> 
+  select(1, 10:11) |> 
+  set_names(c("name", "rent", "rent_rel")) |> 
+  mutate(CMA = "35559", year = 2015, .after = name) |> 
+  mutate(rent = as.numeric(rent)) |> 
+  mutate(rent_rel = if_else(rent_rel %in% c("a", "b", "c", "d"), rent_rel, NA))
+
+vac_windsor <- 
+  readxl::read_xlsx("data/cmhc_Windsor_2015.xlsx", sheet = 4, skip = 2) |> 
+  slice(1:15) |> 
+  select(1, 10:11) |> 
+  set_names(c("name", "vacancy", "vacancy_rel")) |> 
+  mutate(CMA = "35559", year = 2015, .after = name) |> 
+  mutate(vacancy = as.numeric(vacancy)) |> 
+  mutate(vacancy_rel = if_else(vacancy_rel %in% c("a", "b", "c", "d"), 
+                               vacancy_rel, NA))
+
+univ_windsor <- 
+  readxl::read_xlsx("data/cmhc_Windsor_2015.xlsx", sheet = 7, skip = 2) |> 
+  slice(1:15) |> 
+  select(1, 6) |> 
+  set_names(c("name", "universe")) |> 
+  mutate(CMA = "35559", year = 2015, .after = name)
+
+cmhc_windsor <- 
+  rent_windsor |> 
+  inner_join(vac_windsor, by = c("name", "CMA", "year")) |> 
+  inner_join(univ_windsor, by = c("name", "CMA", "year"))
+
+cmhc_2015 <- 
+  cmhc_2015 |> 
+  bind_rows(cmhc_halifax, cmhc_windsor)
+
+rm(cmhc_halifax, cmhc_windsor, rent_halifax, rent_windsor, univ_halifax, 
+   univ_windsor, vac_halifax, vac_windsor)
+
+
 # Reconcile naming differences and identify missing entries ---------------
 
 # Start by trying to match cmhc_2015 names to 2016 names, via cmhc_join_2015
@@ -455,8 +527,6 @@ cmhc_2015_unmatched <-
   anti_join(cmhc_join_2015, by = c("name", "CMA"))
   
 # Fix remaining discrepancies by hand
-# Missing Halifax CMA (12203) in 2015--not available on HMIP
-# Missing Windsor CMA (35559) in 2015--not available on HMIP
 cmhc_2015_unmatched <-
   cmhc_2015_unmatched |> 
   # CMA_all[5]
@@ -719,6 +789,11 @@ cmhc_2015_unmatched <-
     name == "Sydney" ~ "Sydney City",
     # CMA_all[59]
     name == "Rest of Kent" ~ "Remainder of Kent",
+    # Manual Halifax
+    name == "Herring Cove/Terence Bay/St. Margaret's Bay/Prospect" ~
+      "Herring Cove/Terence Bay/Prospect etc.",
+    # Manual Windsor
+    name == "Fontainbleu" ~ "Fontainebleau",
     .default = name)) 
 
 cmhc_2015_unmatched <- 
