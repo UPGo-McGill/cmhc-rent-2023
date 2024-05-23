@@ -3,13 +3,25 @@
 library(magick)
 
 magick::image_read("data/dagitty_FREH.png") |> 
-  image_crop("1800x1370+294+100") |> 
+  image_crop("2040x1360+360+100") |> 
   image_write("output/figure_4a.png")
 
 magick::image_read("data/dagitty_rev.png") |> 
-  image_crop("1800x1370+294+100") |> 
+  image_crop("2040x1360+360+100") |> 
   image_write("output/figure_4b.png")
 
 magick::image_read("data/dagitty_price.png") |> 
-  image_crop("1800x1370+294+100") |> 
+  image_crop("2040x1360+360+100") |> 
   image_write("output/figure_4c.png")
+
+magick::image_read("data/dagitty_FREH_change.png") |> 
+  image_crop("2040x1360+360+100") |> 
+  image_write("output/figure_4d.png")
+
+magick::image_read("data/dagitty_rev_change.png") |> 
+  image_crop("2040x1360+360+100") |> 
+  image_write("output/figure_4e.png")
+
+magick::image_read("data/dagitty_price_change.png") |> 
+  image_crop("2040x1360+360+100") |> 
+  image_write("output/figure_4f.png")

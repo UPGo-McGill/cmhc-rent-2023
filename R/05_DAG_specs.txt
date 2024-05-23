@@ -16,7 +16,7 @@ bb="-7.54,-8.016,8.841,7.107"
 "price (t-2)" [pos="-4.458,-2.964"]
 "rent (t)" [outcome,pos="8.077,-1.915"]
 "rent (t-1)" [pos="2.630,2.938"]
-"rent (t-2)" [pos="-4.458,-0.301"]
+"rent (t-2)" [pos="-4.256,2.313"]
 "rev (t-1)" [pos="2.744,-1.980"]
 "universe_change (t)" [pos="7.621,-6.483"]
 "vacancy (t)" [pos="7.495,2.943"]
@@ -48,6 +48,7 @@ tourism [pos="1.096,-0.866"]
 "rent (t-2)" -> Landlords
 "rent (t-2)" -> Residents
 "rev (t-1)" -> Demand
+"universe_change (t)" -> "Rent stickiness"
 "universe_change (t)" -> Supply
 "vacancy (t)" -> "Rent stickiness"
 "vacancy (t-2)" -> Landlords
@@ -79,7 +80,7 @@ bb="-7.54,-8.016,8.841,7.107"
 "price (t-2)" [pos="-4.458,-2.964"]
 "rent (t)" [outcome,pos="8.077,-1.915"]
 "rent (t-1)" [pos="2.630,2.938"]
-"rent (t-2)" [pos="-4.458,-0.301"]
+"rent (t-2)" [pos="-4.256,2.313"]
 "rev (t-1)" [exposure,pos="2.744,-1.980"]
 "universe_change (t)" [pos="7.621,-6.483"]
 "vacancy (t)" [pos="7.495,2.943"]
@@ -111,6 +112,7 @@ tourism [pos="1.096,-0.866"]
 "rent (t-2)" -> Landlords
 "rent (t-2)" -> Residents
 "rev (t-1)" -> Demand
+"universe_change (t)" -> "Rent stickiness"
 "universe_change (t)" -> Supply
 "vacancy (t)" -> "Rent stickiness"
 "vacancy (t-2)" -> Landlords
@@ -142,7 +144,7 @@ bb="-7.54,-8.016,8.841,7.107"
 "price (t-2)" [pos="-4.458,-2.964"]
 "rent (t)" [outcome,pos="8.077,-1.915"]
 "rent (t-1)" [pos="2.630,2.938"]
-"rent (t-2)" [pos="-4.458,-0.301"]
+"rent (t-2)" [pos="-4.256,2.313"]
 "rev (t-1)" [pos="2.744,-1.980"]
 "universe_change (t)" [pos="7.621,-6.483"]
 "vacancy (t)" [pos="7.495,2.943"]
@@ -174,6 +176,7 @@ tourism [pos="1.096,-0.866"]
 "rent (t-2)" -> Landlords
 "rent (t-2)" -> Residents
 "rev (t-1)" -> Demand
+"universe_change (t)" -> "Rent stickiness"
 "universe_change (t)" -> Supply
 "vacancy (t)" -> "Rent stickiness"
 "vacancy (t-2)" -> Landlords
@@ -190,3 +193,214 @@ apart -> "Landlord mix"
 income -> Demand
 tourism -> "price (t-1)"
 }
+
+
+# FREH_change -------------------------------------------------------------
+
+dag {
+bb="-7.54,-8.016,8.841,7.107"
+"Competition with hotels" [latent,pos="0.330,0.264"]
+"FREH (t-1)" [pos="-4.379,-4.672"]
+"FREH_change (t)" [exposure,pos="2.583,-6.289"]
+"Landlord mix" [latent,pos="4.930,0.603"]
+"Rent stickiness" [latent,pos="6.432,1.458"]
+"non_FREH (t-1)" [pos="-4.159,-1.163"]
+"non_FREH_change (t)" [pos="2.113,-4.627"]
+"price (t-1)" [pos="-4.458,-2.964"]
+"price_change (t)" [pos="2.661,1.497"]
+"rent (t-1)" [pos="-4.256,2.313"]
+"rent_change (t)" [outcome,pos="8.077,-1.915"]
+"rev (t-1)" [pos="-4.393,0.732"]
+"rev_change (t)" [pos="2.744,-1.980"]
+"universe_change (t)" [pos="7.621,-6.483"]
+"vacancy (t)" [pos="7.495,2.943"]
+"vacancy (t-1)" [pos="-4.348,-5.773"]
+Demand [latent,pos="6.119,-1.794"]
+Landlords [latent,pos="-0.969,-5.383"]
+Regulations [latent,pos="-2.205,-6.676"]
+Residents [latent,pos="-0.703,-1.915"]
+Supply [latent,pos="5.915,-5.305"]
+U1 [latent,pos="0.533,2.895"]
+U2 [latent,pos="5.086,-6.450"]
+U3 [latent,pos="5.164,-0.624"]
+U4 [latent,pos="5.289,2.846"]
+apart [pos="3.756,-0.640"]
+income [pos="5.164,-3.658"]
+tourism [pos="1.096,-0.866"]
+"Competition with hotels" -> "price_change (t)"
+"FREH (t-1)" -> "FREH_change (t)"
+"FREH_change (t)" -> "rev_change (t)"
+"FREH_change (t)" -> Supply
+"Landlord mix" -> "Rent stickiness"
+"Rent stickiness" -> "rent_change (t)"
+"non_FREH (t-1)" -> "non_FREH_change (t)"
+"non_FREH_change (t)" -> "rev_change (t)"
+"price (t-1)" -> "price_change (t)"
+"price (t-1)" -> Landlords
+"price (t-1)" -> Residents
+"price_change (t)" -> "Rent stickiness"
+"price_change (t)" -> "rev_change (t)"
+"rent (t-1)" -> "Rent stickiness"
+"rent (t-1)" -> "price_change (t)"
+"rent (t-1)" -> Landlords
+"rent (t-1)" -> Residents
+"rev (t-1)" -> "rev_change (t)"
+"rev_change (t)" -> Demand
+"universe_change (t)" -> "Rent stickiness"
+"universe_change (t)" -> Supply
+"vacancy (t)" -> "Rent stickiness"
+"vacancy (t-1)" -> Landlords
+Demand -> "rent_change (t)"
+Landlords -> "FREH_change (t)"
+Regulations -> Landlords
+Residents -> "non_FREH_change (t)"
+Supply -> "rent_change (t)"
+U1 -> "rent (t-1)"
+U2 -> Supply
+U3 -> Demand
+U4 -> "Rent stickiness"
+apart -> "Landlord mix"
+income -> Demand
+tourism -> "price_change (t)"
+}
+
+
+# rev_change --------------------------------------------------------------
+
+dag {
+bb="-7.54,-8.016,8.841,7.107"
+"Competition with hotels" [latent,pos="0.330,0.264"]
+"FREH (t-1)" [pos="-4.379,-4.672"]
+"FREH_change (t)" [pos="2.583,-6.289"]
+"Landlord mix" [latent,pos="4.930,0.603"]
+"Rent stickiness" [latent,pos="6.432,1.458"]
+"non_FREH (t-1)" [pos="-4.159,-1.163"]
+"non_FREH_change (t)" [pos="2.113,-4.627"]
+"price (t-1)" [pos="-4.458,-2.964"]
+"price_change (t)" [pos="2.661,1.497"]
+"rent (t-1)" [pos="-4.256,2.313"]
+"rent_change (t)" [outcome,pos="8.077,-1.915"]
+"rev (t-1)" [pos="-4.393,0.732"]
+"rev_change (t)" [exposure,pos="2.744,-1.980"]
+"universe_change (t)" [pos="7.621,-6.483"]
+"vacancy (t)" [pos="7.495,2.943"]
+"vacancy (t-1)" [pos="-4.348,-5.773"]
+Demand [latent,pos="6.119,-1.794"]
+Landlords [latent,pos="-0.969,-5.383"]
+Regulations [latent,pos="-2.205,-6.676"]
+Residents [latent,pos="-0.703,-1.915"]
+Supply [latent,pos="5.915,-5.305"]
+U1 [latent,pos="0.533,2.895"]
+U2 [latent,pos="5.086,-6.450"]
+U3 [latent,pos="5.164,-0.624"]
+U4 [latent,pos="5.289,2.846"]
+apart [pos="3.756,-0.640"]
+income [pos="5.164,-3.658"]
+tourism [pos="1.096,-0.866"]
+"Competition with hotels" -> "price_change (t)"
+"FREH (t-1)" -> "FREH_change (t)"
+"FREH_change (t)" -> "rev_change (t)"
+"FREH_change (t)" -> Supply
+"Landlord mix" -> "Rent stickiness"
+"Rent stickiness" -> "rent_change (t)"
+"non_FREH (t-1)" -> "non_FREH_change (t)"
+"non_FREH_change (t)" -> "rev_change (t)"
+"price (t-1)" -> "price_change (t)"
+"price (t-1)" -> Landlords
+"price (t-1)" -> Residents
+"price_change (t)" -> "Rent stickiness"
+"price_change (t)" -> "rev_change (t)"
+"rent (t-1)" -> "Rent stickiness"
+"rent (t-1)" -> "price_change (t)"
+"rent (t-1)" -> Landlords
+"rent (t-1)" -> Residents
+"rev (t-1)" -> "rev_change (t)"
+"rev_change (t)" -> Demand
+"universe_change (t)" -> "Rent stickiness"
+"universe_change (t)" -> Supply
+"vacancy (t)" -> "Rent stickiness"
+"vacancy (t-1)" -> Landlords
+Demand -> "rent_change (t)"
+Landlords -> "FREH_change (t)"
+Regulations -> Landlords
+Residents -> "non_FREH_change (t)"
+Supply -> "rent_change (t)"
+U1 -> "rent (t-1)"
+U2 -> Supply
+U3 -> Demand
+U4 -> "Rent stickiness"
+apart -> "Landlord mix"
+income -> Demand
+tourism -> "price_change (t)"
+}
+
+
+# price_change ------------------------------------------------------------
+
+dag {
+bb="-7.54,-8.016,8.841,7.107"
+"Competition with hotels" [latent,pos="0.330,0.264"]
+"FREH (t-1)" [pos="-4.379,-4.672"]
+"FREH_change (t)" [pos="2.583,-6.289"]
+"Landlord mix" [latent,pos="4.930,0.603"]
+"Rent stickiness" [latent,pos="6.432,1.458"]
+"non_FREH (t-1)" [pos="-4.159,-1.163"]
+"non_FREH_change (t)" [pos="2.113,-4.627"]
+"price (t-1)" [pos="-4.458,-2.964"]
+"price_change (t)" [exposure,pos="2.661,1.497"]
+"rent (t-1)" [pos="-4.256,2.313"]
+"rent_change (t)" [outcome,pos="8.077,-1.915"]
+"rev (t-1)" [pos="-4.393,0.732"]
+"rev_change (t)" [pos="2.744,-1.980"]
+"universe_change (t)" [pos="7.621,-6.483"]
+"vacancy (t)" [pos="7.495,2.943"]
+"vacancy (t-1)" [pos="-4.348,-5.773"]
+Demand [latent,pos="6.119,-1.794"]
+Landlords [latent,pos="-0.969,-5.383"]
+Regulations [latent,pos="-2.205,-6.676"]
+Residents [latent,pos="-0.703,-1.915"]
+Supply [latent,pos="5.915,-5.305"]
+U1 [latent,pos="0.533,2.895"]
+U2 [latent,pos="5.086,-6.450"]
+U3 [latent,pos="5.164,-0.624"]
+U4 [latent,pos="5.289,2.846"]
+apart [pos="3.756,-0.640"]
+income [pos="5.164,-3.658"]
+tourism [pos="1.096,-0.866"]
+"Competition with hotels" -> "price_change (t)"
+"FREH (t-1)" -> "FREH_change (t)"
+"FREH_change (t)" -> "rev_change (t)"
+"FREH_change (t)" -> Supply
+"Landlord mix" -> "Rent stickiness"
+"Rent stickiness" -> "rent_change (t)"
+"non_FREH (t-1)" -> "non_FREH_change (t)"
+"non_FREH_change (t)" -> "rev_change (t)"
+"price (t-1)" -> "price_change (t)"
+"price (t-1)" -> Landlords
+"price (t-1)" -> Residents
+"price_change (t)" -> "Rent stickiness"
+"price_change (t)" -> "rev_change (t)"
+"rent (t-1)" -> "Rent stickiness"
+"rent (t-1)" -> "price_change (t)"
+"rent (t-1)" -> Landlords
+"rent (t-1)" -> Residents
+"rev (t-1)" -> "rev_change (t)"
+"rev_change (t)" -> Demand
+"universe_change (t)" -> "Rent stickiness"
+"universe_change (t)" -> Supply
+"vacancy (t)" -> "Rent stickiness"
+"vacancy (t-1)" -> Landlords
+Demand -> "rent_change (t)"
+Landlords -> "FREH_change (t)"
+Regulations -> Landlords
+Residents -> "non_FREH_change (t)"
+Supply -> "rent_change (t)"
+U1 -> "rent (t-1)"
+U2 -> Supply
+U3 -> Demand
+U4 -> "Rent stickiness"
+apart -> "Landlord mix"
+income -> Demand
+tourism -> "price_change (t)"
+}
+
