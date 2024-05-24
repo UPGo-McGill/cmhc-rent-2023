@@ -291,27 +291,27 @@ pr <- list()
 # FREH
 pr$FREH <- get_prior(fr$brm_FREH, data = dr$main, 
                      data2 = list(adj_mat = ar$main))
-pr$FREH$prior[c(5, 6, 8, 9, 11, 12)] <- "normal(0, 1)"
+pr$FREH$prior[c(4, 5, 7, 8, 9, 11, 12)] <- "normal(0, 1)"
 
-pr$FREH_min <- get_prior(fr$brm_FREH_min, data = dr$main, 
+pr$FREH_m <- get_prior(fr$brm_FREH_m, data = dr$main, 
                          data2 = list(adj_mat = ar$main))
-pr$FREH_min$prior[c(4, 6)] <- "normal(0, 1)"
+pr$FREH_m$prior[c(3, 5, 6)] <- "normal(0, 1)"
 
-pr$FREH_vac <- get_prior(fr$brm_FREH_vac, data = dr$vacancy, 
-                     data2 = list(adj_mat = ar$vacancy))
-pr$FREH_vac$prior[c(5, 6, 8, 9, 11, 12, 13)] <- "normal(0, 1)"
+pr$FREH_v <- get_prior(fr$brm_FREH_v, data = dr$vac, 
+                       data2 = list(adj_mat = ar$vac))
+pr$FREH_v$prior[c(4, 5, 7, 8, 9, 11, 12, 13)] <- "normal(0, 1)"
 
-pr$FREH_imp <- get_prior(fr$brm_FREH, data = dr$impute, 
-                     data2 = list(adj_mat = ar$impute))
-pr$FREH_imp$prior[c(5, 6, 8, 9, 11, 12)] <- "normal(0, 1)"
+pr$FREH_i <- get_prior(fr$brm_FREH, data = dr$imp, 
+                       data2 = list(adj_mat = ar$imp))
+pr$FREH_i$prior[c(4, 5, 7, 8, 9, 11, 12)] <- "normal(0, 1)"
 
-pr$FREH_min_imp <- get_prior(fr$brm_FREH_min, data = dr$impute, 
-                         data2 = list(adj_mat = ar$impute))
-pr$FREH_min_imp$prior[c(4, 6)] <- "normal(0, 1)"
+pr$FREH_mi <- get_prior(fr$brm_FREH_m, data = dr$imp, 
+                         data2 = list(adj_mat = ar$imp))
+pr$FREH_mi$prior[c(3, 5, 6)] <- "normal(0, 1)"
 
-pr$FREH_vac_imp <- get_prior(fr$brm_FREH_vac, data = dr$impute, 
-                         data2 = list(adj_mat = ar$impute))
-pr$FREH_vac_imp$prior[c(5, 6, 8, 9, 11, 12, 13)] <- "normal(0, 1)"
+pr$FREH_vi <- get_prior(fr$brm_FREH_v, data = dr$imp, 
+                        data2 = list(adj_mat = ar$imp))
+pr$FREH_vac_imp$prior[c(4, 5, 7, 8, 9, 11, 12, 13)] <- "normal(0, 1)"
 
 # Rev
 pr$rev <- get_prior(fr$brm_rev, data = dr$main, 
@@ -339,7 +339,29 @@ pr$rev_vac_imp <- get_prior(fr$brm_rev_vac, data = dr$impute,
 pr$rev_vac_imp$prior[c(5, 6, 7, 8, 9, 10, 11)] <- "normal(0, 1)"
 
 # Price
+pr$FREH <- get_prior(fr$brm_FREH, data = dr$main, 
+                     data2 = list(adj_mat = ar$main))
+pr$FREH$prior[c(4, 5, 7, 8, 9, 11, 12)] <- "normal(0, 1)"
 
+pr$FREH_m <- get_prior(fr$brm_FREH_m, data = dr$main, 
+                       data2 = list(adj_mat = ar$main))
+pr$FREH_m$prior[c(3, 5, 6)] <- "normal(0, 1)"
+
+pr$FREH_v <- get_prior(fr$brm_FREH_v, data = dr$vac, 
+                       data2 = list(adj_mat = ar$vac))
+pr$FREH_v$prior[c(4, 5, 7, 8, 9, 11, 12, 13)] <- "normal(0, 1)"
+
+pr$FREH_i <- get_prior(fr$brm_FREH, data = dr$imp, 
+                       data2 = list(adj_mat = ar$imp))
+pr$FREH_i$prior[c(4, 5, 7, 8, 9, 11, 12)] <- "normal(0, 1)"
+
+pr$FREH_mi <- get_prior(fr$brm_FREH_m, data = dr$imp, 
+                        data2 = list(adj_mat = ar$imp))
+pr$FREH_mi$prior[c(3, 5, 6)] <- "normal(0, 1)"
+
+pr$FREH_vi <- get_prior(fr$brm_FREH_v, data = dr$imp, 
+                        data2 = list(adj_mat = ar$imp))
+pr$FREH_vac_imp$prior[c(4, 5, 7, 8, 9, 11, 12, 13)] <- "normal(0, 1)"
 
 chains <- 10
 cores <- 10
