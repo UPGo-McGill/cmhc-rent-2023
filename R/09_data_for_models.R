@@ -15,8 +15,8 @@ source("R/07_imputation.R")
 dr <- list()
 rent_vars <- c("id", "year", "CMA", "name_CMA", "province", "rent", "rent_lag", 
                "FREH", "FREH_lag", "non_FREH", "non_FREH_lag", "rev", "rev_lag", 
-               "price", "price_lag", "tenant", "apart", "income", "tourism", 
-               "vacancy", "universe_change")
+               "price", "price_lag", "apart", "income", "tourism", "vacancy", 
+               "universe_change")
 
 # Main dataset: rent, rent_lag, FREH_lag, rev_lag, price_lag
 dr$main <-
@@ -49,7 +49,7 @@ dr$main <-
   filter(year >= 2017)
 
 # Imputed dataset
-dr$impute <- 
+dr$imp <- 
   monthly_sept |> 
   # Do imputation
   impute() |>
@@ -82,7 +82,7 @@ dr$impute <-
   filter(year >= 2017)
 
 # Vacancy lag dataset
-dr$vacancy <-
+dr$vac <-
   monthly_sept |> 
   filter(!is.na(rent), !is.na(rent_lag), !is.na(FREH_lag), !is.na(rev_lag), 
          !is.na(price_lag), !is.na(vacancy)) |> 
@@ -112,6 +112,71 @@ dr$vacancy <-
   filter(year >= 2017)
 
 
+# Produce dataset with rent_change as DV ----------------------------------
+
+dc <- list()
+change_vars <- c("id", "year", "CMA", "name_CMA", "province", "rent_change", 
+                 "rent_lag", "FREH_change", "non_FREH_change", "rev_change",
+                 "price_change", "apart", "income", "tourism", "vacancy", 
+                 "universe_change")
+
+# Main dataset: rent, rent_lag, FREH_lag, rev_lag, price_lag
+dc$main <-
+  monthly_sept |> 
+  filter(!is.na(rent_change), !is.na(rent_lag), !is.na(FREH_change), 
+         !is.na(rev_change), !is.na(price_change)) |> 
+  # Select relevant variables
+  select(all_of(change_vars)) |> 
+  # Make year a character vector so it is treated as a factor
+  mutate(year = as.character(year)) |> 
+  # Create logged versions of rent_lag, income and tourism
+  mutate(across(c(rent_lag, income, tourism), .fns = list(log = \(x) log(x))), 
+         .before = geometry) |> 
+  # Normalize all variables
+  mutate(across(c(rent_change:tourism_log), list(raw = \(x) x)),
+         across(c(rent_change:tourism_log), \(x) as.numeric(scale(x))), 
+         .before = geometry) |> 
+  filter(year >= 2017)
+
+# Imputed dataset
+dc$imp <-
+  monthly_sept |>
+  # Do imputation
+  impute() |>
+  filter(!is.na(rent_change), !is.na(rent_lag), !is.na(FREH_change), 
+         !is.na(rev_change), !is.na(price_change)) |> 
+  # Select relevant variables
+  select(all_of(change_vars)) |> 
+  # Make year a character vector so it is treated as a factor
+  mutate(year = as.character(year)) |> 
+  # Create logged versions of rent_lag, income and tourism
+  mutate(across(c(rent_lag, income, tourism), .fns = list(log = \(x) log(x))), 
+         .before = geometry) |> 
+  # Normalize all variables
+  mutate(across(c(rent_change:tourism_log), list(raw = \(x) x)),
+         across(c(rent_change:tourism_log), \(x) as.numeric(scale(x))), 
+         .before = geometry) |> 
+  filter(year >= 2017)
+
+# Vacancy dataset
+dc$vac <-
+  monthly_sept |> 
+  filter(!is.na(rent_change), !is.na(rent_lag), !is.na(FREH_change), 
+         !is.na(rev_change), !is.na(price_change), !is.na(vacancy)) |> 
+  # Select relevant variables
+  select(all_of(change_vars)) |> 
+  # Make year a character vector so it is treated as a factor
+  mutate(year = as.character(year)) |> 
+  # Create logged versions of rent_lag, income and tourism
+  mutate(across(c(rent_lag, income, tourism), .fns = list(log = \(x) log(x))), 
+         .before = geometry) |> 
+  # Normalize all variables
+  mutate(across(c(rent_change:tourism_log), list(raw = \(x) x)),
+         across(c(rent_change:tourism_log), \(x) as.numeric(scale(x))), 
+         .before = geometry) |> 
+  filter(year >= 2017)
+
+
 # Clean up ----------------------------------------------------------------
 
-rm(cmhc, cmhc_nbhd, monthly_impute, rent_vars)
+rm(cmhc, cmhc_nbhd, monthly_impute, change_vars, rent_vars)
