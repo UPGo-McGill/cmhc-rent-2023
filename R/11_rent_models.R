@@ -363,6 +363,7 @@ pr$FREH_vi <- get_prior(fr$brm_FREH_v, data = dr$imp,
                         data2 = list(adj_mat = ar$imp))
 pr$FREH_vac_imp$prior[c(4, 5, 7, 8, 9, 11, 12, 13)] <- "normal(0, 1)"
 
+# Parameters
 chains <- 10
 cores <- 10
 iter <- 10000
@@ -389,38 +390,36 @@ mr$b_FREH_vi <- brm(fr$brm_FREH_v, data = dr$imp,
 # Rev
 mr$b_rev <- brm(fr$brm_rev, data = dr$main, data2 = list(adj_mat = ar$main),
                 prior = pr$rev, chains = chains, cores = cores, iter = iter)
-mr$b_rev_min <- brm(fr$brm_rev_min, data = dr$main, 
-                    data2 = list(adj_mat = ar$main), prior = pr$rev_min, 
-                    chains = chains, cores = cores, iter = iter)
-mr$b_rev_vac <- brm(fr$brm_rev_vac, data = dr$vacancy, 
-                    data2 = list(adj_mat = ar$main), prior = pr$rev_vac, 
-                    chains = chains, cores = cores, iter = iter)
-mr$b_rev_imp <- brm(fr$brm_rev, data = dr$impute, 
-                    data2 = list(adj_mat = ar$main), prior = pr$rev, 
-                    chains = chains, cores = cores, iter = iter)
-mr$b_rev_min_imp <- brm(fr$brm_rev_min, data = dr$impute, 
-                        data2 = list(adj_mat = ar$main), prior = pr$rev_min, 
-                        chains = chains, cores = cores, iter = iter)
-mr$b_rev_vac_imp <- brm(fr$brm_rev_vac, data = dr$impute, 
-                        data2 = list(adj_mat = ar$main), prior = pr$rev_vac, 
-                        chains = chains, cores = cores, iter = iter)
+mr$b_rev_m <- brm(fr$brm_rev_m, data = dr$main, 
+                  data2 = list(adj_mat = ar$main), prior = pr$rev_m, 
+                  chains = chains, cores = cores, iter = iter)
+mr$b_rev_v <- brm(fr$brm_rev_v, data = dr$vac, 
+                  data2 = list(adj_mat = ar$vac), prior = pr$rev_v, 
+                  chains = chains, cores = cores, iter = iter)
+mr$b_rev_i <- brm(fr$brm_rev, data = dr$imp, data2 = list(adj_mat = ar$imp), 
+                  prior = pr$rev, chains = chains, cores = cores, iter = iter)
+mr$b_rev_mi <- brm(fr$brm_rev_m, data = dr$imp, data2 = list(adj_mat = ar$main),
+                   prior = pr$rev_m, chains = chains, cores = cores, 
+                   iter = iter)
+mr$b_rev_vi <- brm(fr$brm_rev_v, data = dr$imp, data2 = list(adj_mat = ar$imp), 
+                   prior = pr$rev_v, chains = chains, cores = cores, 
+                   iter = iter)
 
 # Price
-mr$b_price <- brm(fr$brm_price, data = dr$main, 
-                  data2 = list(adj_mat = ar$main), prior = pr$price, 
-                  chains = chains, cores = cores, iter = iter)
-mr$b_price_min <- brm(fr$brm_price_min, data = dr$main, 
-                      data2 = list(adj_mat = ar$main), prior = pr$price_min, 
-                      chains = chains, cores = cores, iter = iter)
-mr$b_price_vac <- brm(fr$brm_price_vac, data = dr$vacancy, 
-                      data2 = list(adj_mat = ar$main), prior = pr$price_vac, 
-                      chains = chains, cores = cores, iter = iter)
-mr$b_price_imp <- brm(fr$brm_price, data = dr$impute, 
-                      data2 = list(adj_mat = ar$main), prior = pr$price, 
-                      chains = chains, cores = cores, iter = iter)
-mr$b_price_min_imp <- brm(fr$brm_price_min, data = dr$impute, 
-                          data2 = list(adj_mat = ar$main), prior = pr$price_min, 
-                          chains = chains, cores = cores, iter = iter)
-mr$b_price_vac_imp <- brm(fr$brm_price_vac, data = dr$impute, 
-                          data2 = list(adj_mat = ar$main), prior = pr$price_vac, 
-                          chains = chains, cores = cores, iter = iter)
+mr$b_price <- brm(fr$brm_price, data = dr$main, data2 = list(adj_mat = ar$main), 
+                  prior = pr$price, chains = chains, cores = cores, iter = iter)
+mr$b_price_m <- brm(fr$brm_price_m, data = dr$main, 
+                    data2 = list(adj_mat = ar$main), prior = pr$price_m, 
+                    chains = chains, cores = cores, iter = iter)
+mr$b_price_v <- brm(fr$brm_price_v, data = dr$vac, 
+                    data2 = list(adj_mat = ar$vac), prior = pr$price_v, 
+                    chains = chains, cores = cores, iter = iter)
+mr$b_price_i <- brm(fr$brm_price, data = dr$imp, data2 = list(adj_mat = ar$imp), 
+                    prior = pr$price, chains = chains, cores = cores, 
+                    iter = iter)
+mr$b_price_mi <- brm(fr$brm_price_m, data = dr$imp, 
+                     data2 = list(adj_mat = ar$imp), prior = pr$price_m, 
+                     chains = chains, cores = cores, iter = iter)
+mr$b_price_vi <- brm(fr$brm_price_v, data = dr$imp, 
+                     data2 = list(adj_mat = ar$imp), prior = pr$price_v, 
+                     chains = chains, cores = cores, iter = iter)
