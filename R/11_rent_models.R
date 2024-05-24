@@ -348,21 +348,21 @@ iter <- 10000
 # FREH
 mr$b_FREH <- brm(fr$brm_FREH, data = dr$main, data2 = list(adj_mat = ar$main),
                  prior = pr$FREH, chains = chains, cores = cores, iter = iter)
-mr$b_FREH_min <- brm(fr$brm_FREH_min, data = dr$main, 
-                     data2 = list(adj_mat = ar$main), prior = pr$FREH_min, 
+mr$b_FREH_m <- brm(fr$brm_FREH_m, data = dr$main, 
+                     data2 = list(adj_mat = ar$main), prior = pr$FREH_m, 
                      chains = chains, cores = cores, iter = iter)
-mr$b_FREH_vac <- brm(fr$brm_FREH_vac, data = dr$vacancy, 
-                     data2 = list(adj_mat = ar$main), prior = pr$FREH_vac, 
+mr$b_FREH_v <- brm(fr$brm_FREH_v, data = dr$vac, 
+                     data2 = list(adj_mat = ar$vac), prior = pr$FREH_v, 
                      chains = chains, cores = cores, iter = iter)
-mr$b_FREH_imp <- brm(fr$brm_FREH, data = dr$impute, 
-                     data2 = list(adj_mat = ar$main), prior = pr$FREH, 
+mr$b_FREH_i <- brm(fr$brm_FREH, data = dr$imp, 
+                     data2 = list(adj_mat = ar$imp), prior = pr$FREH, 
                      chains = chains, cores = cores, iter = iter)
-mr$b_FREH_min_imp <- brm(fr$brm_FREH_min, data = dr$impute, 
-                         data2 = list(adj_mat = ar$main), prior = pr$FREH_min, 
-                         chains = chains, cores = cores, iter = iter)
-mr$b_FREH_vac_imp <- brm(fr$brm_FREH_vac, data = dr$impute, 
-                         data2 = list(adj_mat = ar$main), prior = pr$FREH_vac, 
-                         chains = chains, cores = cores, iter = iter)
+mr$b_FREH_mi <- brm(fr$brm_FREH_m, data = dr$imp, 
+                    data2 = list(adj_mat = ar$imp), prior = pr$FREH_m, 
+                    chains = chains, cores = cores, iter = iter)
+mr$b_FREH_vi <- brm(fr$brm_FREH_v, data = dr$imp, 
+                    data2 = list(adj_mat = ar$imp), prior = pr$FREH_v, 
+                    chains = chains, cores = cores, iter = iter)
 
 # Rev
 mr$b_rev <- brm(fr$brm_rev, data = dr$main, data2 = list(adj_mat = ar$main),
