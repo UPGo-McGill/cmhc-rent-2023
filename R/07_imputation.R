@@ -72,11 +72,24 @@ monthly_impute_rent <-
   rowwise() |>
   mutate(new_ratio = predict(rent_lm, tibble(rent_ratio, year))) |> 
   ungroup() |> 
-  mutate(rent_new = rent_nn * new_ratio) |> 
+  mutate(rent_new = rent_nn * new_ratio)
+
+# Use simple linear trend for any leftover neighbourhoods
+leftovers <- 
+  monthly_impute_rent |> 
+  filter(sum(is.na(rent_new)) > 0, .by = id) |> 
+  mutate(rent_lm = list(lm(rent ~ year, data = tibble(rent, year))),
+         .after = rent_ratio, .by = id) |> 
+  rowwise() |>
+  mutate(rent_new = predict(rent_lm, tibble(rent, year))) |> 
+  ungroup()
+
+monthly_impute_rent <- 
+  monthly_impute_rent |> 
+  anti_join(leftovers, by = "id") |> 
+  bind_rows(leftovers) |> 
   filter(is.na(rent)) |> 
-  select(id, year, rent_new) |> 
-  # Suppress warnings about rank deficiency in models
-  suppressWarnings()
+  select(id, year, rent_new)
 
 # Fit per-neighbourhood linear models and predict missing values for universe
 monthly_impute_univ <-
@@ -133,5 +146,5 @@ monthly_impute <-
 
 # Clean up ----------------------------------------------------------------
 
-rm(nn, nn_join, special_cases, monthly_impute_rent, monthly_impute_univ,
-   monthly_impute_vac)
+rm(leftovers, nn, nn_join, special_cases, monthly_impute_rent, 
+   monthly_impute_univ, monthly_impute_vac)

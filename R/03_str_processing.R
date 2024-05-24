@@ -267,6 +267,7 @@ monthly_sept <-
     price = sum(rev) / sum(R),
     .by = c(id, year)) |> 
   arrange(id, year) |> 
+  # Join to CMHC data
   full_join(select(cmhc, id, year, u2 = universe, r2 = rent, rr2 = rent_rel,
                    v2 = vacancy, vr2 = vacancy_rel), by = c("id", "year")) |> 
   mutate(rent = coalesce(rent, r2),
