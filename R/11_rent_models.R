@@ -241,7 +241,9 @@ mr$sn_FREH_vi <- resf_vc(dr$imp$rent_log,
 
 # Rev
 mr$sn_rev <- resf_vc(dr$main$rent_log, st_drop_geometry(dr$main[fr$resf_rev]),
-                     x_nvc = TRUE, xgroup = gr$main, meig = er$main)
+                     x_nvc = TRUE, xgroup = gr$main, meig = er$main, 
+                     # Set maxiter to avoid error in iteration 18
+                     maxiter = 17)
 mr$sn_rev_m <- resf_vc(dr$main$rent_log, 
                        st_drop_geometry(dr$main[fr$resf_rev_m]),
                        x_nvc = TRUE, xgroup = gr$main, meig = er$main)
