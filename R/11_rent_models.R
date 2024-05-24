@@ -49,11 +49,9 @@ fr <- list()
 fr$lm_FREH <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
   non_FREH_lag_log + non_FREH_lag_dummy + price_lag_log + rev_lag_dummy + 
   universe_change + tourism_log + income_log + apart + CMA:year + id
-
-fr$lm_FREH_min <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
+fr$lm_FREH_m <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
   non_FREH_lag_log + non_FREH_lag_dummy + CMA:year + id
-
-fr$lm_FREH_vac <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
+fr$lm_FREH_v <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
   non_FREH_lag_log + non_FREH_lag_dummy + price_lag_log + rev_lag_dummy + 
   universe_change + tourism_log + income_log + apart + vacancy + CMA:year + id
 
@@ -62,28 +60,24 @@ fr$resf_FREH <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy",
                   "non_FREH_lag_log", "non_FREH_lag_dummy", "price_lag_log",
                   "rev_lag_dummy", "universe_change", "tourism_log", 
                   "income_log", "apart")
-
-fr$resf_FREH_min <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
-                      "non_FREH_lag_log", "non_FREH_lag_dummy")
-
-fr$resf_FREH_vac <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
-                      "non_FREH_lag_log", "non_FREH_lag_dummy", "price_lag_log",
-                      "rev_lag_dummy", "universe_change", "tourism_log", 
-                      "income_log", "apart", "vacancy")
+fr$resf_FREH_m <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
+                    "non_FREH_lag_log", "non_FREH_lag_dummy")
+fr$resf_FREH_v <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
+                    "non_FREH_lag_log", "non_FREH_lag_dummy", "price_lag_log",
+                    "rev_lag_dummy", "universe_change", "tourism_log", 
+                    "income_log", "apart", "vacancy")
 
 # FREH BRM
-fr$brm_FREH <- rent_log ~ ar(gr = id) + car(adj_mat, gr = id, type = "icar") + 
+fr$brm_FREH <- rent_log ~ car(adj_mat, gr = id, type = "icar") + rent_lag_log +
   FREH_lag_log + FREH_lag_dummy + non_FREH_lag_log + non_FREH_lag_dummy + 
   price_lag_log + rev_lag_dummy + universe_change + tourism_log + income_log + 
   apart + (1 | id) + (1 | CMA:year)
-
-fr$brm_FREH_min <- rent_log ~ ar(gr = id) + 
-  car(adj_mat, gr = id, type = "icar") + FREH_lag_log + FREH_lag_dummy + 
-  non_FREH_lag_log + non_FREH_lag_dummy + (1 | id) + (1 | CMA:year)
-
-fr$brm_FREH_vac <- rent_log ~ ar(gr = id) + 
-  car(adj_mat, gr = id, type = "icar") + FREH_lag_log + FREH_lag_dummy + 
-  non_FREH_lag_log + non_FREH_lag_dummy + price_lag_log + rev_lag_dummy + 
+fr$brm_FREH_m <- rent_log ~ car(adj_mat, gr = id, type = "icar") + 
+  rent_lag_log + FREH_lag_log + FREH_lag_dummy + non_FREH_lag_log + 
+  non_FREH_lag_dummy + (1 | id) + (1 | CMA:year)
+fr$brm_FREH_v <- rent_log ~ car(adj_mat, gr = id, type = "icar") + 
+  rent_lag_log + FREH_lag_log + FREH_lag_dummy + non_FREH_lag_log + 
+  non_FREH_lag_dummy + price_lag_log + rev_lag_dummy + 
   universe_change + tourism_log + income_log + apart + vacancy + (1 | id) + 
   (1 | CMA:year)
 
@@ -91,11 +85,9 @@ fr$brm_FREH_vac <- rent_log ~ ar(gr = id) +
 fr$lm_rev <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
   rev_lag_log + rev_lag_dummy + price_lag_log + universe_change + 
   tourism_log + income_log + apart + CMA:year + id
-
-fr$lm_rev_min <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
+fr$lm_rev_m <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
   rev_lag_log + rev_lag_dummy + price_lag_log + CMA:year + id
-
-fr$lm_rev_vac <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
+fr$lm_rev_v <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
   rev_lag_log + rev_lag_dummy + price_lag_log + universe_change + 
   tourism_log + income_log + apart + vacancy + CMA:year + id
 
@@ -103,39 +95,33 @@ fr$lm_rev_vac <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy +
 fr$resf_rev <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
                  "rev_lag_log", "rev_lag_dummy", "price_lag_log", 
                  "universe_change", "tourism_log", "income_log", "apart")
-
-fr$resf_rev_min <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
-                     "rev_lag_log", "rev_lag_dummy", "price_lag_log")
-
-fr$resf_rev_vac <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
-                     "rev_lag_log", "rev_lag_dummy", "price_lag_log",
-                     "universe_change", "tourism_log", "income_log", "apart",
-                     "vacancy")
+fr$resf_rev_m <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
+                   "rev_lag_log", "rev_lag_dummy", "price_lag_log")
+fr$resf_rev_v <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
+                   "rev_lag_log", "rev_lag_dummy", "price_lag_log",
+                   "universe_change", "tourism_log", "income_log", "apart",
+                   "vacancy")
 
 # Rev BRM
-fr$brm_rev <- rent_log ~ ar(gr = id) + car(adj_mat, gr = id, type = "icar") + 
+fr$brm_rev <- rent_log ~ car(adj_mat, gr = id, type = "icar") + rent_lag_log +
   FREH_lag_log + FREH_lag_dummy + rev_lag_log + rev_lag_dummy + price_lag_log + 
   universe_change + tourism_log + income_log + apart + (1 | id) + 
   (1 | CMA:year)
-
-fr$brm_rev_min <- rent_log ~ ar(gr = id) + 
-  car(adj_mat, gr = id, type = "icar") + FREH_lag_log + FREH_lag_dummy + 
-  rev_lag_log + rev_lag_dummy + price_lag_log + (1 | id) + (1 | CMA:year)
-
-fr$brm_rev_vac <- rent_log ~ ar(gr = id) + 
-  car(adj_mat, gr = id, type = "icar") + FREH_lag_log + FREH_lag_dummy + 
-  rev_lag_log + rev_lag_dummy + price_lag_log + universe_change + tourism_log + 
-  income_log + apart + vacancy + (1 | id) + (1 | CMA:year)
+fr$brm_rev_m <- rent_log ~ car(adj_mat, gr = id, type = "icar") + rent_lag_log + 
+  FREH_lag_log + FREH_lag_dummy + rev_lag_log + rev_lag_dummy + price_lag_log + 
+  (1 | id) + (1 | CMA:year)
+fr$brm_rev_v <- rent_log ~ car(adj_mat, gr = id, type = "icar") + rent_lag_log + 
+  FREH_lag_log + FREH_lag_dummy + rev_lag_log + rev_lag_dummy + price_lag_log + 
+  universe_change + tourism_log + income_log + apart + vacancy + (1 | id) + 
+  (1 | CMA:year)
 
 # Price LM
 fr$lm_price <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
   rev_lag_dummy + price_lag_log + universe_change + income_log + apart + 
   CMA:year + id
-
-fr$lm_price_min <- rent_log ~ rent_lag_log + rev_lag_dummy + price_lag_log + 
+fr$lm_price_m <- rent_log ~ rent_lag_log + rev_lag_dummy + price_lag_log + 
   CMA:year + id
-
-fr$lm_price_vac <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
+fr$lm_price_v <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
   rev_lag_dummy + price_lag_log + universe_change + income_log + apart + 
   vacancy + CMA:year + id
 
@@ -143,229 +129,157 @@ fr$lm_price_vac <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy +
 fr$resf_price <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
                    "rev_lag_dummy", "price_lag_log", "universe_change", 
                    "income_log", "apart")
-
-fr$resf_price_min <- c("rent_lag_log", "rev_lag_dummy", "price_lag_log")
-
-fr$resf_price_vac <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
-                       "rev_lag_dummy", "price_lag_log", "universe_change", 
-                       "income_log", "apart", "vacancy")
+fr$resf_price_m <- c("rent_lag_log", "rev_lag_dummy", "price_lag_log")
+fr$resf_price_v <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
+                     "rev_lag_dummy", "price_lag_log", "universe_change", 
+                     "income_log", "apart", "vacancy")
 
 # Price BRM
-fr$brm_price <- rent_log ~ ar(gr = id) + car(adj_mat, gr = id, type = "icar") + 
+fr$brm_price <- rent_log ~ car(adj_mat, gr = id, type = "icar") + rent_lag_log +
   FREH_lag_log + FREH_lag_dummy + rev_lag_dummy + price_lag_log + 
   universe_change + income_log + apart + (1 | id) + (1 | CMA:year)
-
-fr$brm_price_min <- rent_log ~ ar(gr = id) + 
-  car(adj_mat, gr = id, type = "icar") + rev_lag_dummy + price_lag_log + 
-  (1 | id) + (1 | CMA:year)
-
-fr$brm_price_vac <- rent_log ~ ar(gr = id) + 
-  car(adj_mat, gr = id, type = "icar") + FREH_lag_log + FREH_lag_dummy + 
-  rev_lag_dummy + price_lag_log + universe_change + income_log + apart + 
-  vacancy + (1 | id) + (1 | CMA:year)
+fr$brm_price_m <- rent_log ~ car(adj_mat, gr = id, type = "icar") + 
+  rent_lag_log + rev_lag_dummy + price_lag_log + (1 | id) + (1 | CMA:year)
+fr$brm_price_v <- rent_log ~ car(adj_mat, gr = id, type = "icar") + 
+  rent_lag_log + FREH_lag_log + FREH_lag_dummy + rev_lag_dummy + price_lag_log + 
+  universe_change + income_log + apart + vacancy + (1 | id) + (1 | CMA:year)
 
 
 # Linear models -----------------------------------------------------------
 
 mr$l_FREH <- lm(fr$lm_FREH, data = dr$main)
-mr$l_FREH_min <- lm(fr$lm_FREH_min, data = dr$main)
-mr$l_FREH_vac <- lm(fr$lm_FREH_vac, data = dr$vacancy)
-mr$l_FREH_imp <- lm(fr$lm_FREH, data = dr$impute)
-mr$l_FREH_min_imp <- lm(fr$lm_FREH_min, data = dr$impute)
-mr$l_FREH_vac_imp <- lm(fr$lm_FREH_vac, data = dr$impute)
+mr$l_FREH_m <- lm(fr$lm_FREH_m, data = dr$main)
+mr$l_FREH_v <- lm(fr$lm_FREH_v, data = dr$vac)
+mr$l_FREH_i <- lm(fr$lm_FREH, data = dr$imp)
+mr$l_FREH_mi <- lm(fr$lm_FREH_m, data = dr$imp)
+mr$l_FREH_vi <- lm(fr$lm_FREH_v, data = dr$imp)
 
 mr$l_rev <- lm(fr$lm_rev, data = dr$main)
-mr$l_rev_min <- lm(fr$lm_rev_min, data = dr$main)
-mr$l_rev_vac <- lm(fr$lm_rev_vac, data = dr$vacancy)
-mr$l_rev_imp <- lm(fr$lm_rev, data = dr$impute)
-mr$l_rev_min_imp <- lm(fr$lm_rev_min, data = dr$impute)
-mr$l_rev_vac_imp <- lm(fr$lm_rev_vac, data = dr$impute)
+mr$l_rev_m <- lm(fr$lm_rev_m, data = dr$main)
+mr$l_rev_v <- lm(fr$lm_rev_v, data = dr$vac)
+mr$l_rev_i <- lm(fr$lm_rev, data = dr$imp)
+mr$l_rev_mi <- lm(fr$lm_rev_m, data = dr$imp)
+mr$l_rev_vi <- lm(fr$lm_rev_v, data = dr$imp)
 
 mr$l_price <- lm(fr$lm_price, data = dr$main)
-mr$l_price_min <- lm(fr$lm_price_min, data = dr$main)
-mr$l_price_vac <- lm(fr$lm_price_vac, data = dr$vacancy)
-mr$l_price_imp <- lm(fr$lm_price, data = dr$impute)
-mr$l_price_min_imp <- lm(fr$lm_price_min, data = dr$impute)
-mr$l_price_vac_imp <- lm(fr$lm_price_vac, data = dr$impute)
-
-
-# # Models by province
-# mr$l_p <- map(list(
-#   "British Columbia", c("Alberta", "Saskatchewan", "Manitoba"),
-#   "Ontario", "Quebec", c("New Brunswick", "Nova Scotia", 
-#                          "Prince Edward Island", 
-#                          "Newfoundland and Labrador")),
-#   \(x) lm(fr$both, data = filter(dr$main, province %in% x)))
-# 
-# # Models by year
-# mr$l_year_FREH <-
-#   map(2016:2022, \(x) lm(fr$year_FREH, data = filter(dr$main, year == x)))
-# 
-# mr$l_year_rev <-
-#   map(2016:2022, \(x) lm(fr$year_rev, data = filter(dr$main, year == x)))
-# 
-# mr$l_year_both <-
-#   map(2016:2022, \(x) lm(fr$year_both, data = filter(dr$main, year == x)))
-# 
-# mr$l_year_vacancy <-
-#   map(2016:2022, \(x) lm(fr$year_vacancy, 
-#                          data = filter(dr$vacancy, year == x)))
+mr$l_price_m <- lm(fr$lm_price_m, data = dr$main)
+mr$l_price_v <- lm(fr$lm_price_v, data = dr$vac)
+mr$l_price_i <- lm(fr$lm_price, data = dr$imp)
+mr$l_price_mi <- lm(fr$lm_price_m, data = dr$imp)
+mr$l_price_vi <- lm(fr$lm_price_v, data = dr$imp)
 
 
 # RE-ESF ------------------------------------------------------------------
 
 # FREH
-mr$sf_FREH <- resf(
-  y = dr$main$rent_log, x = st_drop_geometry(dr$main[fr$resf_FREH]),
-  meig = er$main, xgroup = gr$main)
-
-mr$sf_FREH_min <- resf(
-  y = dr$main$rent_log, x = st_drop_geometry(dr$main[fr$resf_FREH_min]),
-  meig = er$main, xgroup = gr$main)
-
-mr$sf_FREH_vac <- resf(
-  y = dr$vacancy$rent_log, x = st_drop_geometry(dr$vacancy[fr$resf_FREH_vac]),
-  meig = er$vacancy, xgroup = gr$vacancy)
-
-mr$sf_FREH_imp <- resf(
-  y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_FREH]),
-  meig = er$impute, xgroup = gr$impute)
-
-mr$sf_FREH_min_imp <- resf(
-  y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_FREH_min]),
-  meig = er$impute, xgroup = gr$impute)
-
-mr$sf_FREH_vac_imp <- resf(
-  y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_FREH_vac]),
-  meig = er$impute, xgroup = gr$impute)
+mr$sf_FREH <- resf(dr$main$rent_log, st_drop_geometry(dr$main[fr$resf_FREH]),
+                   gr$main, meig = er$main)
+mr$sf_FREH_m <- resf(dr$main$rent_log, 
+                     st_drop_geometry(dr$main[fr$resf_FREH_m]), gr$main,
+                     meig = er$main)
+mr$sf_FREH_v <- resf(dr$vac$rent_log, st_drop_geometry(dr$vac[fr$resf_FREH_v]), 
+                     gr$vac, meig = er$vac)
+mr$sf_FREH_i <- resf(dr$imp$rent_log, st_drop_geometry(dr$imp[fr$resf_FREH]), 
+                     gr$imp, meig = er$imp)
+mr$sf_FREH_mi <- resf(dr$imp$rent_log, st_drop_geometry(dr$imp[fr$resf_FREH_m]),
+                      gr$imp, meig = er$imp)
+mr$sf_FREH_vi <- resf(dr$imp$rent_log, st_drop_geometry(dr$imp[fr$resf_FREH_v]),
+                      gr$imp, meig = er$imp)
 
 # Rev
-mr$sf_rev <- resf(
-  y = dr$main$rent_log, x = st_drop_geometry(dr$main[fr$resf_rev]),
-  meig = er$main, xgroup = gr$main)
-
-mr$sf_rev_min <- resf(
-  y = dr$main$rent_log, x = st_drop_geometry(dr$main[fr$resf_rev_min]),
-  meig = er$main, xgroup = gr$main)
-
-mr$sf_rev_vac <- resf(
-  y = dr$vacancy$rent_log, x = st_drop_geometry(dr$vacancy[fr$resf_rev_vac]),
-  meig = er$vacancy, xgroup = gr$vacancy)
-
-mr$sf_rev_imp <- resf(
-  y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_rev]),
-  meig = er$impute, xgroup = gr$impute)
-
-mr$sf_rev_min_imp <- resf(
-  y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_rev_min]),
-  meig = er$impute, xgroup = gr$impute)
-
-mr$sf_rev_vac_imp <- resf(
-  y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_rev_vac]),
-  meig = er$impute, xgroup = gr$impute)
+mr$sf_rev <- resf(dr$main$rent_log, st_drop_geometry(dr$main[fr$resf_rev]),
+                  gr$main, meig = er$main)
+mr$sf_rev_m <- resf(dr$main$rent_log, st_drop_geometry(dr$main[fr$resf_rev_m]),
+                    gr$main, meig = er$main)
+mr$sf_rev_v <- resf(dr$vac$rent_log, st_drop_geometry(dr$vac[fr$resf_rev_v]),
+                    gr$vac, meig = er$vac)
+mr$sf_rev_i <- resf(dr$imp$rent_log, st_drop_geometry(dr$imp[fr$resf_rev]),
+                    gr$imp, meig = er$imp)
+mr$sf_rev_mi <- resf(dr$imp$rent_log, st_drop_geometry(dr$imp[fr$resf_rev_m]),
+                     gr$imp, meig = er$imp)
+mr$sf_rev_vi <- resf(dr$imp$rent_log, st_drop_geometry(dr$imp[fr$resf_rev_v]),
+                     gr$imp, meig = er$imp)
 
 # Price
-mr$sf_price <- resf(
-  y = dr$main$rent_log, x = st_drop_geometry(dr$main[fr$resf_price]),
-  meig = er$main, xgroup = gr$main)
-
-mr$sf_price_min <- resf(
-  y = dr$main$rent_log, x = st_drop_geometry(dr$main[fr$resf_price_min]),
-  meig = er$main, xgroup = gr$main)
-
-mr$sf_price_vac <- resf(
-  y = dr$vacancy$rent_log, x = st_drop_geometry(dr$vacancy[fr$resf_price_vac]),
-  meig = er$vacancy, xgroup = gr$vacancy)
-
-mr$sf_price_imp <- resf(
-  y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_price]),
-  meig = er$impute, xgroup = gr$impute)
-
-mr$sf_price_min_imp <- resf(
-  y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_price_min]),
-  meig = er$impute, xgroup = gr$impute)
-
-mr$sf_price_vac_imp <- resf(
-  y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_price_vac]),
-  meig = er$impute, xgroup = gr$impute)
+mr$sf_price <- resf(dr$main$rent_log, st_drop_geometry(dr$main[fr$resf_price]),
+                    gr$main, meig = er$main)
+mr$sf_price_m <- resf(dr$main$rent_log, 
+                      st_drop_geometry(dr$main[fr$resf_price_m]), gr$main,
+                      meig = er$main)
+mr$sf_price_v <- resf(dr$vac$rent_log, 
+                      st_drop_geometry(dr$vac[fr$resf_price_v]), gr$vac,
+                      meig = er$vac)
+mr$sf_price_i <- resf(dr$imp$rent_log, st_drop_geometry(dr$imp[fr$resf_price]), 
+                      gr$imp, meig = er$imp)
+mr$sf_price_mi <- resf(dr$imp$rent_log, 
+                       st_drop_geometry(dr$imp[fr$resf_price_m]), gr$imp,
+                       meig = er$imp)
+mr$sf_price_vi <- resf(dr$imp$rent_log, 
+                       st_drop_geometry(dr$imp[fr$resf_price_v]), gr$imp,
+                       meig = er$imp)
 
 
 # S&NVC -------------------------------------------------------------------
 
 # FREH
-mr$sn_FREH <- resf_vc(
-  y = dr$main$rent_log, x = st_drop_geometry(dr$main[fr$resf_FREH]),
-  meig = er$main, xgroup = gr$main, x_nvc = TRUE)
-
-mr$sn_FREH_min <- resf_vc(
-  y = dr$main$rent_log, x = st_drop_geometry(dr$main[fr$resf_FREH_min]),
-  meig = er$main, xgroup = gr$main, x_nvc = TRUE)
-
-mr$sn_FREH_vac <- resf_vc(
-  y = dr$vacancy$rent_log, x = st_drop_geometry(dr$vacancy[fr$resf_FREH_vac]),
-  meig = er$vacancy, xgroup = gr$vacancy, x_nvc = TRUE)
-
-mr$sn_FREH_imp <- resf_vc(
-  y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_FREH]),
-  meig = er$impute, xgroup = gr$impute, x_nvc = TRUE)
-
-mr$sn_FREH_min_imp <- resf_vc(
-  y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_FREH_min]),
-  meig = er$impute, xgroup = gr$impute, x_nvc = TRUE)
-
-mr$sn_FREH_vac_imp <- resf_vc(
-  y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_FREH_vac]),
-  meig = er$impute, xgroup = gr$impute, x_nvc = TRUE)
+mr$sn_FREH <- resf_vc(dr$main$rent_log, st_drop_geometry(dr$main[fr$resf_FREH]),
+                      x_nvc = TRUE, xgroup = gr$main, meig = er$main)
+mr$sn_FREH_m <- resf_vc(dr$main$rent_log, 
+                     st_drop_geometry(dr$main[fr$resf_FREH_m]), 
+                     x_nvc = TRUE, xgroup = gr$main, meig = er$main)
+mr$sn_FREH_v <- resf_vc(dr$vac$rent_log, 
+                        st_drop_geometry(dr$vac[fr$resf_FREH_v]), 
+                        x_nvc = TRUE, xgroup = gr$vac, meig = er$vac)
+mr$sn_FREH_i <- resf_vc(dr$imp$rent_log, st_drop_geometry(dr$imp[fr$resf_FREH]), 
+                        x_nvc = TRUE, xgroup = gr$imp, meig = er$imp)
+mr$sn_FREH_mi <- resf_vc(dr$imp$rent_log, 
+                         st_drop_geometry(dr$imp[fr$resf_FREH_m]),
+                         x_nvc = TRUE, xgroup = gr$imp, meig = er$imp)
+mr$sn_FREH_vi <- resf_vc(dr$imp$rent_log, 
+                         st_drop_geometry(dr$imp[fr$resf_FREH_v]),
+                         x_nvc = TRUE, xgroup = gr$imp, meig = er$imp)
 
 # Rev
-mr$sn_rev <- resf_vc(
-  y = dr$main$rent_log, x = st_drop_geometry(dr$main[fr$resf_rev]),
-  meig = er$main, xgroup = gr$main, x_nvc = TRUE)
-
-mr$sn_rev_min <- resf_vc(
-  y = dr$main$rent_log, x = st_drop_geometry(dr$main[fr$resf_rev_min]),
-  meig = er$main, xgroup = gr$main, x_nvc = TRUE)
-
-mr$sn_rev_vac <- resf_vc(
-  y = dr$vacancy$rent_log, x = st_drop_geometry(dr$vacancy[fr$resf_rev_vac]),
-  meig = er$vacancy, xgroup = gr$vacancy, x_nvc = TRUE)
-
-mr$sn_rev_imp <- resf_vc(
-  y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_rev]),
-  meig = er$impute, xgroup = gr$impute, x_nvc = TRUE)
-
-mr$sn_rev_min_imp <- resf_vc(
-  y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_rev_min]),
-  meig = er$impute, xgroup = gr$impute, x_nvc = TRUE)
-
-mr$sn_rev_vac_imp <- resf_vc(
-  y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_rev_vac]),
-  meig = er$impute, xgroup = gr$impute, x_nvc = TRUE)
+mr$sn_rev <- resf_vc(dr$main$rent_log, st_drop_geometry(dr$main[fr$resf_rev]),
+                     x_nvc = TRUE, xgroup = gr$main, meig = er$main)
+mr$sn_rev_m <- resf_vc(dr$main$rent_log, 
+                       st_drop_geometry(dr$main[fr$resf_rev_m]),
+                       x_nvc = TRUE, xgroup = gr$main, meig = er$main)
+mr$sn_rev_v <- resf_vc(dr$vac$rent_log, st_drop_geometry(dr$vac[fr$resf_rev_v]),
+                       x_nvc = TRUE, xgroup = gr$vac, meig = er$vac)
+mr$sn_rev_i <- resf_vc(dr$imp$rent_log, st_drop_geometry(dr$imp[fr$resf_rev]),
+                       x_nvc = TRUE, xgroup = gr$imp, meig = er$imp)
+mr$sn_rev_mi <- resf_vc(dr$imp$rent_log, 
+                        st_drop_geometry(dr$imp[fr$resf_rev_m]),
+                        x_nvc = TRUE, xgroup = gr$imp, meig = er$imp)
+mr$sn_rev_vi <- resf_vc(dr$imp$rent_log, 
+                        st_drop_geometry(dr$imp[fr$resf_rev_v]),
+                        x_nvc = TRUE, xgroup = gr$imp, meig = er$imp)
 
 # Price
-mr$sn_price <- resf_vc(
-  y = dr$main$rent_log, x = st_drop_geometry(dr$main[fr$resf_price]),
-  meig = er$main, xgroup = gr$main, x_nvc = TRUE)
+mr$sn_price <- resf_vc(dr$main$rent_log, 
+                       st_drop_geometry(dr$main[fr$resf_price]),
+                       x_nvc = TRUE, xgroup = gr$main, meig = er$main)
+mr$sn_price_m <- resf_vc(dr$main$rent_log, 
+                      st_drop_geometry(dr$main[fr$resf_price_m]), 
+                      x_nvc = TRUE, xgroup = gr$main, meig = er$main)
+mr$sn_price_v <- resf_vc(dr$vac$rent_log, 
+                      st_drop_geometry(dr$vac[fr$resf_price_v]), 
+                      x_nvc = TRUE, xgroup = gr$vac, meig = er$vac)
+mr$sn_price_i <- resf_vc(dr$imp$rent_log, 
+                         st_drop_geometry(dr$imp[fr$resf_price]), 
+                         x_nvc = TRUE, xgroup = gr$imp, meig = er$imp)
+mr$sn_price_mi <- resf_vc(dr$imp$rent_log, 
+                       st_drop_geometry(dr$imp[fr$resf_price_m]), 
+                       x_nvc = TRUE, xgroup = gr$imp, meig = er$imp)
+mr$sn_price_vi <- resf_vc(dr$imp$rent_log, 
+                       st_drop_geometry(dr$imp[fr$resf_price_v]), 
+                       x_nvc = TRUE, xgroup = gr$imp, meig = er$imp)
 
-mr$sn_price_min <- resf_vc(
-  y = dr$main$rent_log, x = st_drop_geometry(dr$main[fr$resf_price_min]),
-  meig = er$main, xgroup = gr$main, x_nvc = TRUE)
 
-mr$sn_price_vac <- resf_vc(
-  y = dr$vacancy$rent_log, x = st_drop_geometry(dr$vacancy[fr$resf_price_vac]),
-  meig = er$vacancy, xgroup = gr$vacancy, x_nvc = TRUE)
+# Save partial output -----------------------------------------------------
 
-mr$sn_price_imp <- resf_vc(
-  y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_price]),
-  meig = er$impute, xgroup = gr$impute, x_nvc = TRUE)
-
-mr$sn_price_min_imp <- resf_vc(
-  y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_price_min]),
-  meig = er$impute, xgroup = gr$impute, x_nvc = TRUE)
-
-mr$sn_price_vac_imp <- resf_vc(
-  y = dr$impute$rent_log, x = st_drop_geometry(dr$impute[fr$resf_price_vac]),
-  meig = er$impute, xgroup = gr$impute, x_nvc = TRUE)
+qsave(mr, file = "output/mr.qs", nthreads = availableCores())
 
 
 # Bayesian models ---------------------------------------------------------
