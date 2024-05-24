@@ -28,17 +28,10 @@ dr$main <-
   # Make year a character vector so it is treated as a factor
   mutate(year = as.character(year)) |> 
   # Replace zero-values of FREH/rev/price with lowest non-zero values
-  mutate(FREH_lag_dummy = FREH_lag == 0, 
-         non_FREH_lag_dummy = non_FREH_lag == 0, 
-         rev_lag_dummy = rev_lag == 0, 
-         .before = rent) |> 
-  mutate(FREH_lag = if_else(FREH_lag == 0, min(FREH_lag[FREH_lag > 0]), 
-                            FREH_lag),
-         non_FREH_lag = if_else(non_FREH_lag == 0, min(
-           non_FREH_lag[non_FREH_lag > 0]), non_FREH_lag),
-         rev_lag = if_else(rev_lag == 0, min(rev_lag[rev_lag > 0]), rev_lag),
-         price_lag = if_else(price_lag == 0, min(price_lag[price_lag > 0]), 
-                             price_lag)) |> 
+  mutate(across(c(FREH, FREH_lag, non_FREH, non_FREH_lag, rev, rev_lag), 
+                list(dummy = \(x) x == 0)), .before = rent) |> 
+  mutate(across(c(FREH, FREH_lag, non_FREH, non_FREH_lag, rev, rev_lag, price,
+                  price_lag), \(x) if_else(x == 0, min(x[x > 0]), x))) |> 
   # Create logged versions of all variables except for vacancy
   mutate(across(c(rent:tourism), .fns = list(log = \(x) log(x))), 
          .before = geometry) |> 
@@ -61,17 +54,10 @@ dr$imp <-
   # Make year a character vector so it is treated as a factor
   mutate(year = as.character(year)) |> 
   # Replace zero-values of FREH/rev/price with lowest non-zero values
-  mutate(FREH_lag_dummy = FREH_lag == 0, 
-         non_FREH_lag_dummy = non_FREH_lag == 0, 
-         rev_lag_dummy = rev_lag == 0, 
-         .before = rent) |> 
-  mutate(FREH_lag = if_else(FREH_lag == 0, min(FREH_lag[FREH_lag > 0]), 
-                            FREH_lag),
-         non_FREH_lag = if_else(non_FREH_lag == 0, min(
-           non_FREH_lag[non_FREH_lag > 0]), non_FREH_lag),
-         rev_lag = if_else(rev_lag == 0, min(rev_lag[rev_lag > 0]), rev_lag),
-         price_lag = if_else(price_lag == 0, min(price_lag[price_lag > 0]), 
-                             price_lag)) |> 
+  mutate(across(c(FREH, FREH_lag, non_FREH, non_FREH_lag, rev, rev_lag), 
+                list(dummy = \(x) x == 0)), .before = rent) |> 
+  mutate(across(c(FREH, FREH_lag, non_FREH, non_FREH_lag, rev, rev_lag, price,
+                  price_lag), \(x) if_else(x == 0, min(x[x > 0]), x))) |> 
   # Create logged versions of all variables except for vacancy
   mutate(across(c(rent:tourism), .fns = list(log = \(x) log(x))), 
          .before = geometry) |> 
@@ -91,17 +77,10 @@ dr$vac <-
   # Make year a character vector so it is treated as a factor
   mutate(year = as.character(year)) |> 
   # Replace zero-values of FREH/rev/price with lowest non-zero values
-  mutate(FREH_lag_dummy = FREH_lag == 0, 
-         non_FREH_lag_dummy = non_FREH_lag == 0, 
-         rev_lag_dummy = rev_lag == 0, 
-         .before = rent) |> 
-  mutate(FREH_lag = if_else(FREH_lag == 0, min(FREH_lag[FREH_lag > 0]), 
-                            FREH_lag),
-         non_FREH_lag = if_else(non_FREH_lag == 0, min(
-           non_FREH_lag[non_FREH_lag > 0]), non_FREH_lag),
-         rev_lag = if_else(rev_lag == 0, min(rev_lag[rev_lag > 0]), rev_lag),
-         price_lag = if_else(price_lag == 0, min(price_lag[price_lag > 0]), 
-                             price_lag)) |> 
+  mutate(across(c(FREH, FREH_lag, non_FREH, non_FREH_lag, rev, rev_lag), 
+                list(dummy = \(x) x == 0)), .before = rent) |> 
+  mutate(across(c(FREH, FREH_lag, non_FREH, non_FREH_lag, rev, rev_lag, price,
+                  price_lag), \(x) if_else(x == 0, min(x[x > 0]), x))) |> 
   # Create logged versions of all variables except for vacancy
   mutate(across(c(rent:tourism), .fns = list(log = \(x) log(x))), 
          .before = geometry) |> 
