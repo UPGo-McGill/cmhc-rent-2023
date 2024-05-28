@@ -24,6 +24,7 @@ fig_1 <-
   filter(!is.na(rent)) |> 
   mutate_region() |> 
   summarize(rent = mean(rent), .by = c(region, year)) |> 
+  filter(!is.na(region)) |> 
   bind_rows(
     cmhc |> 
       inner_join(st_drop_geometry(select(cmhc_nbhd, id, province, CMA))) |> 
@@ -48,23 +49,23 @@ fig_1 <-
 
 ggsave("output/figure_1.png", fig_1, width = 8, height = 4, units = "in")
   
-# 2016-2022 rent change
+# 2015-2023 rent change
 cmhc |> 
   inner_join(st_drop_geometry(select(cmhc_nbhd, id, province, CMA))) |> 
   summarize(rent = sum(rent * universe, na.rm = TRUE) / 
               sum(universe, na.rm = TRUE), .by = year)
 
-# Annualized increase: 8.2%
-752 * 1.082 ^ 6
+# Annualized increase: 8.0%
+685 * 1.08 ^ 8
 
-# 2016-2022 inflation
+# 2015-2023 inflation
 cpi |> 
-  filter(month %in% c(yearmonth("2016-10"), yearmonth("2022-10")),
+  filter(month %in% c(yearmonth("2015-10"), yearmonth("2023-10")),
          product == "All-items") |> 
   summarize(change = value[2] / value[1] - 1)
 
 # Annualized increase: 3.0%
-129 * 1.03 ^ 6
+1.028 ^ 8
 
 
 # Trends in FREH ----------------------------------------------------------
@@ -76,13 +77,12 @@ fig_2 <-
   mutate_region() |> 
   filter(!is.na(region)) |> 
   filter(month >= yearmonth("2015-10")) |> 
-  summarize(active = sum(A + R), FREH = sum(FREH), FREH_3 = sum(FREH_3),
-            .by = c(region, month)) |>
+  summarize(active = sum(A + R), FREH = sum(FREH), .by = c(region, month)) |>
   bind_rows(
     monthly |> 
       filter(month >= yearmonth("2015-10")) |> 
       summarize(region = "Canada", active = sum(A + R), FREH = sum(FREH), 
-                FREH_3 = sum(FREH_3), .by = c(month))) |> 
+                .by = c(month))) |> 
   mutate_days() |> 
   mutate(active = active / days) |> 
   select(-days) |> 
@@ -90,9 +90,8 @@ fig_2 <-
     "Canada", "Atlantic", "British Columbia", "Ontario", "Prairies", "Québec"
     ))) |> 
   rename(`Active listings` = active,
-         `FREH listings (12 months)` = FREH,
-         `FREH listings (3 months)` = FREH_3) |> 
-  pivot_longer(`Active listings`:`FREH listings (3 months)`) |> 
+         `FREH listings` = FREH) |> 
+  pivot_longer(`Active listings`:`FREH listings`) |> 
   ggplot(aes(month, value, linetype = name, colour = name)) +
   geom_line() +
   facet_wrap(~region, scales = "free_y") +
@@ -110,24 +109,22 @@ ggsave("output/figure_2.png", fig_2, width = 8, height = 5, units = "in")
 monthly |> 
   filter(month == max(month)) |> 
   summarize(active = sum(A + R) / 30,
-            FREH = sum(FREH),
-            FREH_3 = sum(FREH_3))
+            FREH = sum(FREH))
 
 # Change from pre-pandemic peak
 monthly |> 
-  summarize(active = sum(A + R) / 30,
-            FREH = sum(FREH),
-            FREH_3 = sum(FREH_3), .by = month) |> 
+  summarize(active = sum(A + R) / 30, FREH = sum(FREH), .by = month) |> 
   summarize(active = active[month == max(month)] / 
               max(active[month < yearmonth("2020-03")]) - 1,
             FREH = FREH[month == max(month)] / 
-              max(FREH[month < yearmonth("2020-03")]) - 1,
-            FREH_3 = FREH_3[month == max(month)] / 
-              max(FREH_3[month < yearmonth("2020-03")]) - 1)
+              max(FREH[month < yearmonth("2020-03")]) - 1)
 
 # STR density by city
 fig_3 <-
   monthly |> 
+  inner_join(qread("output/prop_csd.qs", nthreads = availableCores()), 
+             by = "property_ID") |>
+  relocate(CSD, .after = city) |> 
   summarize(active = sum(A + R), .by = c(month, CSD)) |> 
   mutate_days() |> 
   mutate(active = active / days) |> 
