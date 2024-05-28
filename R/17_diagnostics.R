@@ -455,3 +455,23 @@ mc$sn_housing
 mc$sn_lag
 
 
+
+### DID
+
+
+# Parallel trends assumption ----------------------------------------------
+
+dd |> 
+  filter(n() == 7, .by = id) |> 
+  mutate(reg = if_else(treat == 2024, FALSE, reg),
+         treat = if_else(treat == 2024, 0, treat)) |> 
+  mutate(treated = reg & year >= treat) |> 
+  filter(!treated, year <= 2022) |> 
+  # summarize(rent_log = mean(rent_log), .by = c(treat, year)) |> 
+  summarize(rent_log = mean(rent_log), .by = c(reg, year)) |> 
+  # mutate(treat = as.character(treat)) |> 
+  # ggplot(aes(year, rent_log, colour = treat)) +
+  ggplot(aes(year, rent_log, colour = reg)) +
+  geom_line()
+
+
