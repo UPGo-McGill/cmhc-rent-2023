@@ -47,101 +47,101 @@ fr <- list()
 
 # FREH LM
 fr$lm_FREH <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
-  non_FREH_lag_log + non_FREH_lag_dummy + price_lag_log + rev_lag_dummy + 
+  non_FREH_lag_log + non_FREH_lag_dummy + price_lag_log + rev_price_lag_dummy + 
   universe_change + tourism_log + income_log + apart + CMA:year + id
 fr$lm_FREH_m <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
   non_FREH_lag_log + non_FREH_lag_dummy + CMA:year + id
 fr$lm_FREH_v <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
-  non_FREH_lag_log + non_FREH_lag_dummy + price_lag_log + rev_lag_dummy + 
+  non_FREH_lag_log + non_FREH_lag_dummy + price_lag_log + rev_price_lag_dummy + 
   universe_change + tourism_log + income_log + apart + vacancy + CMA:year + id
 
 # FREH RESF
 fr$resf_FREH <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
                   "non_FREH_lag_log", "non_FREH_lag_dummy", "price_lag_log",
-                  "rev_lag_dummy", "universe_change", "tourism_log", 
+                  "rev_price_lag_dummy", "universe_change", "tourism_log", 
                   "income_log", "apart")
 fr$resf_FREH_m <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
                     "non_FREH_lag_log", "non_FREH_lag_dummy")
 fr$resf_FREH_v <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
                     "non_FREH_lag_log", "non_FREH_lag_dummy", "price_lag_log",
-                    "rev_lag_dummy", "universe_change", "tourism_log", 
+                    "rev_price_lag_dummy", "universe_change", "tourism_log", 
                     "income_log", "apart", "vacancy")
 
 # FREH BRM
 fr$brm_FREH <- rent_log ~ car(adj_mat, gr = id, type = "icar") + rent_lag_log +
   FREH_lag_log + FREH_lag_dummy + non_FREH_lag_log + non_FREH_lag_dummy + 
-  price_lag_log + rev_lag_dummy + universe_change + tourism_log + income_log + 
+  price_lag_log + rev_price_lag_dummy + universe_change + tourism_log + income_log + 
   apart + (1 | id) + (1 | CMA:year)
 fr$brm_FREH_m <- rent_log ~ car(adj_mat, gr = id, type = "icar") + 
   rent_lag_log + FREH_lag_log + FREH_lag_dummy + non_FREH_lag_log + 
   non_FREH_lag_dummy + (1 | id) + (1 | CMA:year)
 fr$brm_FREH_v <- rent_log ~ car(adj_mat, gr = id, type = "icar") + 
   rent_lag_log + FREH_lag_log + FREH_lag_dummy + non_FREH_lag_log + 
-  non_FREH_lag_dummy + price_lag_log + rev_lag_dummy + 
+  non_FREH_lag_dummy + price_lag_log + rev_price_lag_dummy + 
   universe_change + tourism_log + income_log + apart + vacancy + (1 | id) + 
   (1 | CMA:year)
 
 # Rev LM
 fr$lm_rev <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
-  rev_lag_log + rev_lag_dummy + price_lag_log + universe_change + 
+  rev_lag_log + rev_price_lag_dummy + price_lag_log + universe_change + 
   tourism_log + income_log + apart + CMA:year + id
 fr$lm_rev_m <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
-  rev_lag_log + rev_lag_dummy + price_lag_log + CMA:year + id
+  rev_lag_log + rev_price_lag_dummy + price_lag_log + CMA:year + id
 fr$lm_rev_v <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
-  rev_lag_log + rev_lag_dummy + price_lag_log + universe_change + 
+  rev_lag_log + rev_price_lag_dummy + price_lag_log + universe_change + 
   tourism_log + income_log + apart + vacancy + CMA:year + id
 
 # Rev RESF
 fr$resf_rev <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
-                 "rev_lag_log", "rev_lag_dummy", "price_lag_log", 
+                 "rev_lag_log", "rev_price_lag_dummy", "price_lag_log", 
                  "universe_change", "tourism_log", "income_log", "apart")
 fr$resf_rev_m <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
-                   "rev_lag_log", "rev_lag_dummy", "price_lag_log")
+                   "rev_lag_log", "rev_price_lag_dummy", "price_lag_log")
 fr$resf_rev_v <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
-                   "rev_lag_log", "rev_lag_dummy", "price_lag_log",
+                   "rev_lag_log", "rev_price_lag_dummy", "price_lag_log",
                    "universe_change", "tourism_log", "income_log", "apart",
                    "vacancy")
 
 # Rev BRM
 fr$brm_rev <- rent_log ~ car(adj_mat, gr = id, type = "icar") + rent_lag_log +
-  FREH_lag_log + FREH_lag_dummy + rev_lag_log + rev_lag_dummy + price_lag_log + 
+  FREH_lag_log + FREH_lag_dummy + rev_lag_log + rev_price_lag_dummy + price_lag_log + 
   universe_change + tourism_log + income_log + apart + (1 | id) + 
   (1 | CMA:year)
 fr$brm_rev_m <- rent_log ~ car(adj_mat, gr = id, type = "icar") + rent_lag_log + 
-  FREH_lag_log + FREH_lag_dummy + rev_lag_log + rev_lag_dummy + price_lag_log + 
+  FREH_lag_log + FREH_lag_dummy + rev_lag_log + rev_price_lag_dummy + price_lag_log + 
   (1 | id) + (1 | CMA:year)
 fr$brm_rev_v <- rent_log ~ car(adj_mat, gr = id, type = "icar") + rent_lag_log + 
-  FREH_lag_log + FREH_lag_dummy + rev_lag_log + rev_lag_dummy + price_lag_log + 
+  FREH_lag_log + FREH_lag_dummy + rev_lag_log + rev_price_lag_dummy + price_lag_log + 
   universe_change + tourism_log + income_log + apart + vacancy + (1 | id) + 
   (1 | CMA:year)
 
 # Price LM
 fr$lm_price <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
-  rev_lag_dummy + price_lag_log + universe_change + income_log + apart + 
+  rev_price_lag_dummy + price_lag_log + universe_change + income_log + apart + 
   CMA:year + id
-fr$lm_price_m <- rent_log ~ rent_lag_log + rev_lag_dummy + price_lag_log + 
+fr$lm_price_m <- rent_log ~ rent_lag_log + rev_price_lag_dummy + price_lag_log + 
   CMA:year + id
 fr$lm_price_v <- rent_log ~ rent_lag_log + FREH_lag_log + FREH_lag_dummy + 
-  rev_lag_dummy + price_lag_log + universe_change + income_log + apart + 
+  rev_price_lag_dummy + price_lag_log + universe_change + income_log + apart + 
   vacancy + CMA:year + id
 
 # Price RESF
 fr$resf_price <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
-                   "rev_lag_dummy", "price_lag_log", "universe_change", 
+                   "rev_price_lag_dummy", "price_lag_log", "universe_change", 
                    "income_log", "apart")
-fr$resf_price_m <- c("rent_lag_log", "rev_lag_dummy", "price_lag_log")
+fr$resf_price_m <- c("rent_lag_log", "rev_price_lag_dummy", "price_lag_log")
 fr$resf_price_v <- c("rent_lag_log", "FREH_lag_log", "FREH_lag_dummy", 
-                     "rev_lag_dummy", "price_lag_log", "universe_change", 
+                     "rev_price_lag_dummy", "price_lag_log", "universe_change", 
                      "income_log", "apart", "vacancy")
 
 # Price BRM
 fr$brm_price <- rent_log ~ car(adj_mat, gr = id, type = "icar") + rent_lag_log +
-  FREH_lag_log + FREH_lag_dummy + rev_lag_dummy + price_lag_log + 
+  FREH_lag_log + FREH_lag_dummy + rev_price_lag_dummy + price_lag_log + 
   universe_change + income_log + apart + (1 | id) + (1 | CMA:year)
 fr$brm_price_m <- rent_log ~ car(adj_mat, gr = id, type = "icar") + 
-  rent_lag_log + rev_lag_dummy + price_lag_log + (1 | id) + (1 | CMA:year)
+  rent_lag_log + rev_price_lag_dummy + price_lag_log + (1 | id) + (1 | CMA:year)
 fr$brm_price_v <- rent_log ~ car(adj_mat, gr = id, type = "icar") + 
-  rent_lag_log + FREH_lag_log + FREH_lag_dummy + rev_lag_dummy + price_lag_log + 
+  rent_lag_log + FREH_lag_log + FREH_lag_dummy + rev_price_lag_dummy + price_lag_log + 
   universe_change + income_log + apart + vacancy + (1 | id) + (1 | CMA:year)
 
 

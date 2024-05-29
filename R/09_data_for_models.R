@@ -30,6 +30,7 @@ dr$main <-
   # Replace zero-values of FREH/rev/price with lowest non-zero values
   mutate(across(c(FREH, FREH_lag, non_FREH, non_FREH_lag, rev, rev_lag), 
                 list(dummy = \(x) x == 0)), .before = rent) |> 
+  rename(rev_price_dummy = rev_dummy, rev_price_lag_dummy = rev_lag_dummy) |> 
   mutate(across(c(FREH, FREH_lag, non_FREH, non_FREH_lag, rev, rev_lag, price,
                   price_lag), \(x) if_else(x == 0, min(x[x > 0]), x))) |> 
   # Create logged versions of all variables except for vacancy
