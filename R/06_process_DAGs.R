@@ -16,12 +16,12 @@ image_read("data/dagitty_price.png") |>
 
 image_read("data/dagitty_FREH_change.png") |> 
   image_crop("2250x1040+50+380") |> 
-  image_write("output/figure_4d.png")
+  image_write("output/figure_5a.png")
 
 image_read("data/dagitty_rev_change.png") |> 
   image_crop("2250x1040+50+380") |> 
-  image_write("output/figure_4e.png")
+  image_write("output/figure_5b.png")
 
 image_read("data/dagitty_price_change.png") |> 
   image_crop("2250x1040+50+380") |> 
-  image_write("output/figure_4f.png")
+  image_write("output/figure_5c.png")
