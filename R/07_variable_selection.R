@@ -1,4 +1,4 @@
-#### 08 VARIABLE SELECTION #####################################################
+#### 07 VARIABLE SELECTION #####################################################
 
 source("R/01_startup.R")
 qload("output/cmhc.qsm", nthreads = availableCores())

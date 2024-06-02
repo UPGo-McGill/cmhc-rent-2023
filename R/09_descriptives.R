@@ -1,4 +1,4 @@
-#### 10 DESCRIPTIVE STATISTICS #################################################
+#### 09 DESCRIPTIVE STATISTICS #################################################
 
 source("R/08_data_for_models.R")
 
