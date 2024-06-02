@@ -52,6 +52,7 @@ impute <- function(x) {
            vacancy = coalesce(vacancy, vac_new)) |> 
     arrange(id, year) |> 
     mutate(rent_lag = lag(rent), .by = id) |> 
+    mutate(vacancy_lag = lag(vacancy), .by = id) |> 
     mutate(rent_change_new = slide_dbl(rent, \(x) x[2] - x[1], .before = 1, 
                                        .complete = TRUE), .by = id) |> 
     mutate(rent_change = coalesce(rent_change, rent_change_new)) |> 

@@ -128,6 +128,7 @@ monthly_impute_vac <-
                             vac_nn, vac_nn_group), .after = vacancy) |> 
   filter(is.na(vacancy)) |>
   select(id, year, vac_new) |>
+  mutate(vac_new = pmax(vac_new, 0)) |> 
   # Suppress warnings about rank deficiency in models
   suppressWarnings()
 
