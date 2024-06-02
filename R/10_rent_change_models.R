@@ -1,7 +1,7 @@
 #### 13 RENT CHANGE MODELS #####################################################
 
 source("R/05_process_DAGs.R")
-source("R/09_data_for_models.R")
+source("R/08_data_for_models.R")
 
 mc <- list()
 

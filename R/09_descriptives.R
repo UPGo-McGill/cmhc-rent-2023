@@ -1,6 +1,6 @@
 #### 10 DESCRIPTIVE STATISTICS #################################################
 
-source("R/09_data_for_models.R")
+source("R/08_data_for_models.R")
 
 
 # Figure 6: Correlation between STRs and rent -----------------------------
