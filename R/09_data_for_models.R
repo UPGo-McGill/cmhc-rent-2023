@@ -7,156 +7,120 @@ qload("output/cmhc.qsm", nthreads = availableCores())
 
 # Impute missing rent values for spatial panel ----------------------------
 
-source("R/07_imputation.R")
-
-
-# Produce dataset with rent as DV -----------------------------------------
-
-dr <- list()
-rent_vars <- c("id", "year", "CMA", "name_CMA", "province", "rent", "rent_lag", 
-               "FREH", "FREH_lag", "non_FREH", "non_FREH_lag", "rev", "rev_lag", 
-               "price", "price_lag", "apart", "income", "tourism", "vacancy", 
-               "universe_change")
-
-# Main dataset: rent, rent_lag, FREH_lag, rev_lag, price_lag
-dr$main <-
-  monthly_sept |> 
-  filter(!is.na(rent), !is.na(rent_lag), !is.na(FREH_lag), !is.na(rev_lag), 
-         !is.na(price_lag)) |> 
-  # Select relevant variables
-  select(all_of(rent_vars)) |> 
-  # Make year a character vector so it is treated as a factor
-  mutate(year = as.character(year)) |> 
-  # Replace zero-values of FREH/rev/price with lowest non-zero values
-  mutate(across(c(FREH, FREH_lag, non_FREH, non_FREH_lag, rev, rev_lag), 
-                list(dummy = \(x) x == 0)), .before = rent) |> 
-  rename(rev_price_dummy = rev_dummy, rev_price_lag_dummy = rev_lag_dummy) |> 
-  mutate(across(c(FREH, FREH_lag, non_FREH, non_FREH_lag, rev, rev_lag, price,
-                  price_lag), \(x) if_else(x == 0, min(x[x > 0]), x))) |> 
-  # Create logged versions of all variables except for vacancy
-  mutate(across(c(rent:tourism), .fns = list(log = \(x) log(x))), 
-         .before = geometry) |> 
-  # Normalize all variables
-  mutate(across(c(rent:tourism_log), list(raw = \(x) x)),
-         across(c(rent:tourism_log), \(x) as.numeric(scale(x))), 
-         .before = geometry) |> 
-  filter(year >= 2017)
-
-# Imputed dataset
-dr$imp <- 
-  monthly_sept |> 
-  # Do imputation
-  impute() |>
-  filter(!is.na(rent), !is.na(rent_lag), !is.na(FREH_lag), !is.na(rev_lag), 
-         !is.na(price_lag)) |> 
-  filter(year != 2016) |> 
-  # Select relevant variables
-  select(all_of(rent_vars)) |> 
-  # Make year a character vector so it is treated as a factor
-  mutate(year = as.character(year)) |> 
-  # Replace zero-values of FREH/rev/price with lowest non-zero values
-  mutate(across(c(FREH, FREH_lag, non_FREH, non_FREH_lag, rev, rev_lag), 
-                list(dummy = \(x) x == 0)), .before = rent) |> 
-  mutate(across(c(FREH, FREH_lag, non_FREH, non_FREH_lag, rev, rev_lag, price,
-                  price_lag), \(x) if_else(x == 0, min(x[x > 0]), x))) |> 
-  # Create logged versions of all variables except for vacancy
-  mutate(across(c(rent:tourism), .fns = list(log = \(x) log(x))), 
-         .before = geometry) |> 
-  # Normalize all variables
-  mutate(across(c(rent:tourism_log), list(raw = \(x) x)),
-         across(c(rent:tourism_log), \(x) as.numeric(scale(x))), 
-         .before = geometry) |> 
-  filter(year >= 2017)
-
-# Vacancy lag dataset
-dr$vac <-
-  monthly_sept |> 
-  filter(!is.na(rent), !is.na(rent_lag), !is.na(FREH_lag), !is.na(rev_lag), 
-         !is.na(price_lag), !is.na(vacancy)) |> 
-  # Select relevant variables
-  select(all_of(rent_vars)) |> 
-  # Make year a character vector so it is treated as a factor
-  mutate(year = as.character(year)) |> 
-  # Replace zero-values of FREH/rev/price with lowest non-zero values
-  mutate(across(c(FREH, FREH_lag, non_FREH, non_FREH_lag, rev, rev_lag), 
-                list(dummy = \(x) x == 0)), .before = rent) |> 
-  mutate(across(c(FREH, FREH_lag, non_FREH, non_FREH_lag, rev, rev_lag, price,
-                  price_lag), \(x) if_else(x == 0, min(x[x > 0]), x))) |> 
-  # Create logged versions of all variables except for vacancy
-  mutate(across(c(rent:tourism), .fns = list(log = \(x) log(x))), 
-         .before = geometry) |> 
-  # Normalize all variables
-  mutate(across(c(rent:tourism_log), list(raw = \(x) x)),
-         across(c(rent:tourism_log), \(x) as.numeric(scale(x))), 
-         .before = geometry) |> 
-  filter(year >= 2017)
+source("R/06_imputation.R")
 
 
 # Produce dataset with rent_change as DV ----------------------------------
 
 dc <- list()
 change_vars <- c("id", "year", "CMA", "name_CMA", "province", "rent_change", 
-                 "rent_lag", "FREH_change", "non_FREH_change", "rev_change",
-                 "price_change", "apart", "income", "tourism", "vacancy", 
-                 "universe_change")
+                 "rent_lag", "FREH_change", "FREH_lag", "non_FREH_change", 
+                 "non_FREH_lag", "price_change", "price_lag", "apart", "income", 
+                 "tourism", "vacancy_lag", "universe_change")
 
-# Main dataset: rent, rent_lag, FREH_lag, rev_lag, price_lag
+# Main: imputed with vacancy_lag_log
 dc$main <-
   monthly_sept |> 
-  filter(!is.na(rent_change), !is.na(rent_lag), !is.na(FREH_change), 
-         !is.na(rev_change), !is.na(price_change)) |> 
+  # Impute missing values
+  impute() |> 
+  # Filter to only complete observations
+  filter(!is.na(rent_change), !is.na(FREH_change), year >= 2017) |> 
   # Select relevant variables
   select(all_of(change_vars)) |> 
-  # Make year a character vector so it is treated as a factor
-  mutate(year = as.character(year)) |> 
-  # Create logged versions of rent_lag, income and tourism
-  mutate(across(c(rent_lag, income, tourism), .fns = list(log = \(x) log(x))), 
+  # Replace zero FREH/non_FREH/price/vacancy with lowest non-zero values
+  mutate(across(c(FREH_lag, non_FREH_lag, price_lag, vacancy_lag), 
+                list(dummy = \(x) x == 0)), .before = rent_change) |> 
+  mutate(across(c(FREH_lag, non_FREH_lag, price_lag, vacancy_lag), 
+                \(x) if_else(x == 0, min(x[x > 0]), x))) |> 
+  # Create logged versions of variables
+  mutate(across(c(rent_lag, FREH_lag, non_FREH_lag, price_lag, vacancy_lag, 
+                  apart, income, tourism), .fns = list(log = \(x) log(x))),
          .before = geometry) |> 
   # Normalize all variables
   mutate(across(c(rent_change:tourism_log), list(raw = \(x) x)),
-         across(c(rent_change:tourism_log), \(x) as.numeric(scale(x))), 
-         .before = geometry) |> 
-  filter(year >= 2017)
+         across(c(rent_change:tourism_log), \(x) as.numeric(scale(x))),
+         .before = geometry)
 
-# Imputed dataset
-dc$imp <-
+# No log
+dc$no_log <- 
+  monthly_sept |> 
+  # Impute missing values
+  impute() |> 
+  # Filter to only complete observations
+  filter(!is.na(rent_change), !is.na(FREH_change), year >= 2017) |> 
+  # Select relevant variables
+  select(all_of(change_vars)) |> 
+  # Replace zero FREH/non_FREH/price with lowest non-zero values
+  mutate(across(c(FREH_lag, non_FREH_lag, price_lag), 
+                list(dummy = \(x) x == 0)), .before = rent_change) |> 
+  mutate(across(c(FREH_lag, non_FREH_lag, price_lag), 
+                \(x) if_else(x == 0, min(x[x > 0]), x))) |> 
+  # Create logged versions of variables
+  mutate(across(c(rent_lag, FREH_lag, non_FREH_lag, price_lag, apart, income, 
+                  tourism), .fns = list(log = \(x) log(x))), 
+         .before = geometry) |> 
+  # Normalize all variables
+  mutate(across(c(rent_change:tourism_log), list(raw = \(x) x)),
+         across(c(rent_change:tourism_log), \(x) as.numeric(scale(x))),
+         .before = geometry)
+
+# No imputation
+dc$no_imp <-
   monthly_sept |>
-  # Do imputation
-  impute() |>
+  # Filter to only complete observations
   filter(!is.na(rent_change), !is.na(rent_lag), !is.na(FREH_change), 
-         !is.na(rev_change), !is.na(price_change)) |> 
+         !is.na(vacancy_lag), year >= 2017) |> 
   # Select relevant variables
   select(all_of(change_vars)) |> 
-  # Make year a character vector so it is treated as a factor
-  mutate(year = as.character(year)) |> 
-  # Create logged versions of rent_lag, income and tourism
-  mutate(across(c(rent_lag, income, tourism), .fns = list(log = \(x) log(x))), 
+  # Replace zero FREH/non_FREH/price/vacancy with lowest non-zero values
+  mutate(across(c(FREH_lag, non_FREH_lag, price_lag, vacancy_lag), 
+                list(dummy = \(x) x == 0)), .before = rent_change) |> 
+  mutate(across(c(FREH_lag, non_FREH_lag, price_lag, vacancy_lag), 
+                \(x) if_else(x == 0, min(x[x > 0]), x))) |> 
+  # Create logged versions of variables
+  mutate(across(c(rent_lag, FREH_lag, non_FREH_lag, price_lag, vacancy_lag, 
+                  apart, income, tourism), .fns = list(log = \(x) log(x))),
          .before = geometry) |> 
   # Normalize all variables
   mutate(across(c(rent_change:tourism_log), list(raw = \(x) x)),
-         across(c(rent_change:tourism_log), \(x) as.numeric(scale(x))), 
-         .before = geometry) |> 
-  filter(year >= 2017)
+         across(c(rent_change:tourism_log), \(x) as.numeric(scale(x))),
+         .before = geometry)
 
-# Vacancy dataset
-dc$vac <-
+# No vacancy
+dc$no_vac <-
   monthly_sept |> 
   filter(!is.na(rent_change), !is.na(rent_lag), !is.na(FREH_change), 
-         !is.na(rev_change), !is.na(price_change), !is.na(vacancy)) |> 
+         year >= 2017) |> 
   # Select relevant variables
   select(all_of(change_vars)) |> 
-  # Make year a character vector so it is treated as a factor
-  mutate(year = as.character(year)) |> 
-  # Create logged versions of rent_lag, income and tourism
-  mutate(across(c(rent_lag, income, tourism), .fns = list(log = \(x) log(x))), 
+  # Replace zero FREH/non_FREH/price with lowest non-zero values
+  mutate(across(c(FREH_lag, non_FREH_lag, price_lag), 
+                list(dummy = \(x) x == 0)), .before = rent_change) |> 
+  mutate(across(c(FREH_lag, non_FREH_lag, price_lag), 
+                \(x) if_else(x == 0, min(x[x > 0]), x))) |> 
+  # Create logged versions of variables
+  mutate(across(c(rent_lag, FREH_lag, non_FREH_lag, price_lag, apart, income, 
+                  tourism), .fns = list(log = \(x) log(x))),
          .before = geometry) |> 
   # Normalize all variables
   mutate(across(c(rent_change:tourism_log), list(raw = \(x) x)),
-         across(c(rent_change:tourism_log), \(x) as.numeric(scale(x))), 
-         .before = geometry) |> 
-  filter(year >= 2017)
+         across(c(rent_change:tourism_log), \(x) as.numeric(scale(x))),
+         .before = geometry)
 
+
+# Produce DiD dataset -----------------------------------------------------
+
+dr <- 
+  monthly_sept |> 
+  st_drop_geometry() |> 
+  filter(!is.na(rent)) |> 
+  select(id:province, rent, FREH, non_FREH, price) |>
+  mutate(across(c(FREH:price), \(x) if_else(
+    x == 0, min(x[x > 0], na.rm = TRUE), x))) |> 
+  mutate(across(c(rent:price), .fns = list(log = \(x) log(x)))) |> 
+  mutate(across(c(rent:price_log), \(x) as.numeric(scale(x))))
+  
 
 # Clean up ----------------------------------------------------------------
 
-rm(cmhc, cmhc_nbhd, monthly_impute, change_vars, rent_vars)
+rm(cmhc, cmhc_nbhd, monthly_impute, change_vars)
