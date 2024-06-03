@@ -110,7 +110,20 @@ dc$no_vac <-
 
 # Produce DiD dataset -----------------------------------------------------
 
-dr <- 
+dr <- list()
+
+dr$main <- 
+  monthly_sept |> 
+  impute() |> 
+  st_drop_geometry() |> 
+  filter(!is.na(rent)) |> 
+  select(id:province, rent, FREH, non_FREH, price, vacancy) |>
+  mutate(across(c(FREH:vacancy), \(x) if_else(
+    x == 0, min(x[x > 0], na.rm = TRUE), x))) |> 
+  mutate(across(c(rent:vacancy), .fns = list(log = \(x) log(x)))) |> 
+  mutate(across(c(rent:vacancy_log), \(x) as.numeric(scale(x))))
+
+dr$no_imp <- 
   monthly_sept |> 
   st_drop_geometry() |> 
   filter(!is.na(rent)) |> 
@@ -119,7 +132,7 @@ dr <-
     x == 0, min(x[x > 0], na.rm = TRUE), x))) |> 
   mutate(across(c(rent:price), .fns = list(log = \(x) log(x)))) |> 
   mutate(across(c(rent:price_log), \(x) as.numeric(scale(x))))
-  
+
 
 # Clean up ----------------------------------------------------------------
 
