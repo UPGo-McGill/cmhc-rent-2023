@@ -3,8 +3,6 @@
 source("R/05_process_DAGs.R")
 source("R/08_data_for_models.R")
 
-mc <- list()
-
 
 # Prepare eigenvectors ----------------------------------------------------
 
