@@ -130,6 +130,19 @@ ac <- unlist(ac, recursive = FALSE)
 ac <- c(ac["common.1"], ac[-which(names(ac) == "common.1")])
 ac <- map(ac, \(x) x[order(match(x, ac_order))])
 
+# Remove additional duplicates
+if (all(ac$FREH.2 == ac$non_FREH.2)) {
+  ac$FREH_non_FREH.2 <- ac$FREH.2
+  ac$non_FREH.2 <- NULL
+  ac$FREH.2 <- NULL
+}
+
+if (all(ac$FREH.3 == ac$non_FREH.3)) {
+  ac$FREH_non_FREH.3 <- ac$FREH.3
+  ac$non_FREH.3 <- NULL
+  ac$FREH.3 <- NULL
+}
+
 
 # # Figure 4 ----------------------------------------------------------------
 # 
@@ -144,3 +157,8 @@ ac <- map(ac, \(x) x[order(match(x, ac_order))])
 # image_read("data/dagitty_price.png") |> 
 #   image_crop("2250x1040+50+380") |> 
 #   image_write("output/figure_4c.png")
+
+
+# Clean up ----------------------------------------------------------------
+
+rm(ac_order)
