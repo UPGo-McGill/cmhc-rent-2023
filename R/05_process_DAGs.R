@@ -10,7 +10,7 @@ hc <- list()
 hc$common <- dagitty('dag {
 bb="-2,-8.016,8.841,5.107"
 "Competition with hotels" [latent,pos="2.730,-1.434"]
-"Landlord STR decision" [latent,pos="2.425,-4.562"]
+"Landlord STR decision" [latent,pos="2.459,-4.598"]
 "Landlord mix" [latent,pos="5.628,-1.630"]
 "Rent stickiness" [latent,pos="6.460,0.619"]
 "Resident STR decision" [latent,pos="2.499,-2.604"]
@@ -69,7 +69,6 @@ income_log -> rent_lag_log
 non_FREH_change -> Demand
 non_FREH_lag_log -> non_FREH_change
 price_change -> "Rent stickiness"
-price_change -> Supply
 price_lag_log -> "Landlord STR decision"
 price_lag_log -> "Resident STR decision"
 price_lag_log -> price_change
