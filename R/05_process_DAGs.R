@@ -143,19 +143,46 @@ if (all(ac$FREH.3 == ac$non_FREH.3)) {
 }
 
 
-# # Figure 4 ----------------------------------------------------------------
-# 
-# image_read("data/dagitty_FREH.png") |> 
-#   image_crop("2250x1040+50+380") |> 
-#   image_write("output/figure_4a.png")
-# 
-# image_read("data/dagitty_non_FREH.png") |> 
-#   image_crop("2250x1040+50+380") |> 
-#   image_write("output/figure_4b.png")
-# 
-# image_read("data/dagitty_price.png") |> 
-#   image_crop("2250x1040+50+380") |> 
-#   image_write("output/figure_4c.png")
+# Figure 4 ----------------------------------------------------------------
+
+fig_4 <-
+  hc$FREH |> 
+  tidy_dagitty() |> 
+  node_status() |> 
+  node_ancestors("FREH_change") |> 
+  select(everything(), FREH_anc = ancestor) |>  
+  node_ancestors("rent_change") |> 
+  mutate(status = case_when(
+    status == "exposure" ~ "b",
+    status == "outcome" ~ "a",
+    status == "latent" ~ "f",
+    name == "FREH_lag_log" ~ "c",
+    FREH_anc == "ancestor" & ancestor == "ancestor" ~ "e",
+    ancestor == "ancestor" ~ "d")) |> 
+  mutate(label = case_when(
+    status == "a" ~ "Outcome",
+    status == "b" ~ "Exposure",
+    status == "c" ~ "Ancestor\n(treat.)",
+    status == "d" ~ "Ancestor\n(outcome)",
+    status == "e" ~ "Ancestor\n(both)",
+    status == "f" ~ "Latent")) |> 
+  mutate(y = y * -1, yend = yend * -1) |> 
+  ggplot(aes(x = x, y = y, xend = xend, yend = yend, colour = status)) +
+  geom_dag_edges(edge_width = 0.2) +
+  geom_dag_point(size = 16) +
+  geom_label(aes(label = name), family = "Futura", size = 3, show.legend = FALSE) +
+  scale_colour_manual(name = NULL, values = c(
+    a = "#1b9e77", b = "#d95f02", c = "#e6ab02", d = "#7570b3", e = "#e7298a", 
+    f = "grey50"), 
+    labels = c("Outcome", "Treatment", "Ancestor of treatment", 
+               "Ancestor of outcome", "Ancestor of both", "Latent")) +
+  guides(colour = guide_legend(nrow = 1)) +
+  theme_dag() +
+  theme(plot.background = element_rect(colour = "transparent", fill = "white"), 
+        text = element_text(family = "Futura"), legend.position = "bottom")
+
+ggsave("output/figure_4.png", fig_4, width = 12, height = 7, units = "in")
+
 
 
 # Clean up ----------------------------------------------------------------
