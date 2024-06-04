@@ -29,6 +29,7 @@ suppressPackageStartupMessages({
   library(ggfortify)
   library(modelsummary)
   library(dagitty)
+  library(ggdag)
   library(magick)
   library(did)
 })
