@@ -3,21 +3,12 @@
 source("R/08_data_for_models.R")
 
 
-# Figure 6: Correlation between STRs and rent -----------------------------
+# Figure 5: Correlation between STRs and rent -----------------------------
 
-fig_6 <-
+fig_5 <-
   monthly_sept |> 
-  mutate(rent_log = log(rent),
-         FREH_lag_log = log(lag(FREH)),
-         rev_lag_log = log(lag(rev)),
-         price_lag_log = log(lag(price))) |>
-  filter(!is.na(rent_log), !is.na(FREH_lag_log), !is.na(rev_lag_log), 
-         !is.na(price_lag_log)) |>
   st_drop_geometry() |> 
-  select(rent_log, FREH_lag_log, rev_lag_log, price_lag_log, rent_change, 
-         FREH_change, rev_change, price_change) |> 
-  filter(!is.infinite(FREH_lag_log), !is.infinite(rev_lag_log), 
-         !is.infinite(price_lag_log)) |> 
+  select(rent_change, FREH_change, rev_change, price_change) |> 
   GGally::ggpairs(aes(size = "fixed", alpha = "fixed"),
           upper = list(continuous = GGally::wrap(
             GGally::ggally_cor, display_grid = FALSE, family = "Futura")),
@@ -29,29 +20,21 @@ fig_6 <-
   theme(text = element_text(family = "Futura"),
         axis.text = element_text(size = 5))
 
-ggsave("output/figure_6.png", fig_6, width = 8, height = 7, units = "in")
+ggsave("output/figure_5.png", fig_5, width = 8, height = 5, units = "in")
 
 
 # Table 2: Variables ------------------------------------------------------
 
 monthly_sept |> 
-  select(rent, rent_change, FREH_lag, FREH_change, rev_lag, rev_change, 
-         price_lag, price_change, universe_change, vacancy, income, apart, 
-         tourism) |> 
+  select(rent, rent_change, FREH_change, non_FREH_change, price_change, 
+         vacancy_lag, income, apart, tourism) |> 
   st_drop_geometry() |> 
-  mutate(FREH_lag_dummy = FREH_lag == 0, rev_price_lag_dummy = rev_lag == 0, 
-         .before = rent) |> 
-  mutate(FREH_lag = if_else(FREH_lag == 0, min(FREH_lag[FREH_lag > 0]), 
-                            FREH_lag),
-         rev_lag = if_else(rev_lag == 0, min(rev_lag[rev_lag > 0]), rev_lag),
-         price_lag = if_else(price_lag == 0, min(price_lag[price_lag > 0]), 
-                             price_lag)) |> 
+  mutate(vacancy_lag = if_else(
+    vacancy_lag == 0, min(vacancy_lag[vacancy_lag > 0]), vacancy_lag)) |> 
   # Create logged versions of all variables
   mutate(across(c(rent:tourism), .fns = list(log = \(x) log(x)))) |> 
-  select(rent_log, rent_change, FREH_lag_log, FREH_lag_dummy, FREH_change, 
-         rev_lag_log, rev_price_lag_dummy, rev_change, price_lag_log,
-         price_change, universe_change, vacancy, income_log, apart, 
-         tourism_log) |> 
+  select(rent_log, rent_change, FREH_change, non_FREH_change, price_change, 
+         vacancy_lag_log, income_log, apart_log, tourism_log) |> 
   pivot_longer(everything()) |> 
   summarize(
     n = sum(!is.na(value)),
