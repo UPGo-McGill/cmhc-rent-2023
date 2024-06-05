@@ -64,7 +64,9 @@ apart_log -> income_log
 apart_log -> non_FREH_lag_log
 apart_log -> rent_lag_log
 apart_log -> tourism_log
+apart_log -> vacancy_lag_log
 income_log -> Demand
+income_log -> price_lag_log
 income_log -> rent_lag_log
 non_FREH_change -> Demand
 non_FREH_lag_log -> non_FREH_change
@@ -77,6 +79,7 @@ regulation -> "Resident STR decision"
 rent_lag_log -> "Landlord STR decision"
 rent_lag_log -> "Rent stickiness"
 rent_lag_log -> "Resident STR decision"
+rent_lag_log -> price_change
 tourism_log -> FREH_lag_log
 tourism_log -> income_log
 tourism_log -> price_change

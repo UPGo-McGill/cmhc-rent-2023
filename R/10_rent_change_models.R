@@ -15,6 +15,16 @@ ec <- map(dc, \(x) {
     meigen(s_id = x$id)
 })
 
+ec$year <- map(2017:2022, \(x) {
+  dc$main |> 
+    filter(year == x) |> 
+    st_transform(4326) |> 
+    st_set_agr("constant") |> 
+    st_centroid() |> 
+    st_coordinates() |> 
+    meigen()}) |> 
+  set_names(2017:2022)
+
 
 # Prepare group effect tables ---------------------------------------------
 
@@ -37,6 +47,13 @@ mc$no_imp <- resf(dc$no_imp$rent_change, st_drop_geometry(dc$no_imp[
 mc$no_vac <- resf(dc$no_vac$rent_change, st_drop_geometry(dc$no_vac[ac$common.1[
   ac$common.1 != "vacancy_lag_log"]]), gc$no_vac, meig = ec$no_vac)
 
+# Yearly models
+mc$year <- map(2017:2022, \(x) {
+  dat <- filter(dc$main, year == x)
+  resf(dat$rent_change, st_drop_geometry(dat[ac$common.1], gc$year), dat$CMA,
+       meig = ec$year[[as.character(x)]])}) |> 
+  set_names(2017:2022)
+    
 
 # S&NVC -------------------------------------------------------------------
 
