@@ -20,7 +20,7 @@ fig_5 <-
   theme(text = element_text(family = "Futura"),
         axis.text = element_text(size = 5))
 
-ggsave("output/figure_5.png", fig_5, width = 8, height = 5, units = "in")
+ggsave("output/figure_5.png", fig_5, width = 8, height = 4, units = "in")
 
 
 # Table 2: Variables ------------------------------------------------------
