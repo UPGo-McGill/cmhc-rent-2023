@@ -15,16 +15,6 @@ ec <- map(dc, \(x) {
     meigen(s_id = x$id)
 })
 
-ec$year <- map(2017:2022, \(x) {
-  dc$main |> 
-    filter(year == x) |> 
-    st_transform(4326) |> 
-    st_set_agr("constant") |> 
-    st_centroid() |> 
-    st_coordinates() |> 
-    meigen()}) |> 
-  set_names(2017:2022)
-
 
 # Prepare group effect tables ---------------------------------------------
 
