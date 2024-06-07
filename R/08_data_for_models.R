@@ -33,7 +33,7 @@ dc$main <-
            universe[year == 2021], .by = id) |> 
   # Replace zero FREH/non_FREH/price/vacancy with lowest non-zero values
   mutate(across(c(FREH_lag, non_FREH_lag, price_lag, vacancy_lag), 
-                list(dummy = \(x) x == 0)), .before = rent_change) |> 
+                list(dummy = \(x) x == 0)), .before = rent) |> 
   mutate(across(c(FREH_lag, non_FREH_lag, price_lag, vacancy_lag), 
                 \(x) if_else(x == 0, min(x[x > 0]), x))) |> 
   # Create logged versions of variables
