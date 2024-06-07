@@ -87,6 +87,7 @@ model_change <- function(target_year, change_FREH, change_non_FREH,
   stopifnot(exists("cmhc"))
   stopifnot(exists("cmhc_nbhd"))
   stopifnot(exists("mc"))
+  stopifnot(exists("monthly_sept"))
   mc <- get("mc")
   
   x <- 
@@ -104,20 +105,29 @@ model_change <- function(target_year, change_FREH, change_non_FREH,
     effect_non_FREH = y[["non_FREH_change", "Estimate"]],
     effect_price = y[["price_change", "Estimate"]])
   
-  # Get rent change from CMHC
+  # Get rent change
   rent_change <- 
-    cmhc |> 
-    left_join(cmhc_nbhd, by = "id") |> 
+    monthly_sept |> 
+    st_drop_geometry() |> 
+    # Impute missing values
+    impute() |> 
+    # Update tenant_count to reflect trend in universe
+    mutate(tenant_count = universe * tenant_count[year == 2021] / 
+             universe[year == 2021], .by = id) |> 
     group_by(year, ...) |>
-    summarize(total_rent = sum(rent * tenant_count, na.rm = TRUE),
+    mutate(total_rent_u = rent * universe,
+           total_rent_t = rent * tenant_count) |> 
+    summarize(total_rent_u = sum(total_rent_u), 
+              total_rent_t = sum(total_rent_t), 
               .groups = "drop") |> 
     arrange(..., year) |>
     group_by(...) |>
-    mutate(dif = slide_dbl(total_rent, \(x) x[2] - x[1], .before = 1)) |> 
+    mutate(dif_u = slide_dbl(total_rent_u, \(x) x[2] - x[1], .before = 1),
+           dif_t = slide_dbl(total_rent_t, \(x) x[2] - x[1], .before = 1)) |> 
     ungroup() |> 
     group_by(...) |>
-    summarize(j = "j", total_rent_dif = dif[year == target_year], 
-              .groups = "drop")
+    summarize(j = "j", total_rent_dif_u = dif_u[year == target_year], 
+              total_rent_dif_t = dif_t[year == target_year], .groups = "drop")
   
   # Apply treatment
   x1 <- 
@@ -179,7 +189,8 @@ model_change <- function(target_year, change_FREH, change_non_FREH,
       dif = total_change - total_change_c,
       dif_pct = dif / total_change, .groups = "drop") |> 
     left_join(rent_change) |> 
-    mutate(rent_change_pct = dif / total_rent_dif) |> 
+    mutate(rent_change_pct_u = dif / total_rent_dif_u,
+           rent_change_pct_t = dif / total_rent_dif_t) |> 
     mutate(year = target_year, .before = total_change) |> 
     select(-j)
   
