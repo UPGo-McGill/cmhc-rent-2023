@@ -30,12 +30,12 @@ mc <- map(ac, \(x) resf(dc$main$rent_change, st_drop_geometry(dc$main[x]),
 
 # Additional scenarios on common adjustment set
 mc$no_log <- resf(dc$no_log$rent_change, st_drop_geometry(dc$no_log[
-  c(ac$common.1[ac$common.1 != "vacancy_lag_log"], "vacancy_lag")]), gc$no_log, 
+  c(setdiff(ac$common.1, "vacancy_lag_log"), "vacancy_lag")]), gc$no_log, 
   meig = ec$no_log)
 mc$no_imp <- resf(dc$no_imp$rent_change, st_drop_geometry(dc$no_imp[
   ac$common.1]), gc$no_imp, meig = ec$no_imp)
-mc$no_vac <- resf(dc$no_vac$rent_change, st_drop_geometry(dc$no_vac[ac$common.1[
-  ac$common.1 != "vacancy_lag_log"]]), gc$no_vac, meig = ec$no_vac)
+mc$no_vac <- resf(dc$no_vac$rent_change, st_drop_geometry(dc$no_vac[
+  setdiff(ac$common.1, "vacancy_lag_log")]), gc$no_vac, meig = ec$no_vac)
 
 
 # S&NVC -------------------------------------------------------------------
