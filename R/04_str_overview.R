@@ -153,7 +153,7 @@ fig_3 <-
   scale_x_yearmonth(name = NULL) +
   scale_y_continuous(name = "Active STRs as % of all dwellings",
                      labels = scales::percent) +
-  scale_colour_viridis_d(name = "Community size") +
+  scale_colour_brewer(name = "Community size", palette = "Dark2") +
   scale_linetype(name = "Community size") +
   theme_minimal() +
   theme(text = element_text(family = "Futura"),

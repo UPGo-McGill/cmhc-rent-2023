@@ -63,6 +63,11 @@ md <- map(dd, \(y) {
   set_names(names(dd))
 
 
+# Save output -------------------------------------------------------------
+
+qsave(md, "output/md.qs")
+
+
 # Results -----------------------------------------------------------------
 
 ad <- map(md, map, \(x) aggte(x, type = "simple", na.rm = TRUE, alp = .05))
@@ -105,15 +110,15 @@ fig_8 <-
   mutate(down = att - 1.96 * SE, up = att + 1.96 * SE) |> 
   mutate(var = factor(var, levels = c("rent_log", "FREH")), 
          model = factor(model, levels = c("Main", "Vancouver-adjusted"))) |> 
-  ggplot(aes(year, att, colour = model, linetype = model)) +
-  geom_pointrange(aes(ymin = down, ymax = up), position = position_nudge(
-    x = c(-0.05, -0.05, -0.05, -0.05, -0.05, 0.05, 0.05, 0.05, 0.05, 0.05, 
-          -0.05, -0.05, -0.05, -0.05, 0.05, 0.05, 0.05, 0.05))) +
+  ggplot(aes(year, att, colour = model)) +
+  geom_hline(aes(yintercept = 0), linetype = "dashed") +
+  geom_point(position = position_dodge(0.25)) +
+  geom_errorbar(aes(ymin = down, ymax = up), width = 0.2, 
+                position = position_dodge(0.25)) +
   facet_wrap(~var, nrow = 1, scales = "free") +
   scale_color_brewer(name = NULL, palette = "Dark2") +
   scale_x_continuous(name = NULL) +
   scale_y_continuous(name = "Estimate") +
-  scale_linetype(name = NULL) +
   theme_minimal() +
   theme(text = element_text(family = "Futura"), legend.position = "bottom")
 

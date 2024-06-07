@@ -1,6 +1,7 @@
 #### RENT CHANGE MODEL OUTPUTS #################################################
 
 source("R/01_startup.R")
+source("R/05_process_DAGs.R")
 mc <- qread("output/mc.qs", nthreads = availableCores())
 
 
@@ -31,10 +32,11 @@ fig_7 <-
   filter(var %in% c("FREH_change", "non_FREH_change", "price_change")) |> 
   mutate(down = Estimate - 1.96 * SE, up = Estimate + 1.96 * SE) |> 
   mutate(model = factor(model, levels = names(ac))) |> 
-  ggplot(aes(var, Estimate, colour = model, linetype = model)) +
-  geom_pointrange(aes(ymin = down, ymax = up), 
-                  position = position_nudge(x = c(0, 0, 0, -0.07, 0.07, 
-                                                  -0.07, -0.07, 0.07, 0.07))) +
+  ggplot(aes(var, Estimate, colour = model)) +
+  geom_hline(aes(yintercept = 0), linetype = "dashed") +
+  geom_point(position = position_dodge(0.25)) +
+  geom_errorbar(aes(ymin = down, ymax = up), width = 0.2, 
+                position = position_dodge(0.25)) +
   scale_color_brewer(name = NULL, palette = "Dark2") +
   scale_x_discrete(name = NULL) +
   scale_y_continuous(name = "Estimate") +
