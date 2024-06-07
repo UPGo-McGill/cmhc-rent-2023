@@ -32,7 +32,7 @@ fig_7 <-
   mutate(down = Estimate - 1.96 * SE, up = Estimate + 1.96 * SE) |> 
   mutate(model = factor(model, levels = names(ac))) |> 
   ggplot(aes(var, Estimate, colour = model, linetype = model)) +
-  geom_pointrange((aes(ymin = down, ymax = up)), 
+  geom_pointrange(aes(ymin = down, ymax = up), 
                   position = position_nudge(x = c(0, 0, 0, -0.07, 0.07, 
                                                   -0.07, -0.07, 0.07, 0.07))) +
   scale_color_brewer(name = NULL, palette = "Dark2") +
