@@ -1,29 +1,41 @@
 #### 14 DISCUSSION #############################################################
 
-source("R/08_rent_models.R")
-source("R/10_rent_change_models.R")
-monthly <- qread("output/monthly.qs", nthreads = availableCores())
-prop_cmhc <- qread("output/prop_cmhc.qs", nthreads = availableCores())
+source("R/05_process_DAGs.R")
+source("R/08_data_for_models.R")
 qload("output/cmhc.qsm", nthreads = availableCores())
+source("R/06_imputation.R")
+mc <- qread("output/mc.qs", nthreads = availableCores())
+md <- qread("output/md.qs")
+
+# monthly <- qread("output/monthly.qs", nthreads = availableCores())
+# prop_cmhc <- qread("output/prop_cmhc.qs", nthreads = availableCores())
 
 
 # Size of STR effect ------------------------------------------------------
 
-effect_yty <- bind_rows(
-  model_year(2016, 2017),
-  model_year(2017, 2018),
-  model_year(2018, 2019),
-  model_year(2019, 2020),
-  model_year(2020, 2021),
-  model_year(2021, 2022))
+effect_change <- bind_rows(
+  model_change(2017, 0, 0, 0),
+  model_change(2018, 0, 0, 0),
+  model_change(2019, 0, 0, 0),
+  model_change(2020, 0, 0, 0),
+  model_change(2021, 0, 0, 0),
+  model_change(2022, 0, 0, 0))
 
-effect_cumulative <- bind_rows(
-  model_year(2016, 2017),
-  model_year(2016, 2018),
-  model_year(2016, 2019),
-  model_year(2016, 2020),
-  model_year(2016, 2021),
-  model_year(2016, 2022))
+effect_change
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 # Average effect before pandemic
 effect_yty |> 
@@ -121,14 +133,9 @@ monthly |>
 
 # Comparison of rent_log and rent_change models ---------------------------
 
-effect_change <- bind_rows(
-  model_change_manual(2017, 0, 0),
-  model_change_manual(2018, 0, 0),
-  model_change_manual(2019, 0, 0),
-  model_change_manual(2020, 0, 0),
-  model_change_manual(2021, 0, 0),
-  model_change_manual(2022, 0, 0)
-)
+
+effect_change |> 
+  mutate(across(-c(dif_pct, rent_change_pct), \(x) x * 12))
 
 # Average effect size compared to rent_log model
 mean(effect_change$rent_change_pct / effect_yty$rent_change_pct)
