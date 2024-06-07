@@ -65,6 +65,7 @@ md <- map(dd, \(y) {
 
 # Save output -------------------------------------------------------------
 
+qsave(dd, "output/dd.qs")
 qsave(md, "output/md.qs")
 
 

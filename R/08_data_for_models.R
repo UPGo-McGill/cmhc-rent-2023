@@ -125,7 +125,8 @@ dr$main <-
   mutate(across(c(FREH:vacancy), \(x) if_else(
     x == 0, min(x[x > 0], na.rm = TRUE), x))) |> 
   mutate(across(c(rent:vacancy), .fns = list(log = \(x) log(x)))) |> 
-  mutate(across(c(rent:vacancy_log), \(x) as.numeric(scale(x))))
+  mutate(across(c(rent:price_log), list(raw = \(x) x)),
+         across(c(rent:vacancy_log), \(x) as.numeric(scale(x))))
 
 dr$no_imp <- 
   monthly_sept |> 
@@ -135,7 +136,8 @@ dr$no_imp <-
   mutate(across(c(FREH:price), \(x) if_else(
     x == 0, min(x[x > 0], na.rm = TRUE), x))) |> 
   mutate(across(c(rent:price), .fns = list(log = \(x) log(x)))) |> 
-  mutate(across(c(rent:price_log), \(x) as.numeric(scale(x))))
+  mutate(across(c(rent:price_log), list(raw = \(x) x)),
+         across(c(rent:price_log), \(x) as.numeric(scale(x))))
 
 
 # Clean up ----------------------------------------------------------------

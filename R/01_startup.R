@@ -78,10 +78,11 @@ mutate_days <- function(x) {
     mutate(days = days_in_month(month(as.Date(month))))
 }
 
-model_change <- function(target_year, change_FREH, change_non_FREH, 
-                         change_price, ..., use_FREH = TRUE, 
-                         use_non_FREH = TRUE, use_price = TRUE, 
-                         whole_year = FALSE, model = "common.1") {
+model_change <- function(target_year, ..., change_FREH = 0, 
+                         change_non_FREH = 0, change_price = 0, 
+                         use_FREH = TRUE, use_non_FREH = TRUE, 
+                         use_price = TRUE, whole_year = FALSE, 
+                         model = "common.1") {
   
   # Setup
   stopifnot(exists("cmhc"))
@@ -114,7 +115,7 @@ model_change <- function(target_year, change_FREH, change_non_FREH,
     # Update tenant_count to reflect trend in universe
     mutate(tenant_count = universe * tenant_count[year == 2021] / 
              universe[year == 2021], .by = id) |> 
-    select(id, year, rent, tenant_count)
+    select(id:province, rent, tenant_count)
   
   # Get rent change
   rent_change <- 
@@ -131,6 +132,11 @@ model_change <- function(target_year, change_FREH, change_non_FREH,
     group_by(...) |>
     summarize(j = "j", total_rent_dif = dif[year == target_year], 
               .groups = "drop")
+  
+  # Drop additional columns from tenant_count
+  tenant_count <- 
+    tenant_count |> 
+    select(id, year, rent, tenant_count)
   
   # Apply treatment
   x1 <- 
