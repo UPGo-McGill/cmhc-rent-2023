@@ -79,9 +79,9 @@ mutate_days <- function(x) {
 }
 
 model_change <- function(target_year, change_FREH, change_non_FREH, 
-                         change_price, ..., by_year = FALSE, use_FREH = TRUE, 
+                         change_price, ..., use_FREH = TRUE, 
                          use_non_FREH = TRUE, use_price = TRUE, 
-                         model = "common.1") {
+                         whole_year = FALSE, model = "common.1") {
   
   # Setup
   stopifnot(exists("cmhc"))
@@ -105,8 +105,8 @@ model_change <- function(target_year, change_FREH, change_non_FREH,
     effect_non_FREH = y[["non_FREH_change", "Estimate"]],
     effect_price = y[["price_change", "Estimate"]])
   
-  # Get rent change
-  rent_change <- 
+  # Get tenant counts
+  tenant_count <- 
     monthly_sept |> 
     st_drop_geometry() |> 
     # Impute missing values
@@ -114,20 +114,23 @@ model_change <- function(target_year, change_FREH, change_non_FREH,
     # Update tenant_count to reflect trend in universe
     mutate(tenant_count = universe * tenant_count[year == 2021] / 
              universe[year == 2021], .by = id) |> 
+    select(id, year, rent, tenant_count)
+  
+  # Get rent change
+  rent_change <- 
+    tenant_count |> 
     group_by(year, ...) |>
-    mutate(total_rent_u = rent * universe,
-           total_rent_t = rent * tenant_count) |> 
-    summarize(total_rent_u = sum(total_rent_u), 
-              total_rent_t = sum(total_rent_t), 
-              .groups = "drop") |> 
+    # group_by(year) |> 
+    mutate(total_rent = rent * tenant_count) |> 
+    summarize(total_rent = sum(total_rent), .groups = "drop") |> 
     arrange(..., year) |>
+    # arrange(year) |> 
     group_by(...) |>
-    mutate(dif_u = slide_dbl(total_rent_u, \(x) x[2] - x[1], .before = 1),
-           dif_t = slide_dbl(total_rent_t, \(x) x[2] - x[1], .before = 1)) |> 
+    mutate(dif = slide_dbl(total_rent, \(x) x[2] - x[1], .before = 1)) |> 
     ungroup() |> 
     group_by(...) |>
-    summarize(j = "j", total_rent_dif_u = dif_u[year == target_year], 
-              total_rent_dif_t = dif_t[year == target_year], .groups = "drop")
+    summarize(j = "j", total_rent_dif = dif[year == target_year], 
+              .groups = "drop")
   
   # Apply treatment
   x1 <- 
@@ -167,7 +170,8 @@ model_change <- function(target_year, change_FREH, change_non_FREH,
         price_change_c * effect_price * use_price)
   
   # Produce output
-  x3 |> 
+  x4 <-
+    x3 |> 
     select(-FREH_change_c, -non_FREH_change_c, -price_change_c, -effect_FREH, 
            -effect_non_FREH, -effect_price) |> 
     mutate(
@@ -177,8 +181,7 @@ model_change <- function(target_year, change_FREH, change_non_FREH,
         mean(x$rent_change_raw),
       .after = rent_change_raw) |> 
     select(id:rent_change_raw, rent_change_raw_c) |> 
-    left_join(select(cmhc_nbhd, id, tenant_count), by = "id") |> 
-    select(-geometry) |> 
+    left_join(tenant_count, by = c("id", "year")) |> 
     mutate(total_change = rent_change_raw * tenant_count,
            total_change_c = rent_change_raw_c * tenant_count) |> 
     group_by(...) |>
@@ -189,9 +192,15 @@ model_change <- function(target_year, change_FREH, change_non_FREH,
       dif = total_change - total_change_c,
       dif_pct = dif / total_change, .groups = "drop") |> 
     left_join(rent_change) |> 
-    mutate(rent_change_pct_u = dif / total_rent_dif_u,
-           rent_change_pct_t = dif / total_rent_dif_t) |> 
+    mutate(rent_change_pct = dif / total_rent_dif) |> 
     mutate(year = target_year, .before = total_change) |> 
     select(-j)
+  
+  # Multiply by 12 if whole_year is TRUE
+  if (whole_year) x4 <- x4 |> 
+    mutate(across(-c(year, dif_pct, rent_change_pct_u, rent_change_pct_t), 
+                  \(x) x * 12))
+  
+  x4
   
 }
