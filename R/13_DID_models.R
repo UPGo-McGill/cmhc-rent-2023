@@ -1,4 +1,4 @@
-#### 12 DIFFERENCE-IN-DIFFERENCES MODELS #######################################
+#### 13 DIFFERENCE-IN-DIFFERENCES MODELS #######################################
 
 source("R/01_startup.R")
 source("R/08_data_for_models.R")
