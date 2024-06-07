@@ -145,6 +145,16 @@ if (all(ac$FREH.3 == ac$non_FREH.3)) {
   ac$FREH.3 <- NULL
 }
 
+# Add dummy variables where needed
+ac <- map(ac, \(x) {
+  
+  if (any("FREH_lag_log" %in% x)) x <- c(x, "FREH_lag_dummy")
+  if (any("non_FREH_lag_log" %in% x)) x <- c(x, "non_FREH_lag_dummy")
+  if (any("price_lag_log" %in% x)) x <- c(x, "price_lag_dummy")
+  x
+  
+})
+
 
 # Figure 4 ----------------------------------------------------------------
 

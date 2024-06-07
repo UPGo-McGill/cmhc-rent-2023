@@ -13,10 +13,11 @@ source("R/06_imputation.R")
 # Produce dataset with rent_change as DV ----------------------------------
 
 dc <- list()
-change_vars <- c("id", "year", "CMA", "name_CMA", "province", "rent_change", 
-                 "rent_lag", "FREH_change", "FREH_lag", "non_FREH_change", 
-                 "non_FREH_lag", "price_change", "price_lag", "apart", "income", 
-                 "tourism", "vacancy_lag", "universe_change")
+change_vars <- c("id", "year", "CMA", "name_CMA", "province", "rent", 
+                 "rent_change", "rent_lag", "FREH_change", "FREH_lag", 
+                 "non_FREH_change", "non_FREH_lag", "price_change", "price_lag", 
+                 "apart", "income", "tourism", "vacancy_lag", "tenant_count",
+                 "universe", "universe_change")
 
 # Main: imputed with vacancy_lag_log
 dc$main <-
@@ -27,6 +28,9 @@ dc$main <-
   filter(!is.na(rent_change), !is.na(FREH_change), year >= 2017) |> 
   # Select relevant variables
   select(all_of(change_vars)) |> 
+  # Update tenant_count to reflect trend in universe
+  mutate(tenant_count = universe * tenant_count[year == 2021] / 
+           universe[year == 2021], .by = id) |> 
   # Replace zero FREH/non_FREH/price/vacancy with lowest non-zero values
   mutate(across(c(FREH_lag, non_FREH_lag, price_lag, vacancy_lag), 
                 list(dummy = \(x) x == 0)), .before = rent_change) |> 
@@ -37,8 +41,8 @@ dc$main <-
                   apart, income, tourism), .fns = list(log = \(x) log(x))),
          .before = geometry) |> 
   # Normalize all variables
-  mutate(across(c(rent_change:tourism_log), list(raw = \(x) x)),
-         across(c(rent_change:tourism_log), \(x) as.numeric(scale(x))),
+  mutate(across(c(rent:tourism_log), list(raw = \(x) x)),
+         across(c(rent:tourism_log), \(x) as.numeric(scale(x))), 
          .before = geometry)
 
 # No log
