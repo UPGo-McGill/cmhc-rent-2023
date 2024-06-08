@@ -208,16 +208,25 @@ tenant_count <-
 did_rent_dif <-
   dd$main |> 
   mutate(id = as.character(id)) |> 
+  # Add effects to data
   inner_join(did_effects, by = c("year", "treat")) |> 
+  # Create counterfactual for rent_log in the absence of treatment
   mutate(rent_log_cf = rent_log - att) |> 
+  # Un-standardize rent_log_cf
   mutate(rent_log_cf_raw = rent_log_cf * sd(dd$main$rent_log_raw) + 
            mean(dd$main$rent_log_raw)) |>
+  # Exponentiate rent_log_cf_raw to get counterfactual rent
   mutate(rent_cf_raw = exp(rent_log_cf_raw)) |> 
-  mutate(rent_raw = exp(rent_log_raw)) |> 
+  # Exponentiate rent_log_raw to get actual rent
+  mutate(rent_raw = exp(rent_log_raw)) |>
+  # Get rent difference
   mutate(rent_dif = rent_cf_raw - rent_raw) |> 
   select(id, year, treat, rent_raw, rent_dif) |> 
   inner_join(tenant_count, by = c("id", "year"))
-  
+
+# Number/% of treated neighbourhoods
+nrow(filter(did_rent_dif, year == treat)) / nrow(cmhc_nbhd)
+
 # Average rent decrease in first year
 did_rent_dif |> 
   filter(year == treat) |> 
@@ -241,7 +250,6 @@ did_rent_dif |>
     total_rent = sum(total_rent),
     total_rent_dif = sum(total_rent_dif)) |> 
   mutate(pct = total_rent_dif / (total_rent + total_rent_dif))
-
 
 
 # DiD FREH implications ---------------------------------------------------
@@ -335,12 +343,15 @@ did_non_FREH_dif |>
 
 # Effect of regulations on non-regulated places ---------------------------
 
+dyn <- aggte(md$main$rent_log, type = "dynamic")
+
 did_rent_non_treated <-
   dr$main |> 
   anti_join(did_rent_dif, by = c("id")) |> 
+  # Remove Georgina ON, because it removed its PR restriction
+  filter(id != "2270780") |> 
   filter(year == 2022) |> 
-  mutate(att = did_effects$att[did_effects$treat == 2022 & 
-                                 did_effects$year == 2022]) |> 
+  mutate(att = dyn$att.egt[dyn$egt == 0]) |> 
   mutate(rent_log_cf = rent_log - att) |> 
   mutate(rent_log_cf_raw = rent_log_cf * sd(dd$main$rent_log_raw) + 
            mean(dd$main$rent_log_raw)) |>
