@@ -8,9 +8,6 @@ dd <- qread("output/dd.qs")
 mc <- qread("output/mc.qs", nthreads = availableCores())
 md <- qread("output/md.qs")
 
-# monthly <- qread("output/monthly.qs", nthreads = availableCores())
-# prop_cmhc <- qread("output/prop_cmhc.qs", nthreads = availableCores())
-
 
 # Size of STR effect ------------------------------------------------------
 
@@ -233,6 +230,19 @@ did_rent_dif |>
     total_rent_dif = sum(total_rent_dif)) |> 
   mutate(pct = total_rent_dif / (total_rent + total_rent_dif))
 
+# Average rent decrease in 2022
+did_rent_dif |> 
+  filter(year == 2022) |> 
+  mutate(total_rent = rent_raw * tenant_count,
+         total_rent_dif = rent_dif * tenant_count) |> 
+  summarize(
+    mean_rent = weighted.mean(rent_raw, tenant_count),
+    mean_rent_dif = weighted.mean(rent_dif, tenant_count),
+    total_rent = sum(total_rent),
+    total_rent_dif = sum(total_rent_dif)) |> 
+  mutate(pct = total_rent_dif / (total_rent + total_rent_dif))
+
+
 
 # DiD FREH implications ---------------------------------------------------
 
@@ -256,6 +266,18 @@ did_FREH_dif <-
 # Average FREH decrease in first year
 did_FREH_dif |> 
   filter(year == treat) |> 
+  mutate(total_FREH = FREH_raw * tenant_count,
+         total_FREH_dif = FREH_dif * tenant_count) |> 
+  summarize(
+    mean_FREH = weighted.mean(FREH_raw, tenant_count),
+    mean_FREH_dif = weighted.mean(FREH_dif, tenant_count),
+    total_FREH = sum(total_FREH),
+    total_FREH_dif = sum(total_FREH_dif)) |> 
+  mutate(pct = total_FREH_dif / (total_FREH + total_FREH_dif))
+
+# Average FREH decrease in 2022
+did_FREH_dif |> 
+  filter(year == 2022) |> 
   mutate(total_FREH = FREH_raw * tenant_count,
          total_FREH_dif = FREH_dif * tenant_count) |> 
   summarize(
@@ -297,6 +319,48 @@ did_non_FREH_dif |>
     total_non_FREH = sum(total_non_FREH),
     total_non_FREH_dif = sum(total_non_FREH_dif)) |> 
   mutate(pct = total_non_FREH_dif / (total_non_FREH + total_non_FREH_dif))
+
+# Average non-FREH decrease in 2022
+did_non_FREH_dif |> 
+  filter(year == 2022) |> 
+  mutate(total_non_FREH = non_FREH_raw * tenant_count,
+         total_non_FREH_dif = non_FREH_dif * tenant_count) |> 
+  summarize(
+    mean_non_FREH = weighted.mean(non_FREH_raw, tenant_count),
+    mean_non_FREH_dif = weighted.mean(non_FREH_dif, tenant_count),
+    total_non_FREH = sum(total_non_FREH),
+    total_non_FREH_dif = sum(total_non_FREH_dif)) |> 
+  mutate(pct = total_non_FREH_dif / (total_non_FREH + total_non_FREH_dif))
+
+
+# Effect of regulations on non-regulated places ---------------------------
+
+did_rent_non_treated <-
+  dr$main |> 
+  anti_join(did_rent_dif, by = c("id")) |> 
+  filter(year == 2022) |> 
+  mutate(att = did_effects$att[did_effects$treat == 2022 & 
+                                 did_effects$year == 2022]) |> 
+  mutate(rent_log_cf = rent_log - att) |> 
+  mutate(rent_log_cf_raw = rent_log_cf * sd(dd$main$rent_log_raw) + 
+           mean(dd$main$rent_log_raw)) |>
+  mutate(rent_cf_raw = exp(rent_log_cf_raw)) |> 
+  mutate(rent_raw = exp(rent_log_raw)) |> 
+  mutate(rent_dif = rent_cf_raw - rent_raw) |> 
+  select(id, year, rent_raw, rent_dif) |> 
+  inner_join(tenant_count, by = c("id", "year"))
+
+# Possible average rent decrease in 2022
+did_rent_non_treated |> 
+  filter(year == 2022) |> 
+  mutate(total_rent = rent_raw * tenant_count,
+         total_rent_dif = rent_dif * tenant_count) |> 
+  summarize(
+    mean_rent = weighted.mean(rent_raw, tenant_count),
+    mean_rent_dif = weighted.mean(rent_dif, tenant_count),
+    total_rent = sum(total_rent),
+    total_rent_dif = sum(total_rent_dif)) |> 
+  mutate(pct = total_rent_dif / (total_rent + total_rent_dif))
 
 
 # Table 5: Regional breakdown ---------------------------------------------
@@ -351,21 +415,6 @@ prov_price <-
   set_names(c("Region", "Total rent increase", "Estimated price contribution"))
 
 prov_FREH |> 
-  inner_join(prov_non_FREH) |> 
-  inner_join(prov_price) |> 
+  inner_join(prov_non_FREH, by = c("Region", "Total rent increase")) |> 
+  inner_join(prov_price, by = c("Region", "Total rent increase")) |> 
   gt::gt()
-
-model_year(2021, 2022, province, use_rev = FALSE) |> 
-  mutate_region() |> 
-  summarize(total_rent_dif = sum(total_rent_dif),
-            dif = sum(dif),
-            rent_change_pct = dif / total_rent_dif,
-            .by = region) |> 
-  mutate(total_rent_dif = scales::dollar(total_rent_dif, 0.1, scale = 1/1000000, 
-                                         suffix = "M"),
-         dif = scales::dollar(dif, 0.1, scale = 1/1000000, suffix = "M"),
-         rent_change_pct = scales::percent(rent_change_pct, 0.1)) |> 
-  set_names(c("Region", "Total rent increase", "FREH contribution ($)", 
-              "FREH contribution (%)")) |> 
-  gt::gt()
-  
