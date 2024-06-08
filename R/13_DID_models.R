@@ -21,7 +21,8 @@ dd <-
     x |> 
       inner_join(select(reg, id, date, reg), by = "id") |> 
       mutate(treat = if_else(is.na(date), 0, year(date - 1) + 1), 
-             id = as.numeric(id)) |> 
+             # Add prefix so leading 0s don't get removed
+             id = as.numeric(paste0("1111", id))) |> 
       filter(treat == 0 | treat > 2017) |> 
       # Remove provinces with no treatment in the time period
       filter(!province %in% c("Manitoba", "Saskatchewan", "Nova Scotia", 
@@ -33,7 +34,7 @@ dd$all <-
   dr$main |> 
   inner_join(select(reg, id, date, reg), by = "id") |> 
   mutate(treat = if_else(is.na(date), 0, year(date - 1) + 1), 
-         id = as.numeric(id))
+         id = as.numeric(paste0("1111", id)))
 
 # Variant with Vancouver treatment delayed by a year to account for slow
 # regulatory progress
@@ -43,7 +44,7 @@ dd$van <-
     name_CSD == "Vancouver", as.Date("2019-08-31"), date)), id, date, reg), 
     by = "id") |> 
   mutate(treat = if_else(is.na(date), 0, year(date - 1) + 1), 
-         id = as.numeric(id)) |> 
+         id = as.numeric(paste0("1111", id))) |> 
   filter(treat == 0 | treat > 2017) |> 
   # Remove provinces with no treatment in the time period
   filter(!province %in% c("Manitoba", "Saskatchewan", "Nova Scotia", 
@@ -61,6 +62,11 @@ md <- map(dd, \(y) {
     map(\(x) att_gt(x, tname = "year", idname = "id", gname = "treat", 
                     allow_unbalanced_panel = TRUE, data = y))}) |> 
   set_names(names(dd))
+
+
+# Revert IDs --------------------------------------------------------------
+
+dd <- map(dd, \(x) mutate(x, id = str_remove(as.character(id), "^1111")))
 
 
 # Save output -------------------------------------------------------------
@@ -83,9 +89,9 @@ aggte(md$main$price, type = "simple", na.rm = TRUE, alp = .1)
 # Table 4 -----------------------------------------------------------------
 
 tibble(
-  var = names(ad_95),
-  att = round(map_dbl(ad_95, \(x) x$overall.att), 3),
-  se = round(map_dbl(ad_95, \(x) x$overall.se), 3)
+  var = names(ad$main),
+  att = round(map_dbl(ad$main, \(x) x$overall.att), 3),
+  se = round(map_dbl(ad$main, \(x) x$overall.se), 3)
 )
 
 
