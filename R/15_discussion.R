@@ -111,7 +111,7 @@ fig_10 <-
       mutate(type = "Cumulative effect")) |>
   mutate(type = factor(type, levels = c("Year-to-year effect",
                                         "Cumulative effect"))) |>
-  ggplot(aes(year, rent_change_pct, colour = rent_change_pct)) +
+  ggplot(aes(year, rent_change_pct, colour = rent_change_pct > 0)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_point(size = 5) +
   geom_segment(aes(yend = 0), lwd = 2) +
@@ -122,8 +122,7 @@ fig_10 <-
   facet_wrap(~type, nrow = 2, scales = "free") +
   scale_x_continuous(name = NULL) +
   scale_y_continuous(name = NULL, labels = scales::percent) +
-  scale_colour_fermenter(type = "div", palette = "RdBu",
-                         limits = c(-0.01, 0.01), oob = scales::squish) +
+  scale_colour_brewer(palette = "Dark2", direction = -1) +
   theme_minimal() +
   theme(text = element_text(family = "Futura"), legend.position = "none")
 
