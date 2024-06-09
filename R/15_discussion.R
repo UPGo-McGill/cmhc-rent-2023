@@ -212,8 +212,8 @@ did_rent_dif <-
   # Create counterfactual for rent_log in the absence of treatment
   mutate(rent_log_cf = rent_log - att) |> 
   # Un-standardize rent_log_cf
-  mutate(rent_log_cf_raw = rent_log_cf * sd(dd$main$rent_log_raw) + 
-           mean(dd$main$rent_log_raw)) |>
+  mutate(rent_log_cf_raw = rent_log_cf * sd(dr$main$rent_log_raw) + 
+           mean(dr$main$rent_log_raw)) |>
   # Exponentiate rent_log_cf_raw to get counterfactual rent
   mutate(rent_cf_raw = exp(rent_log_cf_raw)) |> 
   # Exponentiate rent_log_raw to get actual rent
@@ -264,8 +264,8 @@ did_FREH_dif <-
   mutate(id = as.character(id)) |> 
   inner_join(did_FREH_effects, by = c("year", "treat")) |> 
   mutate(FREH_cf = FREH - att) |> 
-  mutate(FREH_cf_raw = FREH_cf * sd(dd$main$FREH_raw, na.rm = TRUE) + 
-           mean(dd$main$FREH_raw, na.rm = TRUE)) |>
+  mutate(FREH_cf_raw = FREH_cf * sd(dr$main$FREH_raw, na.rm = TRUE) + 
+           mean(dr$main$FREH_raw, na.rm = TRUE)) |>
   mutate(FREH_dif = FREH_cf_raw - FREH_raw) |> 
   select(id, year, treat, FREH_raw, FREH_dif) |> 
   inner_join(tenant_count, by = c("id", "year"))
@@ -309,8 +309,8 @@ did_non_FREH_dif <-
   inner_join(did_non_FREH_effects, by = c("year", "treat")) |> 
   mutate(non_FREH_cf = non_FREH - att) |> 
   mutate(non_FREH_cf_raw = non_FREH_cf * 
-           sd(dd$main$non_FREH_raw, na.rm = TRUE) + 
-           mean(dd$main$non_FREH_raw, na.rm = TRUE)) |>
+           sd(dr$main$non_FREH_raw, na.rm = TRUE) + 
+           mean(dr$main$non_FREH_raw, na.rm = TRUE)) |>
   mutate(non_FREH_dif = non_FREH_cf_raw - non_FREH_raw) |> 
   select(id, year, treat, non_FREH_raw, non_FREH_dif) |> 
   inner_join(tenant_count, by = c("id", "year"))
