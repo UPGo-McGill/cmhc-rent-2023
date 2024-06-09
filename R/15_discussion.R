@@ -352,8 +352,8 @@ did_rent_non_treated <-
   filter(year == 2022) |> 
   mutate(att = dyn$att.egt[dyn$egt == 0]) |> 
   mutate(rent_log_cf = rent_log - att) |> 
-  mutate(rent_log_cf_raw = rent_log_cf * sd(dd$main$rent_log_raw) + 
-           mean(dd$main$rent_log_raw)) |>
+  mutate(rent_log_cf_raw = rent_log_cf * sd(dr$main$rent_log_raw) + 
+           mean(dr$main$rent_log_raw)) |>
   mutate(rent_cf_raw = exp(rent_log_cf_raw)) |> 
   mutate(rent_raw = exp(rent_log_raw)) |> 
   mutate(rent_dif = rent_cf_raw - rent_raw) |> 
