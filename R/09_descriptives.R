@@ -24,6 +24,44 @@ fig_5 <-
 ggsave("output/figure_5.png", fig_5, width = 8, height = 4, units = "in")
 
 
+# DiD treatment -----------------------------------------------------------
+
+reg <-
+  qread("data/reg.qs") |> 
+  mutate(reg = if_else(reg == "TBD", FALSE, as.logical(reg))) |> 
+  mutate(date = if_else(date >= "2023-01-02", NA, date)) |> 
+  mutate(reg = if_else(is.na(date), FALSE, TRUE)) |> 
+  inner_join(st_drop_geometry(cmhc_nbhd), by = c("id", "name")) |> 
+  select(-c(pop:tenant)) |> 
+  # Remove Georgina ON, because it removed its PR restriction in 2023
+  filter(id != "2270780")
+
+# How many cities with treatment
+reg |> 
+  filter(reg) |> 
+  count(name_CSD) |> 
+  nrow()
+
+# How many neighbourhoods with treatment
+reg |> 
+  filter(reg) |> 
+  nrow()
+
+# How many neighbourhoods in total
+dr$main |> 
+  inner_join(select(reg, id, date, reg), by = "id") |> 
+  mutate(treat = if_else(is.na(date), 0, year(date - 1) + 1), 
+         # Add prefix so leading 0s don't get removed
+         id = as.numeric(paste0("1111", id))) |> 
+  filter(treat == 0 | treat > 2017) |> 
+  # Remove provinces with no treatment in the time period
+  filter(!province %in% c("Manitoba", "Saskatchewan", "Nova Scotia", 
+                          "Prince Edward Island", "Alberta",
+                          "Newfoundland and Labrador")) |> 
+  count(id) |> 
+  nrow()
+
+
 # Table 2: Variables ------------------------------------------------------
 
 monthly_sept |> 

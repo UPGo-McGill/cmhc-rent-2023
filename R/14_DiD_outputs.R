@@ -69,7 +69,8 @@ fig_9 <-
   ggdid() +
   ggtitle(NULL) +
   theme_minimal() +
-  scale_x_continuous(name = "Years post-treatment") + 
+  scale_x_continuous(name = "Years post-treatment", 
+                     breaks = c(-6, -4, -2, 0, 2, 4)) + 
   scale_y_continuous(name = "ATT") +
   scale_color_brewer(name = NULL, palette = "Dark2", labels = c(
     "Pre-treatment", "Post-treatment")) +

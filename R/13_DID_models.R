@@ -11,7 +11,7 @@ qload("output/cmhc.qsm", nthreads = availableCores())
 reg <-
   qread("data/reg.qs") |> 
   mutate(reg = if_else(reg == "TBD", FALSE, as.logical(reg))) |> 
-  mutate(date = if_else(date >= "2022-01-02", NA, date)) |> 
+  mutate(date = if_else(date >= "2023-01-02", NA, date)) |> 
   mutate(reg = if_else(is.na(date), FALSE, TRUE)) |> 
   inner_join(st_drop_geometry(cmhc_nbhd), by = c("id", "name")) |> 
   select(-c(pop:tenant)) |> 
