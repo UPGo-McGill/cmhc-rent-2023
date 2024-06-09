@@ -1,4 +1,4 @@
-#### 14 DISCUSSION #############################################################
+#### 15 DISCUSSION #############################################################
 
 source("R/05_process_DAGs.R")
 source("R/08_data_for_models.R")
@@ -150,7 +150,7 @@ monthly_sept |>
   filter(year == 2022) |> 
   pull(rev_count) |> 
   sum() |> 
-  scales::dollar(1000000)
+  scales::dollar(100000)
 
 # Ratio of the two
 ((monthly_sept |> 
