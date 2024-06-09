@@ -1,6 +1,7 @@
 #### 09 DESCRIPTIVE STATISTICS #################################################
 
 source("R/08_data_for_models.R")
+qload("output/cmhc.qsm", nthreads = availableCores())
 
 
 # Figure 5: Correlation between STRs and rent -----------------------------

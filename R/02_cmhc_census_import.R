@@ -1384,7 +1384,7 @@ cmhc <-
   cmhc |> 
   filter(sum(is.na(universe)) < 4, .by = id) |>
   filter(sum(is.na(rent)) < 7, .by = id) |>
-  filter(n() >= 8, .by = id) |> 
+  filter(n() >= 6, .by = id) |> 
   arrange(id, year)
   
 cmhc_nbhd <- 
@@ -1407,4 +1407,3 @@ cmhc <-
 # Save output -------------------------------------------------------------
 
 qsavem(cmhc, cmhc_nbhd, file = "output/cmhc.qsm", nthreads = availableCores())
-
