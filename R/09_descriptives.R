@@ -32,9 +32,7 @@ reg <-
   mutate(date = if_else(date >= "2023-01-02", NA, date)) |> 
   mutate(reg = if_else(is.na(date), FALSE, TRUE)) |> 
   inner_join(st_drop_geometry(cmhc_nbhd), by = c("id", "name")) |> 
-  select(-c(pop:tenant)) |> 
-  # Remove Georgina ON, because it removed its PR restriction in 2023
-  filter(id != "2270780")
+  select(-c(pop:tenant))
 
 # How many cities with treatment
 reg |> 

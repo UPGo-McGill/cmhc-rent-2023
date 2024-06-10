@@ -224,6 +224,7 @@ did_rent_dif <-
   inner_join(tenant_count, by = c("id", "year"))
 
 # Number/% of treated neighbourhoods
+nrow(filter(did_rent_dif, year == treat))
 nrow(filter(did_rent_dif, year == treat)) / nrow(cmhc_nbhd)
 
 # Average rent decrease in first year
