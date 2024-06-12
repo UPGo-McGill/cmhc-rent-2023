@@ -380,32 +380,32 @@ prov_FREH <-
   model_change(2022, province, use_non_FREH = FALSE, use_price = FALSE) |> 
   mutate_region() |> 
   filter(!is.na(region)) |> 
-  summarize(total_rent_dif = sum(total_rent_dif),
-            dif = sum(dif),
-            rent_change_pct = dif / total_rent_dif,
+  summarize(across(total_before:str_share, sum),
+            str_pct = str_share / total_change,
             .by = region) |> 
-  mutate(total_rent_dif = scales::dollar(total_rent_dif, 0.1, scale = 1/1000000, 
-                                         suffix = "M"),
-         dif = scales::dollar(dif, 0.1, scale = 1/1000000, suffix = "M"),
-         rent_change_pct = scales::percent(rent_change_pct, 0.1)) |> 
-  mutate(FREH = paste0(dif, " (", rent_change_pct, ")")) |> 
-  select(region, total_rent_dif, FREH) |> 
+  mutate(total_change = scales::dollar(total_change, 0.1, scale = 1/1000000, 
+                                       suffix = "M"),
+         str_share = scales::dollar(str_share, 0.1, scale = 1/1000000, 
+                                    suffix = "M"),
+         str_pct = scales::percent(str_pct, 0.1)) |> 
+  mutate(var = paste0(str_share, " (", str_pct, ")")) |> 
+  select(region, total_change, var) |> 
   set_names(c("Region", "Total rent increase", "Estimated FREH contribution"))
 
 prov_non_FREH <-
   model_change(2022, province, use_FREH = FALSE, use_price = FALSE) |> 
   mutate_region() |> 
   filter(!is.na(region)) |> 
-  summarize(total_rent_dif = sum(total_rent_dif),
-            dif = sum(dif),
-            rent_change_pct = dif / total_rent_dif,
+  summarize(across(total_before:str_share, sum),
+            str_pct = str_share / total_change,
             .by = region) |> 
-  mutate(total_rent_dif = scales::dollar(total_rent_dif, 0.1, scale = 1/1000000, 
-                                         suffix = "M"),
-         dif = scales::dollar(dif, 0.1, scale = 1/1000000, suffix = "M"),
-         rent_change_pct = scales::percent(rent_change_pct, 0.1)) |> 
-  mutate(non_FREH = paste0(dif, " (", rent_change_pct, ")")) |> 
-  select(region, total_rent_dif, non_FREH) |> 
+  mutate(total_change = scales::dollar(total_change, 0.1, scale = 1/1000000, 
+                                       suffix = "M"),
+         str_share = scales::dollar(str_share, 0.1, scale = 1/1000000, 
+                                    suffix = "M"),
+         str_pct = scales::percent(str_pct, 0.1)) |> 
+  mutate(var = paste0(str_share, " (", str_pct, ")")) |> 
+  select(region, total_change, var) |> 
   set_names(c("Region", "Total rent increase", 
               "Estimated non-FREH contribution"))
 
@@ -413,16 +413,16 @@ prov_price <-
   model_change(2022, province, use_FREH = FALSE, use_non_FREH = FALSE) |> 
   mutate_region() |> 
   filter(!is.na(region)) |> 
-  summarize(total_rent_dif = sum(total_rent_dif),
-            dif = sum(dif),
-            rent_change_pct = dif / total_rent_dif,
+  summarize(across(total_before:str_share, sum),
+            str_pct = str_share / total_change,
             .by = region) |> 
-  mutate(total_rent_dif = scales::dollar(total_rent_dif, 0.1, scale = 1/1000000, 
-                                         suffix = "M"),
-         dif = scales::dollar(dif, 0.1, scale = 1/1000000, suffix = "M"),
-         rent_change_pct = scales::percent(rent_change_pct, 0.1)) |> 
-  mutate(price = paste0(dif, " (", rent_change_pct, ")")) |> 
-  select(region, total_rent_dif, price) |> 
+  mutate(total_change = scales::dollar(total_change, 0.1, scale = 1/1000000, 
+                                       suffix = "M"),
+         str_share = scales::dollar(str_share, 0.1, scale = 1/1000000, 
+                                    suffix = "M"),
+         str_pct = scales::percent(str_pct, 0.1)) |> 
+  mutate(var = paste0(str_share, " (", str_pct, ")")) |> 
+  select(region, total_change, var) |> 
   set_names(c("Region", "Total rent increase", "Estimated price contribution"))
 
 prov_FREH |> 

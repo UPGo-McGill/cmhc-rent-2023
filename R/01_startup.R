@@ -96,7 +96,7 @@ model_change <- function(target_year, ..., change_FREH = 0,
     st_drop_geometry() |> 
     select(id:province, rent_change, FREH_change, non_FREH_change, price_change,
            rent_change_raw, FREH_change_raw, non_FREH_change_raw, 
-           price_change_raw)
+           price_change_raw, rent_lag_raw)
   
   # Get coefficients
   y <- mc[[model]]$b
@@ -117,21 +117,17 @@ model_change <- function(target_year, ..., change_FREH = 0,
              universe[year == 2021], .by = id) |> 
     select(id:province, rent, tenant_count)
   
-  # Get rent change
-  rent_change <- 
-    tenant_count |> 
-    group_by(year, ...) |>
-    # group_by(year) |> 
-    mutate(total_rent = rent * tenant_count) |> 
-    summarize(total_rent = sum(total_rent), .groups = "drop") |> 
-    arrange(..., year) |>
-    # arrange(year) |> 
-    group_by(...) |>
-    mutate(dif = slide_dbl(total_rent, \(x) x[2] - x[1], .before = 1)) |> 
-    ungroup() |> 
-    group_by(...) |>
-    summarize(j = "j", total_rent_dif = dif[year == target_year], 
-              .groups = "drop")
+  # Get lagged tenant counts
+  tenant_count_lag <- 
+    monthly_sept |> 
+    st_drop_geometry() |> 
+    # Impute missing values
+    impute() |> 
+    # Update tenant_count to reflect trend in universe
+    mutate(tenant_count_lag = universe * tenant_count[year == 2021] / 
+             universe[year == 2021], .by = id) |> 
+    select(id, year, tenant_count_lag) |> 
+    mutate(year = year + 1)
   
   # Drop additional columns from tenant_count
   tenant_count <- 
@@ -149,7 +145,7 @@ model_change <- function(target_year, ..., change_FREH = 0,
            price_change_c = change_price) |> 
     select(id:province, rent_change_raw, rent_change, FREH_change, 
            FREH_change_c, non_FREH_change, non_FREH_change_c, price_change, 
-           price_change_c) |> 
+           price_change_c, rent_lag_raw) |> 
     # Standardize treatment values
     mutate(FREH_change_c = (FREH_change_c - mean(x$FREH_change_raw)) / 
              sd(x$FREH_change_raw),
@@ -186,26 +182,27 @@ model_change <- function(target_year, ..., change_FREH = 0,
       rent_change_raw_c = rent_change_c * sd(x$rent_change_raw) + 
         mean(x$rent_change_raw),
       .after = rent_change_raw) |> 
-    select(id:rent_change_raw, rent_change_raw_c) |> 
+    select(id:rent_change_raw, rent_change_raw_c, rent_lag_raw) |> 
     left_join(tenant_count, by = c("id", "year")) |> 
-    mutate(total_change = rent_change_raw * tenant_count,
-           total_change_c = rent_change_raw_c * tenant_count) |> 
+    left_join(tenant_count_lag, by = c("id", "year")) |> 
+    mutate(total_before = rent_lag_raw * tenant_count_lag,
+           total_after = (rent_lag_raw + rent_change_raw) * tenant_count,
+           total_after_c = (rent_lag_raw + rent_change_raw_c) * tenant_count) |> 
     group_by(...) |>
     summarize(
       j = "j",
-      total_change = sum(total_change),
-      total_change_c = sum(total_change_c),
-      dif = total_change - total_change_c,
-      dif_pct = dif / total_change, .groups = "drop") |> 
-    left_join(rent_change) |> 
-    mutate(rent_change_pct = dif / total_rent_dif) |> 
-    mutate(year = target_year, .before = total_change) |> 
+      total_before = sum(total_before),
+      total_after = sum(total_after),
+      total_after_c = sum(total_after_c), 
+      total_change = total_after - total_before,
+      str_share = total_after - total_after_c,
+      str_pct = str_share / total_change, .groups = "drop") |> 
+    mutate(year = target_year, .before = total_before) |> 
     select(-j)
   
   # Multiply by 12 if whole_year is TRUE
   if (whole_year) x4 <- x4 |> 
-    mutate(across(-c(year, dif_pct, rent_change_pct_u, rent_change_pct_t), 
-                  \(x) x * 12))
+    mutate(across(-c(year, str_pct), \(x) x * 12))
   
   x4
   
