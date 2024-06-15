@@ -45,29 +45,6 @@ dc$main <-
          across(c(rent:tourism_log), \(x) as.numeric(scale(x))), 
          .before = geometry)
 
-# No log
-dc$no_log <- 
-  monthly_sept |> 
-  # Impute missing values
-  impute() |> 
-  # Filter to only complete observations
-  filter(!is.na(rent_change), !is.na(FREH_change), year >= 2017) |> 
-  # Select relevant variables
-  select(all_of(change_vars)) |> 
-  # Replace zero FREH/non_FREH/price with lowest non-zero values
-  mutate(across(c(FREH_lag, non_FREH_lag, price_lag), 
-                list(dummy = \(x) x == 0)), .before = rent_change) |> 
-  mutate(across(c(FREH_lag, non_FREH_lag, price_lag), 
-                \(x) if_else(x == 0, min(x[x > 0]), x))) |> 
-  # Create logged versions of variables
-  mutate(across(c(rent_lag, FREH_lag, non_FREH_lag, price_lag, apart, income, 
-                  tourism), .fns = list(log = \(x) log(x))), 
-         .before = geometry) |> 
-  # Normalize all variables
-  mutate(across(c(rent_change:tourism_log), list(raw = \(x) x)),
-         across(c(rent_change:tourism_log), \(x) as.numeric(scale(x))),
-         .before = geometry)
-
 # No imputation
 dc$no_imp <-
   monthly_sept |>

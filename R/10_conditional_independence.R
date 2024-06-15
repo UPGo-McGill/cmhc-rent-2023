@@ -35,6 +35,8 @@ test_failures <- map(tc, \(x) {
     table()
 })
 
+qsave(tc, file = "output/tc.qs")
+
 
 # Figure 6: Conditional independence --------------------------------------
 

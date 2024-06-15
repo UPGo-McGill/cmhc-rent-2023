@@ -29,13 +29,16 @@ mc <- map(ac, \(x) resf(dc$main$rent_change, st_drop_geometry(dc$main[x]),
   set_names(names(ac))
 
 # Additional scenarios on common adjustment set
-mc$no_log <- resf(dc$no_log$rent_change, st_drop_geometry(dc$no_log[
-  c(setdiff(ac$common.1, "vacancy_lag_log"), "vacancy_lag")]), gc$no_log, 
-  meig = ec$no_log)
 mc$no_imp <- resf(dc$no_imp$rent_change, st_drop_geometry(dc$no_imp[
   ac$common.1]), gc$no_imp, meig = ec$no_imp)
 mc$no_vac <- resf(dc$no_vac$rent_change, st_drop_geometry(dc$no_vac[
   setdiff(ac$common.1, "vacancy_lag_log")]), gc$no_vac, meig = ec$no_vac)
+
+# Additional non-Gaussian variant on common adjustment set
+mc$non_gauss <- resf(dc$main$rent_change, 
+                     st_drop_geometry(dc$main[ac$common.1]), 
+                     gc$main, meig = ec$main, 
+                     nongauss = nongauss_y(tr_num = 2))
 
 
 # S&NVC -------------------------------------------------------------------
@@ -47,15 +50,6 @@ mc$sn_common_force <- resf_vc(dc$main$rent_change,
                               st_drop_geometry(dc$main[ac$common.1]), 
                               x_nvc = TRUE, xgroup = gc$main, meig = ec$main, 
                               x_sel = 1:4)
-
-
-# Linear models -----------------------------------------------------------
-
-mc$l_common <-
-  ac$common.1 |> 
-  paste(collapse = " + ") |> 
-  paste0(x = "rent_change ~ ", y = _, " + id + CMA:year") |> 
-  lm(data = dc$main)
 
 
 # Save output -------------------------------------------------------------
