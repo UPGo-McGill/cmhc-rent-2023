@@ -211,3 +211,49 @@ fig_A2 <-
   theme(text = element_text(family = "Futura"), legend.position = "bottom")
 
 ggsave("output/figure_A2.png", fig_A2, width = 8, height = 4, units = "in")
+
+
+
+
+### rent_change diagnostics ####################################################
+
+# Figure 3: Residuals-fitted plot -----------------------------------------
+
+fig_A3 <-
+  tibble(pred = mc$common.1$pred$pred, resid = mc$common.1$resid) |> 
+  ggplot(aes(pred, resid)) +
+  geom_point() +
+  geom_smooth(se = FALSE) +
+  scale_x_continuous(name = "Fitted values") +
+  scale_y_continuous(name = "Residuals") +
+  theme_minimal() +
+  theme(text = element_text(family = "Futura"))
+
+ggsave("output/figure_A3.png", fig_A3, width = 8, height = 4, units = "in")
+
+
+# Figure A4: QQ plots -----------------------------------------------------
+
+fig_A4_1 <-
+  ggplot() +
+  geom_qq(aes(sample = mc$common.1$resid)) +
+  geom_qq_line(aes(sample = mc$common.1$resid)) +
+  scale_x_continuous(name = "Theoretical quantiles") + 
+  scale_y_continuous(name = "Sample quantiles") + 
+  ggtitle("Main RE-ESF model") +
+  theme_minimal() +
+  theme(text = element_text(family = "Futura"))
+
+fig_A4_2 <-
+  ggplot() +
+  geom_qq(aes(sample = mc$non_gauss$resid)) +
+  geom_qq_line(aes(sample = mc$non_gauss$resid)) +
+  scale_x_continuous(name = "Theoretical quantiles") + 
+  scale_y_continuous(name = "Sample quantiles") + 
+  ggtitle("Non-Gaussian RE-ESF model") +
+  theme_minimal() +
+  theme(text = element_text(family = "Futura"))
+
+fig_A4 <- wrap_plots(fig_A4_1, fig_A4_2, nrow = 1)
+
+ggsave("output/figure_A4.png", fig_A4, width = 8, height = 4, units = "in")
