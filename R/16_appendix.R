@@ -348,3 +348,87 @@ fig_A6 <-
 ggsave("output/figure_A6.png", fig_A6, width = 8, height = 4, units = "in")
 
 
+### DiD dataset ################################################################
+
+# Load regulations
+reg <-
+  qread("data/reg.qs") |> 
+  mutate(reg = if_else(reg == "TBD", FALSE, as.logical(reg))) |> 
+  mutate(date = if_else(date >= "2023-01-02", NA, date)) |> 
+  mutate(reg = if_else(is.na(date), FALSE, TRUE)) |> 
+  inner_join(st_drop_geometry(cmhc_nbhd), by = c("id", "name")) |> 
+  select(-c(pop:tenant))
+
+
+# Table A4: STR regulations -----------------------------------------------
+
+reg |> 
+  filter(reg) |> 
+  count(name_CSD, province, date) |> 
+  select(-n) |> 
+  gt::gt()
+
+# Montreal borough details
+reg |> 
+  filter(reg) |> 
+  filter(name_CSD == "Montréal")
+
+
+### DiD robustness checks ######################################################
+
+ad <- map(md, map, \(x) aggte(x, type = "simple", na.rm = TRUE, alp = .05))
+
+# Provincial population
+get_census("CA21", regions = list(C = 1), level = "PR") |> 
+  mutate(in_df = GeoUID %in% c("13", "24", "35", "59")) |> 
+  summarize(dwellings = sum(Dwellings), .by = in_df) |> 
+  mutate(pct = dwellings / sum(dwellings))
+  summarize(dwellings_pct = )
+
+
+# Table A5: ATT for all model variants ------------------------------------
+
+map(names(ad), \(x) {
+  tibble(
+    model = x,
+    var = names(ad[[x]]),
+    att = round(map_dbl(ad[[x]], \(x) x$overall.att), 3),
+    se = round(map_dbl(ad[[x]], \(x) x$overall.se), 3))}) |> 
+  bind_rows() |> 
+  mutate(att = paste0(att, "\n(", se, ")")) |> 
+  select(-se) |> 
+  pivot_wider(names_from = var, values_from = att) |> 
+  gt::gt()
+
+# Confidence intervals
+map(md, map, \(x) aggte(x, type = "simple", na.rm = TRUE, alp = .001))
+map(md, map, \(x) aggte(x, type = "simple", na.rm = TRUE, alp = .01))
+ad
+map(md, map, \(x) aggte(x, type = "simple", na.rm = TRUE, alp = .1))
+
+
+### DiD diagnostics ############################################################
+
+
+# Parallel trends assumption ----------------------------------------------
+
+fig_A7_list <-
+  map(names(md), \(x) {
+    aggte(md[[x]]$rent_log, type = "dynamic") |> 
+      ggdid() +
+      ggtitle(x) +
+      theme_minimal() +
+      scale_x_continuous(name = "Years post-treatment", 
+                         breaks = c(-6, -4, -2, 0, 2, 4)) + 
+      scale_y_continuous(name = "ATT") +
+      scale_color_brewer(name = NULL, palette = "Dark2", labels = c(
+        "Pre-treatment", "Post-treatment")) +
+      theme(text = element_text(family = "Futura"),
+            legend.position = "bottom")
+  })
+
+fig_A7 <- 
+  wrap_plots(fig_A7_list, guides = "collect") & 
+  theme(legend.position = "bottom")  
+
+ggsave("output/figure_A7.png", fig_A7, width = 8, height = 8, units = "in")
