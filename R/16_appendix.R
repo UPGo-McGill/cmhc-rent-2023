@@ -213,6 +213,9 @@ fig_A2 <-
 ggsave("output/figure_A2.png", fig_A2, width = 8, height = 4, units = "in")
 
 
+# Table A3: SNVC model ----------------------------------------------------
+
+mc$sn_common_force
 
 
 ### rent_change diagnostics ####################################################
@@ -257,3 +260,11 @@ fig_A4_2 <-
 fig_A4 <- wrap_plots(fig_A4_1, fig_A4_2, nrow = 1)
 
 ggsave("output/figure_A4.png", fig_A4, width = 8, height = 4, units = "in")
+
+
+# VIF ---------------------------------------------------------------------
+
+# VIF on simplified version of model: All values under 2
+lm(rent_change ~ FREH_change + non_FREH_change + price_change + rent_lag_log + 
+     vacancy_lag_log + apart_log + income_log, data = dc$main) |> 
+  car::vif()
