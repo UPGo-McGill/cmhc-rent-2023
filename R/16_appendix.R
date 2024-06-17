@@ -8,6 +8,16 @@ dd <- qread("output/dd.qs")
 mc <- qread("output/mc.qs", nthreads = availableCores())
 md <- qread("output/md.qs")
 tc <- qread("output/tc.qs")
+DA_union <- qread("output/DA_union.qs", nthreads = availableCores())
+province <- qread("output/province.qs", nthreads = availableCores())
+water <- qread("output/water.qs", nthreads = availableCores())
+
+largest_CMAs <- 
+  dc$main |> 
+  st_drop_geometry() |> 
+  count(CMA, sort = TRUE) |> 
+  slice(1:6) |> 
+  pull(CMA)
 
 
 ### Structural causal model ####################################################
