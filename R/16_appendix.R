@@ -268,3 +268,54 @@ ggsave("output/figure_A4.png", fig_A4, width = 8, height = 4, units = "in")
 lm(rent_change ~ FREH_change + non_FREH_change + price_change + rent_lag_log + 
      vacancy_lag_log + apart_log + income_log, data = dc$main) |> 
   car::vif()
+
+
+# Figure A5: Map of residuals ---------------------------------------------
+
+fig_A5_list <- map(largest_CMAs, \(x) {
+  
+  name <- 
+    dc$main |> 
+    filter(CMA == x) |> 
+    pull(name_CMA) |> 
+    unique()
+  
+  prov_name <- 
+    dc$main |> 
+    filter(CMA == x) |> 
+    pull(province) |> 
+    unique()
+  
+  bbox <- st_bbox(filter(dc$main, CMA == x))
+  
+  prov <- filter(DA_union, province == prov_name)
+  wat <- filter(water, province == prov_name)
+  
+  dc$main |> 
+    mutate(.resid = mc$common.1$resid) |> 
+    filter(CMA == x) |> 
+    summarize(.resid = mean(.resid, na.rm = TRUE), 
+              across(geometry, st_union),
+              .by = id) |> 
+    ggplot(aes(fill = .resid)) +
+    geom_sf(data = prov, fill = "grey", colour = "transparent", lwd = 0.1) +
+    geom_sf(colour = "white") +
+    geom_sf(data = wat, colour = "transparent", fill = "white") +
+    scale_fill_viridis_b(name = "Residual", limits = c(-0.5, 0.5), 
+                         n.breaks = 7, oob = scales::squish) +
+    ggtitle(name) +
+    coord_sf(xlim = c(bbox["xmin"], bbox["xmax"]),
+             ylim = c(bbox["ymin"], bbox["ymax"])) +
+    theme_void() +
+    theme(plot.margin = margin(10, 10, 10, 10),
+          text = element_text(family = "Futura"))
+  
+})
+
+fig_A5 <- 
+  wrap_plots(c(fig_A5_list), nrow = 2) + 
+  plot_layout(guides = "collect") & 
+  theme(legend.position = "bottom", legend.key.width = unit(2, "cm"))
+
+ggsave("output/figure_A5.png", fig_A5, width = 10, height = 7, units = "in")
+
