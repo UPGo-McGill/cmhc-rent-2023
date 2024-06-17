@@ -123,13 +123,25 @@ province <- qread("output/province.qs", nthreads = availableCores())
 
 # # Import water ------------------------------------------------------------
 # 
-# water <- 
+# water <-
 #   map(list.files("data/water"), \(x) {
-#     read_sf(paste0("data/water/", x, "/waterbody_2.shp")) |> 
-#       st_transform(3347) |> 
-#       select(feature_id) |> 
-#       mutate(pr = x, .after = feature_id)}) |> 
-#   bind_rows() |> 
+#     read_sf(paste0("data/water/", x, "/waterbody_2.shp")) |>
+#       st_transform(3347) |>
+#       select(feature_id) |>
+#       mutate(pr = x, .after = feature_id)}) |>
+#   bind_rows() |>  
+#   filter(!pr %in% c("NT", "NU", "YT")) |> 
+#   mutate(province = case_when(
+#     pr == "AB" ~ "Alberta",
+#     pr == "BC" ~ "British Columbia",
+#     pr == "MB" ~ "Manitoba",
+#     pr == "NL" ~ "Newfoundland and Labrador",
+#     pr == "NS" ~ "Nova Scotia",
+#     pr == "ON" ~ "Ontario",
+#     pr == "PE" ~ "Prince Edward Island",
+#     pr == "QC" ~ "Quebec",
+#     pr == "SK" ~ "Saskatchewan")) |> 
+#   select(feature_id, province, geometry) |> 
 #   st_set_agr("constant")
 # 
 # qsave(water, file = "output/water.qs", nthreads = availableCores())
