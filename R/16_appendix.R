@@ -319,3 +319,22 @@ fig_A5 <-
 
 ggsave("output/figure_A5.png", fig_A5, width = 10, height = 7, units = "in")
 
+
+# Figure A6: Stationarity of residuals and dependent variable -------------
+
+fig_A6 <- 
+  dc$main |> 
+  st_drop_geometry() |> 
+  mutate(Residuals = mc$common.1$resid[,1]) |> 
+  select(year, Residuals, rent_change) |> 
+  pivot_longer(-year) |> 
+  mutate(year = as.character(year)) |> 
+  ggplot(aes(year, value)) +
+  geom_boxplot() +
+  facet_wrap(~name, scales = "free_y") +
+  theme_minimal() +
+  theme(text = element_text(family = "Futura"))
+
+ggsave("output/figure_A6.png", fig_A6, width = 8, height = 4, units = "in")
+
+
