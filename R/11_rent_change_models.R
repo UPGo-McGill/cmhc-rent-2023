@@ -49,7 +49,7 @@ mc$sn_common <- resf_vc(dc$main$rent_change,
 mc$sn_common_force <- resf_vc(dc$main$rent_change, 
                               st_drop_geometry(dc$main[ac$common.1]), 
                               x_nvc = TRUE, xgroup = gc$main, meig = ec$main, 
-                              x_sel = 1:4)
+                              x_sel = 1:3)
 
 
 # Save output -------------------------------------------------------------
