@@ -24,6 +24,8 @@ tibble(
   se = round(map_dbl(ad$main, \(x) x$overall.se), 3)
 )
 
+ad$main
+
 
 # Figure 8: Calendar effects ----------------------------------------------
 
