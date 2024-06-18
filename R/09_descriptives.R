@@ -4,20 +4,24 @@ source("R/08_data_for_models.R")
 qload("output/cmhc.qsm", nthreads = availableCores())
 
 
-# Figure 5: Correlation between STRs and rent -----------------------------
+# Figure 5: Correlation between STR change and rent_change ----------------
 
 fig_5 <-
   monthly_sept |> 
   st_drop_geometry() |> 
-  select(rent_change, FREH_change, rev_change, price_change) |> 
+  select(rent_change, FREH_change, non_FREH_change, price_change) |> 
+  filter(abs(rent_change) < 400,
+         abs(FREH_change) < 0.01,
+         abs(non_FREH_change) < 0.01,
+         abs(price_change) < 400) |> 
   GGally::ggpairs(aes(size = "fixed", alpha = "fixed"),
           upper = list(continuous = GGally::wrap(
             GGally::ggally_cor, display_grid = FALSE, family = "Futura")),
           lower = list(continuous = GGally::wrap(
             GGally::ggally_smooth_lm, se = FALSE))) +
-  theme_minimal() +
   scale_size_manual(values = c(fixed = 0.2)) +
   scale_alpha_manual(values = c(fixed = 0.4)) +
+  theme_minimal() +
   theme(text = element_text(family = "Futura"),
         axis.text = element_text(size = 5))
 

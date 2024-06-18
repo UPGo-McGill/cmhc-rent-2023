@@ -103,7 +103,7 @@ fig_2 <-
   theme(text = element_text(family = "Futura"),
         legend.position = "bottom")
 
-ggsave("output/figure_2.png", fig_2, width = 8, height = 5, units = "in")
+ggsave("output/figure_2.png", fig_2, width = 8, height = 4, units = "in")
 
 # Sep 2022 figures
 monthly |> 
@@ -159,4 +159,4 @@ fig_3 <-
   theme(text = element_text(family = "Futura"),
         legend.position = "bottom")
   
-ggsave("output/figure_3.png", fig_3, width = 8, height = 5, units = "in")
+ggsave("output/figure_3.png", fig_3, width = 8, height = 4, units = "in")
