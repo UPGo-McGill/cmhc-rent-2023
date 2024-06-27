@@ -85,8 +85,8 @@ source("R/01_startup.R")
 #   mutate(tourism = entertainment + accommodation) |>
 #   mutate(apart = apart_small + apart_big) |> 
 #   select(DA = GeoUID, CMA = CMA_UID, pop = Population, dwellings = Dwellings,
-#          tourism, tourism_parent, rent, tenants, owners, apart, apart_parent,
-#          income, income_parent) |>
+#          tourism, accommodation, tourism_parent, rent, tenants, owners, apart, 
+#          apart_parent, income, income_parent) |>
 #   mutate(area_DA = units::drop_units(st_area(geometry)),
 #          .before = geometry) |>
 #   st_set_agr("constant")
@@ -236,6 +236,7 @@ cmhc_DA <-
     pop = sum(pop * area_int / area_DA, na.rm = TRUE),
     dwellings = sum(dwellings * area_int / area_DA, na.rm = TRUE),
     tourism = sum(tourism * area_int / area_DA, na.rm = TRUE),
+    accommodation = sum(accommodation * area_int / area_DA, na.rm = TRUE),
     tourism_parent = sum(tourism_parent * area_int / area_DA, na.rm = TRUE),
     apart = sum(apart * area_int / area_DA, na.rm = TRUE),
     apart_parent = sum(apart_parent * area_int / area_DA, na.rm = TRUE),
@@ -251,6 +252,7 @@ cmhc_DA <-
   cmhc_DA |> 
   mutate(
     tourism = tourism / tourism_parent,
+    accommodation = accommodation / tourism_parent,
     tenant = tenants_DA / (tenants_DA + owners_DA),
     apart = apart / apart_parent) |>
   rename(tenant_count = tenants_DA) |> 

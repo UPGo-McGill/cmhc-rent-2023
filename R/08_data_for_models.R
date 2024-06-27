@@ -16,8 +16,8 @@ dc <- list()
 change_vars <- c("id", "year", "CMA", "name_CMA", "province", "rent", 
                  "rent_change", "rent_lag", "FREH_change", "FREH_lag", 
                  "non_FREH_change", "non_FREH_lag", "price_change", "price_lag", 
-                 "apart", "income", "tourism", "vacancy_lag", "tenant_count",
-                 "universe", "universe_change")
+                 "apart", "income", "tourism", "vacancy_lag", "tenant", 
+                 "tenant_count", "universe", "universe_change")
 
 # Main: imputed with vacancy_lag_log
 dc$main <-
@@ -25,7 +25,7 @@ dc$main <-
   # Impute missing values
   impute() |> 
   # Filter to only complete observations
-  filter(!is.na(rent_change), !is.na(FREH_change), year >= 2017) |> 
+  filter(!is.na(rent_change), !is.na(FREH_change), year >= 2018) |> 
   # Select relevant variables
   select(all_of(change_vars)) |> 
   # Update tenant_count to reflect trend in universe
@@ -50,7 +50,7 @@ dc$no_imp <-
   monthly_sept |>
   # Filter to only complete observations
   filter(!is.na(rent_change), !is.na(rent_lag), !is.na(FREH_change), 
-         !is.na(vacancy_lag), year >= 2017) |> 
+         !is.na(vacancy_lag), year >= 2018) |> 
   # Select relevant variables
   select(all_of(change_vars)) |> 
   # Replace zero FREH/non_FREH/price/vacancy with lowest non-zero values
@@ -71,7 +71,7 @@ dc$no_imp <-
 dc$no_vac <-
   monthly_sept |> 
   filter(!is.na(rent_change), !is.na(rent_lag), !is.na(FREH_change), 
-         year >= 2017) |> 
+         year >= 2018) |> 
   # Select relevant variables
   select(all_of(change_vars)) |> 
   # Replace zero FREH/non_FREH/price with lowest non-zero values
@@ -109,7 +109,7 @@ dr$no_imp <-
   monthly_sept |> 
   st_drop_geometry() |> 
   filter(!is.na(rent)) |> 
-  select(id:province, rent, FREH, non_FREH, price) |>
+  select(id:province, rent, FREH, non_FREH, price, vacancy) |>
   mutate(across(c(FREH:price), \(x) if_else(
     x == 0, min(x[x > 0], na.rm = TRUE), x))) |> 
   mutate(across(c(rent:price), .fns = list(log = \(x) log(x)))) |> 

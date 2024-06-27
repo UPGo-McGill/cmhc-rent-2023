@@ -94,7 +94,7 @@ CSD <- qread("output/CSD.qs", nthreads = availableCores())
 #   mutate(rev = if_else(R == 0, 0, rev))
 # 
 # 
-# # Convert currency --------------------------------------------------------
+# # Convert currency and adjust for inflation -------------------------------
 # 
 # exchange_rates <- qread("data/exchange_rates.qs")
 # 
@@ -104,27 +104,6 @@ CSD <- qread("output/CSD.qs", nthreads = availableCores())
 #             by = "month") |>
 #   mutate(rev = rev * exchange_rate) |>
 #   select(-year_month, -exchange_rate)
-# 
-# rm(exchange_rates)
-# 
-# 
-# # Calculate FREH ----------------------------------------------------------
-# 
-# # Add FREH
-# monthly <-
-#   monthly |>
-#   arrange(property_ID, month) |>
-#   mutate(FREH = listing_type == "Entire home/apt" & slide2_lgl(
-#     A, R, \(A, R) sum(A) + sum(R) >= 183 & sum(R) > 90, .before = 11),
-#     .by = property_ID, .after = B)
-# 
-# # Add non-FREH
-# monthly <- 
-#   monthly |> 
-#   mutate(non_FREH = !FREH & A + R > 0, .after = FREH)
-# 
-# 
-# # Adjust revenue for inflation --------------------------------------------
 # 
 # cpi <-
 #   read_csv("data/CPI.csv") |>
@@ -151,7 +130,23 @@ CSD <- qread("output/CSD.qs", nthreads = availableCores())
 #   mutate(rev = rev * value) |>
 #   select(-value)
 # 
-# rm(cpi, cpi_income)
+# rm(cpi, cpi_income, exchange_rates)
+# 
+# 
+# # Calculate FREH ----------------------------------------------------------
+# 
+# # Add FREH
+# monthly <-
+#   monthly |>
+#   arrange(property_ID, month) |>
+#   mutate(FREH = listing_type == "Entire home/apt" & slide2_lgl(
+#     A, R, \(A, R) sum(A) + sum(R) >= 183 & sum(R) > 90, .before = 11),
+#     .by = property_ID, .after = B)
+# 
+# # Add non-FREH
+# monthly <-
+#   monthly |>
+#   mutate(non_FREH = !FREH & A + R > 0, .after = FREH)
 # 
 # 
 # # Save intermediate output ------------------------------------------------
@@ -291,15 +286,16 @@ monthly_sept <-
     rev = rev_count / (rent_DA * dwellings * tenant + rev_count),
     FREH = FREH_count / dwellings,
     non_FREH = non_FREH_count / dwellings,
+    STR = FREH + non_FREH,
     .after = price) |> 
   relocate(rent_rel, vacancy_rel, .after = last_col()) |> 
   arrange(id, year) |> 
   mutate(
     # Add YOY change variables
-    across(c(rent:non_FREH), 
+    across(c(rent:STR), 
            list(change = \(x) slide_dbl(x, \(y) y[2] - y[1], .before = 1))),
     # Add lag variables
-    across(c(rent:non_FREH, rent_change:non_FREH_change), list(lag = lag)),
+    across(c(rent:STR, rent_change:STR_change), list(lag = lag)),
     .by = id) |> 
   # Normalize universe_change by total number of rental units
   mutate(universe_change = universe_change / universe) |> 
@@ -308,7 +304,7 @@ monthly_sept <-
   relocate(geometry, .after = last_col()) |> 
   relocate(name, province, CMA, name_CMA, pop, dwellings, .after = year) |> 
   # Set 2023 STR values to NA
-  mutate(across(c(active_count:non_FREH, active_count_change:non_FREH_change),
+  mutate(across(c(active_count:STR, active_count_change:STR_change),
                 \(x) if_else(year == "2023", NA, x)))
 
 qsave(monthly_sept, "output/monthly_sept.qs", nthreads = availableCores())
