@@ -26,7 +26,10 @@ mc$common.1$b |>
   mutate(across(c(Estimate, SE, low, high), \(x) scales::comma(x, 0.001))) |> 
   mutate(Estimate = paste0(Estimate, stars),
          SE = paste0("(", SE, ")")) |> 
-  select(-t_value, -p_value, -stars)
+  select(-t_value, -p_value, -stars) |> 
+  gt::gt()
+
+nrow(dc$main)
 
 
 # Figure 7: Parameter estimates -------------------------------------------
