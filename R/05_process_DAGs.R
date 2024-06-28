@@ -81,6 +81,7 @@ rent_lag_log -> "Rent stickiness"
 rent_lag_log -> "Resident STR decision"
 rent_lag_log -> price_change
 tourism_log -> FREH_lag_log
+tourism_log -> non_FREH_lag_log
 tourism_log -> income_log
 tourism_log -> price_change
 tourism_log -> price_lag_log
