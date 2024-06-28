@@ -8,6 +8,7 @@ qload("output/cmhc.qsm", nthreads = availableCores())
 
 fig_5 <-
   monthly_sept |> 
+  filter(year >= 2018) |> 
   st_drop_geometry() |> 
   select(rent_change, FREH_change, non_FREH_change, price_change) |> 
   filter(abs(rent_change) < 400,
@@ -23,7 +24,8 @@ fig_5 <-
   scale_alpha_manual(values = c(fixed = 0.4)) +
   theme_minimal() +
   theme(text = element_text(family = "Futura"),
-        axis.text = element_text(size = 5))
+        axis.text = element_text(size = 5),
+        strip.text = element_text(size = 7))
 
 ggsave("output/figure_5.png", fig_5, width = 8, height = 4, units = "in")
 
@@ -67,6 +69,8 @@ dr$main |>
 # Table 2: Variables ------------------------------------------------------
 
 monthly_sept |> 
+  mutate(across(c(FREH_change, non_FREH_change, price_change),
+                \(x) if_else(year <= 2018, NA, x))) |> 
   select(rent, rent_change, FREH_change, non_FREH_change, price_change, 
          vacancy_lag, income, apart, tourism) |> 
   st_drop_geometry() |> 
