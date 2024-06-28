@@ -1,4 +1,4 @@
-#### 08 DATA FOR MODELS ########################################################
+#### 06 DATA FOR MODELS ########################################################
 
 source("R/01_startup.R")
 monthly_sept <- qread("output/monthly_sept.qs")
@@ -7,7 +7,7 @@ qload("output/cmhc.qsm", nthreads = availableCores())
 
 # Impute missing rent values for spatial panel ----------------------------
 
-source("R/06_imputation.R")
+source("R/05_imputation.R")
 
 
 # Produce dataset with rent_change as DV ----------------------------------
