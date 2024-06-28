@@ -2,7 +2,6 @@
 
 source("R/01_startup.R")
 source("R/08_data_for_models.R")
-monthly_sept <- qread("output/monthly_sept.qs")
 qload("output/cmhc.qsm", nthreads = availableCores())
 
 
@@ -59,8 +58,11 @@ md_vars <- c("rent_log", "FREH", "non_FREH", "price")
 md <- map(dd, \(y) {
   md_vars |> 
     set_names(md_vars) |> 
-    map(\(x) att_gt(x, tname = "year", idname = "id", gname = "treat", 
-                    allow_unbalanced_panel = TRUE, data = y))}) |> 
+    map(\(x) {
+      anticip = if_else(x == "rent_log", 0, 1)
+      att_gt(x, tname = "year", idname = "id", gname = "treat", 
+                    allow_unbalanced_panel = TRUE, data = y)
+      })}) |> 
   set_names(names(dd))
 
 

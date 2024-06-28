@@ -98,23 +98,17 @@ dr$main <-
   impute() |> 
   st_drop_geometry() |> 
   filter(!is.na(rent)) |> 
-  select(id:province, rent, FREH, non_FREH, price, vacancy) |>
-  mutate(across(c(FREH:vacancy), \(x) if_else(
-    x == 0, min(x[x > 0], na.rm = TRUE), x))) |> 
-  mutate(across(c(rent:vacancy), .fns = list(log = \(x) log(x)))) |> 
-  mutate(across(c(rent:price_log), list(raw = \(x) x)),
-         across(c(rent:vacancy_log), \(x) as.numeric(scale(x))))
+  select(id:province, rent, FREH, non_FREH, price, STR) |>
+  mutate(rent_log = log(rent)) |> 
+  mutate(across(c(rent:rent_log), \(x) as.numeric(scale(x))))
 
 dr$no_imp <- 
   monthly_sept |> 
   st_drop_geometry() |> 
   filter(!is.na(rent)) |> 
   select(id:province, rent, FREH, non_FREH, price, vacancy) |>
-  mutate(across(c(FREH:price), \(x) if_else(
-    x == 0, min(x[x > 0], na.rm = TRUE), x))) |> 
-  mutate(across(c(rent:price), .fns = list(log = \(x) log(x)))) |> 
-  mutate(across(c(rent:price_log), list(raw = \(x) x)),
-         across(c(rent:price_log), \(x) as.numeric(scale(x))))
+  mutate(rent_log = log(rent)) |> 
+  mutate(across(c(rent:rent_log), \(x) as.numeric(scale(x))))
 
 
 # Clean up ----------------------------------------------------------------

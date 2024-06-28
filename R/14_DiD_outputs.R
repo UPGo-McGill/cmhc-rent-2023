@@ -9,22 +9,22 @@ md <- qread("output/md.qs")
 
 ad <- map(md, map, \(x) aggte(x, type = "simple", na.rm = TRUE, alp = .05))
 
-# Maximum confidence intervals
-aggte(md$main$rent_log, type = "simple", na.rm = TRUE, alp = .001)
-aggte(md$main$FREH, type = "simple", na.rm = TRUE, alp = .001)
-aggte(md$main$non_FREH, type = "simple", na.rm = TRUE, alp = .001)
-aggte(md$main$price, type = "simple", na.rm = TRUE, alp = .1)
-
 
 # Table 4 -----------------------------------------------------------------
 
 tibble(
   var = names(ad$main),
   att = round(map_dbl(ad$main, \(x) x$overall.att), 3),
-  se = round(map_dbl(ad$main, \(x) x$overall.se), 3)
-)
+  se = round(map_dbl(ad$main, \(x) x$overall.se), 3))
 
 ad$main
+
+# Maximum confidence intervals
+aggte(md$main$rent_log, type = "simple", na.rm = TRUE, alp = .001)
+aggte(md$main$FREH, type = "simple", na.rm = TRUE, alp = .001)
+aggte(md$main$non_FREH, type = "simple", na.rm = TRUE, alp = .001)
+aggte(md$main$price, type = "simple", na.rm = TRUE, alp = .1)
+
 
 
 # Figure 8: Calendar effects ----------------------------------------------
