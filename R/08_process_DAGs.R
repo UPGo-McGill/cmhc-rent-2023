@@ -30,7 +30,7 @@ non_FREH_change [pos="4.248,-3.229"]
 non_FREH_lag_log [pos="0.434,-3.977"]
 price_change [pos="4.279,-1.770"]
 price_lag_log [pos="0.444,-2.386"]
-regulation [latent,pos="1.477,-6.575"]
+Regulation [latent,pos="1.477,-6.575"]
 rent_change [outcome,pos="7.859,-2.026"]
 rent_lag_log [pos="0.455,0.497"]
 tourism_log [pos="5.048,-6.343"]
@@ -74,8 +74,8 @@ price_change -> "Rent stickiness"
 price_lag_log -> "Landlord STR decision"
 price_lag_log -> "Resident STR decision"
 price_lag_log -> price_change
-regulation -> "Landlord STR decision"
-regulation -> "Resident STR decision"
+Regulation -> "Landlord STR decision"
+Regulation -> "Resident STR decision"
 rent_lag_log -> "Landlord STR decision"
 rent_lag_log -> "Rent stickiness"
 rent_lag_log -> "Resident STR decision"
@@ -157,9 +157,9 @@ ac <- map(ac, \(x) {
 })
 
 
-# Figure 4 ----------------------------------------------------------------
+# Figure 5 ----------------------------------------------------------------
 
-# fig_4 <-
+# fig_5 <-
 #   hc$FREH |>
 #   tidy_dagitty() |>
 #   node_status() |>
@@ -196,7 +196,7 @@ ac <- map(ac, \(x) {
 #   theme(plot.background = element_rect(colour = "transparent", fill = "white"),
 #         text = element_text(family = "Futura"), legend.position = "bottom")
 # 
-# ggsave("output/figure_4.png", fig_4, width = 12, height = 7, units = "in")
+# ggsave("output/figure_5.png", fig_5, width = 12, height = 7, units = "in")
 
 
 # Clean up ----------------------------------------------------------------
