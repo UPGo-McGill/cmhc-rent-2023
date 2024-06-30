@@ -1,7 +1,7 @@
-#### 13 DIFFERENCE-IN-DIFFERENCES MODELS #######################################
+#### 12 DIFFERENCE-IN-DIFFERENCES MODELS #######################################
 
 source("R/01_startup.R")
-source("R/08_data_for_models.R")
+source("R/06_data_for_models.R")
 qload("output/cmhc.qsm", nthreads = availableCores())
 
 
@@ -63,7 +63,8 @@ md <- map(dd, \(y) {
       att_gt(x, tname = "year", idname = "id", gname = "treat", 
                     allow_unbalanced_panel = TRUE, data = y)
       })}) |> 
-  set_names(names(dd))
+  set_names(names(dd)) |> 
+  suppressWarnings()
 
 
 # Revert IDs --------------------------------------------------------------
