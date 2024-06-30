@@ -1,7 +1,7 @@
 #### 10 RENT CHANGE MODELS #####################################################
 
-source("R/05_process_DAGs.R")
-source("R/08_data_for_models.R")
+source("R/06_data_for_models.R")
+source("R/08_process_DAGs.R")
 
 
 # Prepare eigenvectors ----------------------------------------------------
