@@ -1,7 +1,7 @@
-#### RENT CHANGE MODEL OUTPUTS #################################################
+#### 11 RENT CHANGE MODEL OUTPUTS ##############################################
 
 source("R/01_startup.R")
-source("R/05_process_DAGs.R")
+source("R/08_process_DAGs.R")
 mc <- qread("output/mc.qs", nthreads = availableCores())
 
 
@@ -29,12 +29,12 @@ mc$common.1$b |>
   select(-t_value, -p_value, -stars) |> 
   gt::gt()
 
-nrow(dc$main)
+nrow(mc$common.1$sf)
 
 
 # Figure 7: Parameter estimates -------------------------------------------
 
-fig_7 <-
+fig_8 <-
   names(ac) |> 
   map(\(x) {
     mc[[x]]$b |> 
@@ -63,4 +63,4 @@ fig_7 <-
   theme_minimal() +
   theme(text = element_text(family = "Futura"), legend.position = "bottom")
 
-ggsave("output/figure_7.png", fig_7, width = 8, height = 4, units = "in")
+ggsave("output/figure_8.png", fig_8, width = 8, height = 4, units = "in")

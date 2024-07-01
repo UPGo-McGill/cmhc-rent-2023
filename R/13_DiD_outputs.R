@@ -1,4 +1,4 @@
-#### 14 DIFFERENCE-IN-DIFFERENCES OUTPUTS ######################################
+#### 13 DIFFERENCE-IN-DIFFERENCES OUTPUTS ######################################
 
 source("R/01_startup.R")
 dd <- qread("output/dd.qs")
@@ -8,6 +8,24 @@ md <- qread("output/md.qs")
 # Results -----------------------------------------------------------------
 
 ad <- map(md, map, \(x) aggte(x, type = "simple", na.rm = TRUE, alp = .05))
+
+
+# Figure 7: Parallel trends assumption ------------------------------------
+
+fig_7 <- 
+  aggte(md$main$rent_log, type = "dynamic") |> 
+  ggdid() +
+  ggtitle(NULL) +
+  theme_minimal() +
+  scale_x_continuous(name = "Years post-treatment", 
+                     breaks = c(-6, -4, -2, 0, 2, 4)) + 
+  scale_y_continuous(name = "ATT") +
+  scale_color_brewer(name = NULL, palette = "Dark2", labels = c(
+    "Pre-treatment", "Post-treatment")) +
+  theme(text = element_text(family = "Futura"),
+        legend.position = "bottom")
+
+ggsave("output/figure_7.png", fig_7, width = 8, height = 4, units = "in")
 
 
 # Table 4 -----------------------------------------------------------------
@@ -62,21 +80,3 @@ fig_8 <-
   theme(text = element_text(family = "Futura"), legend.position = "bottom")
 
 ggsave("output/figure_8.png", fig_8, width = 8, height = 4, units = "in")
-
-
-# Figure 9: Parallel trends assumption ------------------------------------
-
-fig_9 <- 
-  aggte(md$main$rent_log, type = "dynamic") |> 
-  ggdid() +
-  ggtitle(NULL) +
-  theme_minimal() +
-  scale_x_continuous(name = "Years post-treatment", 
-                     breaks = c(-6, -4, -2, 0, 2, 4)) + 
-  scale_y_continuous(name = "ATT") +
-  scale_color_brewer(name = NULL, palette = "Dark2", labels = c(
-    "Pre-treatment", "Post-treatment")) +
-  theme(text = element_text(family = "Futura"),
-        legend.position = "bottom")
-
-ggsave("output/figure_9.png", fig_9, width = 8, height = 4, units = "in")
