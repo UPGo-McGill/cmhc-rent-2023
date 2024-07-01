@@ -28,6 +28,7 @@ treat_table |>
   pivot_wider(names_from = "var", values_from = "effect") |> 
   ggplot(aes(FREH, rent_log)) +
   geom_point()
-  lm(rent_log ~ FREH + non_FREH, data = _) |> 
-  summary()
+
+# -0.132 FREH and -0.129 non_FREH -> -0.0461 rent_log
+  
   
