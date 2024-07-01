@@ -1,9 +1,9 @@
 #### 15 DISCUSSION #############################################################
 
-source("R/05_process_DAGs.R")
-source("R/08_data_for_models.R")
+source("R/06_data_for_models.R")
+source("R/08_process_DAGs.R")
 qload("output/cmhc.qsm", nthreads = availableCores())
-source("R/06_imputation.R")
+source("R/05_imputation.R")
 dd <- qread("output/dd.qs")
 mc <- qread("output/mc.qs", nthreads = availableCores())
 md <- qread("output/md.qs")
@@ -12,27 +12,26 @@ md <- qread("output/md.qs")
 # Size of STR effect ------------------------------------------------------
 
 effect_yty <- bind_rows(
-  model_change(2017),
   model_change(2018),
   model_change(2019),
   model_change(2020),
   model_change(2021),
   model_change(2022))
 
-dc_2016 <-
+dc_2017 <-
   dc$main |> 
   st_drop_geometry() |> 
-  filter(year == 2017) |> 
+  filter(year == 2018) |> 
   select(id, FREH_lag_raw, FREH_lag_dummy, non_FREH_lag_raw, non_FREH_lag_dummy,
          price_lag_raw, price_lag_dummy) |> 
   mutate(FREH_lag_raw = if_else(FREH_lag_dummy, 0, FREH_lag_raw),
          non_FREH_lag_raw = if_else(non_FREH_lag_dummy, 0, non_FREH_lag_raw),
          price_lag_raw = if_else(price_lag_dummy, 0, price_lag_raw)) |> 
-  select(id, FREH_2016 = FREH_lag_raw, non_FREH_2016 = non_FREH_lag_raw, 
-         price_2016 = price_lag_raw)
+  select(id, FREH_2017 = FREH_lag_raw, non_FREH_2017 = non_FREH_lag_raw, 
+         price_2017 = price_lag_raw)
     
-back_to_2016 <- 
-  map(2017:2022, \(x) {
+back_to_2017 <- 
+  map(2018:2022, \(x) {
     dc$main |> 
       st_drop_geometry() |> 
       filter(year == x) |> 
@@ -40,62 +39,58 @@ back_to_2016 <-
              non_FREH_lag_raw = if_else(non_FREH_lag_dummy, 0, 
                                         non_FREH_lag_raw),
              price_lag_raw = if_else(price_lag_dummy, 0, price_lag_raw)) |> 
-      inner_join(dc_2016, by = "id") |> 
-      mutate(FREH_change_new = FREH_2016 - FREH_lag_raw,
-             non_FREH_change_new = non_FREH_2016 - non_FREH_lag_raw,
-             price_change_new = price_2016 - price_lag_raw) |> 
+      inner_join(dc_2017, by = "id") |> 
+      mutate(FREH_change_new = FREH_2017 - FREH_lag_raw,
+             non_FREH_change_new = non_FREH_2017 - non_FREH_lag_raw,
+             price_change_new = price_2017 - price_lag_raw) |> 
       select(id, FREH_change_new, non_FREH_change_new, price_change_new)}) |> 
-  set_names(2017:2022)
+  set_names(2018:2022)
 
 effect_cum <- bind_rows(
-  model_change(2017, 
-               change_FREH = back_to_2016$`2017`$FREH_change_new, 
-               change_non_FREH = back_to_2016$`2017`$non_FREH_change_new, 
-               change_price = back_to_2016$`2017`$price_change_new),
   model_change(2018, 
-               change_FREH = back_to_2016$`2018`$FREH_change_new, 
-               change_non_FREH = back_to_2016$`2018`$non_FREH_change_new, 
-               change_price = back_to_2016$`2018`$price_change_new),
+               change_FREH = back_to_2017$`2018`$FREH_change_new, 
+               change_non_FREH = back_to_2017$`2018`$non_FREH_change_new, 
+               change_price = back_to_2017$`2018`$price_change_new),
   model_change(2019, 
-               change_FREH = back_to_2016$`2019`$FREH_change_new, 
-               change_non_FREH = back_to_2016$`2019`$non_FREH_change_new, 
-               change_price = back_to_2016$`2019`$price_change_new),
+               change_FREH = back_to_2017$`2019`$FREH_change_new, 
+               change_non_FREH = back_to_2017$`2019`$non_FREH_change_new, 
+               change_price = back_to_2017$`2019`$price_change_new),
   model_change(2020, 
-               change_FREH = back_to_2016$`2020`$FREH_change_new, 
-               change_non_FREH = back_to_2016$`2020`$non_FREH_change_new, 
-               change_price = back_to_2016$`2020`$price_change_new),
+               change_FREH = back_to_2017$`2020`$FREH_change_new, 
+               change_non_FREH = back_to_2017$`2020`$non_FREH_change_new, 
+               change_price = back_to_2017$`2020`$price_change_new),
   model_change(2021, 
-               change_FREH = back_to_2016$`2021`$FREH_change_new, 
-               change_non_FREH = back_to_2016$`2021`$non_FREH_change_new, 
-               change_price = back_to_2016$`2021`$price_change_new),
+               change_FREH = back_to_2017$`2021`$FREH_change_new, 
+               change_non_FREH = back_to_2017$`2021`$non_FREH_change_new, 
+               change_price = back_to_2017$`2021`$price_change_new),
   model_change(2022, 
-               change_FREH = back_to_2016$`2022`$FREH_change_new, 
-               change_non_FREH = back_to_2016$`2022`$non_FREH_change_new, 
-               change_price = back_to_2016$`2022`$price_change_new))
+               change_FREH = back_to_2017$`2022`$FREH_change_new, 
+               change_non_FREH = back_to_2017$`2022`$non_FREH_change_new, 
+               change_price = back_to_2017$`2022`$price_change_new))
 
 # Average effect before pandemic
 effect_yty |> 
   filter(year <= 2019) |> 
-  pull(rent_change_pct) |> 
+  pull(str_pct) |> 
   mean() |> 
   scales::percent(0.1)
 
 # Average effect during pandemic
 effect_yty |> 
   filter(year == 2020) |> 
-  pull(rent_change_pct) |> 
+  pull(str_pct) |> 
   scales::percent(0.1)
 
 # Cumulative effect before pandemic
 effect_cum |> 
   filter(year == 2019) |> 
-  pull(rent_change_pct) |> 
+  pull(str_pct) |> 
   scales::percent(0.1)
 
 # Cumulative effect by 2022
 effect_cum |> 
   filter(year == 2022) |> 
-  pull(rent_change_pct) |> 
+  pull(str_pct) |> 
   scales::percent(0.1)
 
 
@@ -103,22 +98,23 @@ effect_cum |>
 
 fig_10 <-
   effect_yty |> 
-  select(year, rent_change_pct, dif) |> 
+  select(year, str_pct, str_share) |> 
   mutate(type = "Year-to-year effect") |> 
   bind_rows(
     effect_cum |>
-      select(year, rent_change_pct, dif) |>
+      select(year, str_pct, str_share) |>
       mutate(type = "Cumulative effect")) |>
   mutate(type = factor(type, levels = c("Year-to-year effect",
                                         "Cumulative effect"))) |>
-  ggplot(aes(year, rent_change_pct, colour = rent_change_pct > 0)) +
+  ggplot(aes(year, str_pct, colour = str_pct > 0)) +
   geom_hline(yintercept = 0, linetype = "dashed") +
   geom_point(size = 5) +
   geom_segment(aes(yend = 0), lwd = 2) +
   geom_label(
-    aes(label = scales::dollar(dif, 0.1, scale = 1/1000000, suffix = "M")),
-    family = "Futura", nudge_y = c(-0.015, 0.015, 0.015, 0.015, 0.015, 0.015, 
-                                   -0.01, -0.01, -0.01, 0.01, 0.01, 0.01)) +
+    aes(label = scales::dollar(str_share, 0.1, scale = 1/1000000, 
+                               suffix = "M")),
+    family = "Futura", nudge_y = c(-0.015, -0.015, 0.015, 0.015, -0.015, 
+                                   -0.01, -0.01, 0.01, 0.01, -0.01)) +
   facet_wrap(~type, nrow = 2, scales = "free") +
   scale_x_continuous(name = NULL) +
   scale_y_continuous(name = NULL, labels = scales::percent) +
@@ -349,7 +345,6 @@ did_rent_non_treated <-
   dr$main |> 
   anti_join(did_rent_dif, by = c("id")) |> 
   # Remove Georgina ON, because it removed its PR restriction
-  filter(id != "2270780") |> 
   filter(year == 2022) |> 
   mutate(att = dyn$att.egt[dyn$egt == 0]) |> 
   mutate(rent_log_cf = rent_log - att) |> 
