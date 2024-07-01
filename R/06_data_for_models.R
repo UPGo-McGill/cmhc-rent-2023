@@ -100,7 +100,8 @@ dr$main <-
   filter(!is.na(rent)) |> 
   select(id:province, rent, FREH, non_FREH, price, STR) |>
   mutate(rent_log = log(rent)) |> 
-  mutate(across(c(rent:rent_log), \(x) as.numeric(scale(x))))
+  mutate(across(c(rent:rent_log), list(raw = \(x) x)),
+         across(c(rent:rent_log), \(x) as.numeric(scale(x))))
 
 dr$no_imp <- 
   monthly_sept |> 
@@ -108,7 +109,8 @@ dr$no_imp <-
   filter(!is.na(rent)) |> 
   select(id:province, rent, FREH, non_FREH, price, vacancy) |>
   mutate(rent_log = log(rent)) |> 
-  mutate(across(c(rent:rent_log), \(x) as.numeric(scale(x))))
+  mutate(across(c(rent:rent_log), list(raw = \(x) x)),
+         across(c(rent:rent_log), \(x) as.numeric(scale(x))))
 
 
 # Clean up ----------------------------------------------------------------

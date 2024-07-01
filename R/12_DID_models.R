@@ -66,6 +66,10 @@ md <- map(dd, \(y) {
   set_names(names(dd)) |> 
   suppressWarnings()
 
+md$no_2023$rent_log <- 
+  att_gt("rent_log", tname = "year", idname = "id", gname = "treat", 
+         allow_unbalanced_panel = TRUE, data = filter(dd$main, year <= 2022))
+
 
 # Revert IDs --------------------------------------------------------------
 
