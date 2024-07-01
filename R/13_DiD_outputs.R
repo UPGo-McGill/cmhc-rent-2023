@@ -53,7 +53,7 @@ cal$van <- aggte(md$van$rent_log, type = "calendar")
 cal$FREH <- aggte(md$main$FREH, type = "calendar")
 cal$van_FREH <- aggte(md$van$FREH, type = "calendar")
 
-fig_8 <-
+fig_9 <-
   tibble(year = 2019:2023, att = cal$main$att.egt, SE = cal$main$se.egt, 
          var = "rent_log", model = "Main") |> 
   bind_rows(tibble(year = 2019:2023, att = cal$van$att.egt, 
@@ -79,4 +79,4 @@ fig_8 <-
   theme_minimal() +
   theme(text = element_text(family = "Futura"), legend.position = "bottom")
 
-ggsave("output/figure_8.png", fig_8, width = 8, height = 4, units = "in")
+ggsave("output/figure_9.png", fig_9, width = 8, height = 4, units = "in")
