@@ -1,9 +1,9 @@
 #### 16 APPENDIX: DIAGNOSTICS AND ROBUSTNESS CHECKS ############################
 
-source("R/05_process_DAGs.R")
-source("R/08_data_for_models.R")
+source("R/06_data_for_models.R")
+source("R/08_process_DAGs.R")
 qload("output/cmhc.qsm", nthreads = availableCores())
-source("R/06_imputation.R")
+source("R/05_imputation.R")
 dd <- qread("output/dd.qs")
 mc <- qread("output/mc.qs", nthreads = availableCores())
 md <- qread("output/md.qs")
@@ -115,7 +115,15 @@ tc$var_2 |>
   mutate(cond_vars = str_extract(var_2, "(?<= \\| ).*"),
          var_2 = str_remove(var_2, " \\| .*"),
          .after = var_2) |> 
+  mutate(stars = case_when(
+    p < 0.001 ~ "***",
+    p < 0.01 ~ "**",
+    p < 0.05 ~ "*",
+    p < 0.1 ~ "+",
+    .default = "")) |> 
   mutate(across(estimate:high, \(x) scales::comma(x, 0.001))) |> 
+  mutate(estimate = paste0(estimate, stars)) |> 
+  select(-p, -stars) |> 
   gt::gt()
 
 
@@ -383,7 +391,6 @@ get_census("CA21", regions = list(C = 1), level = "PR") |>
   mutate(in_df = GeoUID %in% c("13", "24", "35", "59")) |> 
   summarize(dwellings = sum(Dwellings), .by = in_df) |> 
   mutate(pct = dwellings / sum(dwellings))
-  summarize(dwellings_pct = )
 
 
 # Table A5: ATT for all model variants ------------------------------------
@@ -398,6 +405,7 @@ map(names(ad), \(x) {
   mutate(att = paste0(att, "\n(", se, ")")) |> 
   select(-se) |> 
   pivot_wider(names_from = var, values_from = att) |> 
+  filter(model != "no_2023") |> 
   gt::gt()
 
 # Confidence intervals
@@ -409,11 +417,10 @@ map(md, map, \(x) aggte(x, type = "simple", na.rm = TRUE, alp = .1))
 
 ### DiD diagnostics ############################################################
 
-
 # Parallel trends assumption ----------------------------------------------
 
 fig_A7_list <-
-  map(names(md), \(x) {
+  map(setdiff(names(md), "no_2023"), \(x) {
     aggte(md[[x]]$rent_log, type = "dynamic") |> 
       ggdid() +
       ggtitle(x) +
@@ -427,7 +434,7 @@ fig_A7_list <-
             legend.position = "bottom")
   })
 
-fig_A7 <- 
+fig_A7 <-
   wrap_plots(fig_A7_list, guides = "collect") & 
   theme(legend.position = "bottom")  
 
