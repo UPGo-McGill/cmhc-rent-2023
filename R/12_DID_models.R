@@ -26,7 +26,8 @@ dd <-
       # Remove provinces with no treatment in the time period
       filter(!province %in% c("Manitoba", "Saskatchewan", "Nova Scotia", 
                               "Prince Edward Island", "Alberta",
-                              "Newfoundland and Labrador"))
+                              "Newfoundland and Labrador",
+                              "Northwest Territories"))
   })
 
 dd$all <- 
@@ -48,7 +49,8 @@ dd$van <-
   # Remove provinces with no treatment in the time period
   filter(!province %in% c("Manitoba", "Saskatchewan", "Nova Scotia", 
                           "Prince Edward Island", "Alberta",
-                          "Newfoundland and Labrador"))
+                          "Newfoundland and Labrador",
+                          "Northwest Territories"))
 
 
 # Fit models --------------------------------------------------------------

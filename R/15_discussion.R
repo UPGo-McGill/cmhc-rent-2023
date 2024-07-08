@@ -221,7 +221,6 @@ did_rent_dif <-
 
 # Number/% of treated neighbourhoods
 nrow(filter(did_rent_dif, year == treat))
-nrow(filter(did_rent_dif, year == treat)) / nrow(cmhc_nbhd)
 
 # Average rent decrease in first year
 did_rent_dif |> 
@@ -233,7 +232,8 @@ did_rent_dif |>
     mean_rent_dif = weighted.mean(rent_dif, tenant_count),
     total_rent = sum(total_rent),
     total_rent_dif = sum(total_rent_dif)) |> 
-  mutate(pct = total_rent_dif / (total_rent + total_rent_dif))
+  mutate(pct = scales::percent(
+    total_rent_dif / (total_rent + total_rent_dif), 0.1))
 
 # Average rent decrease in 2022
 did_rent_dif |> 
@@ -245,7 +245,8 @@ did_rent_dif |>
     mean_rent_dif = weighted.mean(rent_dif, tenant_count),
     total_rent = sum(total_rent),
     total_rent_dif = sum(total_rent_dif)) |> 
-  mutate(pct = total_rent_dif / (total_rent + total_rent_dif))
+  mutate(pct = scales::percent(
+    total_rent_dif / (total_rent + total_rent_dif), 0.1))
 
 
 # DiD FREH implications ---------------------------------------------------
@@ -277,7 +278,8 @@ did_FREH_dif |>
     mean_FREH_dif = weighted.mean(FREH_dif, tenant_count),
     total_FREH = sum(total_FREH),
     total_FREH_dif = sum(total_FREH_dif)) |> 
-  mutate(pct = total_FREH_dif / (total_FREH + total_FREH_dif))
+  mutate(pct = scales::percent(
+    total_FREH_dif / (total_FREH + total_FREH_dif), 0.1))
 
 # Average FREH decrease in 2022
 did_FREH_dif |> 
@@ -289,7 +291,8 @@ did_FREH_dif |>
     mean_FREH_dif = weighted.mean(FREH_dif, tenant_count),
     total_FREH = sum(total_FREH),
     total_FREH_dif = sum(total_FREH_dif)) |> 
-  mutate(pct = total_FREH_dif / (total_FREH + total_FREH_dif))
+  mutate(pct = scales::percent(
+    total_FREH_dif / (total_FREH + total_FREH_dif), 0.1))
 
 
 # DiD non-FREH implications -----------------------------------------------
@@ -322,7 +325,8 @@ did_non_FREH_dif |>
     mean_non_FREH_dif = weighted.mean(non_FREH_dif, tenant_count),
     total_non_FREH = sum(total_non_FREH),
     total_non_FREH_dif = sum(total_non_FREH_dif)) |> 
-  mutate(pct = total_non_FREH_dif / (total_non_FREH + total_non_FREH_dif))
+  mutate(pct = scales::percent(
+    total_non_FREH_dif / (total_non_FREH + total_non_FREH_dif), 0.1))
 
 # Average non-FREH decrease in 2022
 did_non_FREH_dif |> 
@@ -334,7 +338,8 @@ did_non_FREH_dif |>
     mean_non_FREH_dif = weighted.mean(non_FREH_dif, tenant_count),
     total_non_FREH = sum(total_non_FREH),
     total_non_FREH_dif = sum(total_non_FREH_dif)) |> 
-  mutate(pct = total_non_FREH_dif / (total_non_FREH + total_non_FREH_dif))
+  mutate(pct = scales::percent(
+    total_non_FREH_dif / (total_non_FREH + total_non_FREH_dif), 0.1))
 
 
 # Effect of regulations on non-regulated places ---------------------------
@@ -366,7 +371,8 @@ did_rent_non_treated |>
     mean_rent_dif = weighted.mean(rent_dif, tenant_count),
     total_rent = sum(total_rent),
     total_rent_dif = sum(total_rent_dif)) |> 
-  mutate(pct = total_rent_dif / (total_rent + total_rent_dif))
+  mutate(pct = scales::percent(
+    total_rent_dif / (total_rent + total_rent_dif), 0.1))
 
 
 # Table 5: Regional breakdown ---------------------------------------------
