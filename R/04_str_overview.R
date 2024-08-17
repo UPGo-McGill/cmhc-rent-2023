@@ -55,8 +55,8 @@ cmhc |>
   summarize(rent = sum(rent * universe, na.rm = TRUE) / 
               sum(universe, na.rm = TRUE), .by = year)
 
-# Annualized increase: 8.0%
-685 * 1.08 ^ 8
+# Annualized increase: 4.4%
+899 * 1.044 ^ 8
 
 # 2015-2023 inflation
 cpi |> 
@@ -64,7 +64,7 @@ cpi |>
          product == "All-items") |> 
   summarize(change = value[2] / value[1] - 1)
 
-# Annualized increase: 3.0%
+# Annualized increase: 2.8%
 1.028 ^ 8
 
 

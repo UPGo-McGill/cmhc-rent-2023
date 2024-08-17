@@ -181,7 +181,7 @@ monthly_sept |>
   scales::percent(0.1)
 
 
-# DiD rent implications ---------------------------------------------------
+# DiD implication setup ---------------------------------------------------
 
 did_effects <- 
   tibble(treat = md$main$rent_log$group,
@@ -219,38 +219,6 @@ did_rent_dif <-
   select(id, year, treat, rent_raw, rent_dif) |> 
   inner_join(tenant_count, by = c("id", "year"))
 
-# Number/% of treated neighbourhoods
-nrow(filter(did_rent_dif, year == treat))
-
-# Average rent decrease in first year
-did_rent_dif |> 
-  filter(year == treat) |> 
-  mutate(total_rent = rent_raw * tenant_count,
-         total_rent_dif = rent_dif * tenant_count) |> 
-  summarize(
-    mean_rent = weighted.mean(rent_raw, tenant_count),
-    mean_rent_dif = weighted.mean(rent_dif, tenant_count),
-    total_rent = sum(total_rent),
-    total_rent_dif = sum(total_rent_dif)) |> 
-  mutate(pct = scales::percent(
-    total_rent_dif / (total_rent + total_rent_dif), 0.1))
-
-# Average rent decrease in 2022
-did_rent_dif |> 
-  filter(year == 2022) |> 
-  mutate(total_rent = rent_raw * tenant_count,
-         total_rent_dif = rent_dif * tenant_count) |> 
-  summarize(
-    mean_rent = weighted.mean(rent_raw, tenant_count),
-    mean_rent_dif = weighted.mean(rent_dif, tenant_count),
-    total_rent = sum(total_rent),
-    total_rent_dif = sum(total_rent_dif)) |> 
-  mutate(pct = scales::percent(
-    total_rent_dif / (total_rent + total_rent_dif), 0.1))
-
-
-# DiD FREH implications ---------------------------------------------------
-
 did_FREH_effects <- 
   tibble(treat = md$main$FREH$group,
          year = md$main$FREH$t,
@@ -267,35 +235,6 @@ did_FREH_dif <-
   mutate(FREH_dif = FREH_cf_raw - FREH_raw) |> 
   select(id, year, treat, FREH_raw, FREH_dif) |> 
   inner_join(tenant_count, by = c("id", "year"))
-
-# Average FREH decrease in first year
-did_FREH_dif |> 
-  filter(year == treat) |> 
-  mutate(total_FREH = FREH_raw * tenant_count,
-         total_FREH_dif = FREH_dif * tenant_count) |> 
-  summarize(
-    mean_FREH = weighted.mean(FREH_raw, tenant_count),
-    mean_FREH_dif = weighted.mean(FREH_dif, tenant_count),
-    total_FREH = sum(total_FREH),
-    total_FREH_dif = sum(total_FREH_dif)) |> 
-  mutate(pct = scales::percent(
-    total_FREH_dif / (total_FREH + total_FREH_dif), 0.1))
-
-# Average FREH decrease in 2022
-did_FREH_dif |> 
-  filter(year == 2022) |> 
-  mutate(total_FREH = FREH_raw * tenant_count,
-         total_FREH_dif = FREH_dif * tenant_count) |> 
-  summarize(
-    mean_FREH = weighted.mean(FREH_raw, tenant_count),
-    mean_FREH_dif = weighted.mean(FREH_dif, tenant_count),
-    total_FREH = sum(total_FREH),
-    total_FREH_dif = sum(total_FREH_dif)) |> 
-  mutate(pct = scales::percent(
-    total_FREH_dif / (total_FREH + total_FREH_dif), 0.1))
-
-
-# DiD non-FREH implications -----------------------------------------------
 
 did_non_FREH_effects <- 
   tibble(treat = md$main$non_FREH$group,
@@ -315,6 +254,38 @@ did_non_FREH_dif <-
   select(id, year, treat, non_FREH_raw, non_FREH_dif) |> 
   inner_join(tenant_count, by = c("id", "year"))
 
+
+# DiD first-year implications ---------------------------------------------
+
+# Number/% of treated neighbourhoods
+nrow(filter(did_rent_dif, year == treat))
+
+# Average rent decrease in first year
+did_rent_dif |> 
+  filter(year == treat) |> 
+  mutate(total_rent = rent_raw * tenant_count,
+         total_rent_dif = rent_dif * tenant_count) |> 
+  summarize(
+    mean_rent = weighted.mean(rent_raw, tenant_count),
+    mean_rent_dif = weighted.mean(rent_dif, tenant_count),
+    total_rent = sum(total_rent),
+    total_rent_dif = sum(total_rent_dif)) |> 
+  mutate(pct = scales::percent(
+    total_rent_dif / (total_rent + total_rent_dif), 0.1))
+
+# Average FREH decrease in first year
+did_FREH_dif |> 
+  filter(year == treat) |> 
+  mutate(total_FREH = FREH_raw * tenant_count,
+         total_FREH_dif = FREH_dif * tenant_count) |> 
+  summarize(
+    mean_FREH = weighted.mean(FREH_raw, tenant_count),
+    mean_FREH_dif = weighted.mean(FREH_dif, tenant_count),
+    total_FREH = sum(total_FREH),
+    total_FREH_dif = sum(total_FREH_dif)) |> 
+  mutate(pct = scales::percent(
+    total_FREH_dif / (total_FREH + total_FREH_dif), 0.1))
+
 # Average non-FREH decrease in first year
 did_non_FREH_dif |> 
   filter(year == treat) |> 
@@ -327,6 +298,35 @@ did_non_FREH_dif |>
     total_non_FREH_dif = sum(total_non_FREH_dif)) |> 
   mutate(pct = scales::percent(
     total_non_FREH_dif / (total_non_FREH + total_non_FREH_dif), 0.1))
+
+
+# DiD 2022 implications ---------------------------------------------------
+
+# Average rent decrease in 2022
+did_rent_dif |> 
+  filter(year == 2022) |> 
+  mutate(total_rent = rent_raw * tenant_count,
+         total_rent_dif = rent_dif * tenant_count) |> 
+  summarize(
+    mean_rent = weighted.mean(rent_raw, tenant_count),
+    mean_rent_dif = weighted.mean(rent_dif, tenant_count),
+    total_rent = sum(total_rent),
+    total_rent_dif = sum(total_rent_dif)) |> 
+  mutate(pct = scales::percent(
+    total_rent_dif / (total_rent + total_rent_dif), 0.1))
+
+# Average FREH decrease in 2022
+did_FREH_dif |> 
+  filter(year == 2022) |> 
+  mutate(total_FREH = FREH_raw * tenant_count,
+         total_FREH_dif = FREH_dif * tenant_count) |> 
+  summarize(
+    mean_FREH = weighted.mean(FREH_raw, tenant_count),
+    mean_FREH_dif = weighted.mean(FREH_dif, tenant_count),
+    total_FREH = sum(total_FREH),
+    total_FREH_dif = sum(total_FREH_dif)) |> 
+  mutate(pct = scales::percent(
+    total_FREH_dif / (total_FREH + total_FREH_dif), 0.1))
 
 # Average non-FREH decrease in 2022
 did_non_FREH_dif |> 

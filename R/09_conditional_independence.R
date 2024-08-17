@@ -22,6 +22,7 @@ tc <- map(1:4, \(x) {
 # Test successes
 map(tc, \(x) count(x, pass = low * high <= 0))
 
+# Test failures
 test_failures <- map(tc, \(x) {
   x |> 
     filter(low * high > 0) |> 
@@ -34,6 +35,9 @@ test_failures <- map(tc, \(x) {
     unlist() |> 
     table()
 })
+
+# Largest failure
+max(tc$var_2$estimate)
 
 qsave(tc, file = "output/tc.qs")
 

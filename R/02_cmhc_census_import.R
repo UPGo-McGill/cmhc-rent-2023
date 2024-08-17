@@ -456,78 +456,6 @@ cmhc_2015 <-
   arrange(CMA, name)
 
 
-# Manually add Halifax and Windsor (missing from HMIP) --------------------
-
-rent_halifax <-
-  readxl::read_xlsx("data/cmhc_Halifax_2015.xlsx", skip = 2) |> 
-  slice(1:26) |> 
-  select(1, 10:11) |> 
-  set_names(c("name", "rent", "rent_rel")) |> 
-  mutate(CMA = "12205", year = 2015, .after = name) |> 
-  mutate(rent = as.numeric(rent)) |> 
-  mutate(rent_rel = if_else(rent_rel %in% c("a", "b", "c", "d"), rent_rel, NA))
-
-vac_halifax <- 
-  readxl::read_xlsx("data/cmhc_Halifax_2015.xlsx", sheet = 4, skip = 2) |> 
-  slice(1:26) |> 
-  select(1, 10:11) |> 
-  set_names(c("name", "vacancy", "vacancy_rel")) |> 
-  mutate(CMA = "12205", year = 2015, .after = name) |> 
-  mutate(vacancy = as.numeric(vacancy)) |> 
-  mutate(vacancy_rel = if_else(vacancy_rel %in% c("a", "b", "c", "d"), 
-                               vacancy_rel, NA))
-
-univ_halifax <- 
-  readxl::read_xlsx("data/cmhc_Halifax_2015.xlsx", sheet = 7, skip = 2) |> 
-  slice(1:26) |> 
-  select(1, 6) |> 
-  set_names(c("name", "universe")) |> 
-  mutate(CMA = "12205", year = 2015, .after = name)
-
-cmhc_halifax <- 
-  rent_halifax |> 
-  inner_join(vac_halifax, by = c("name", "CMA", "year")) |> 
-  inner_join(univ_halifax, by = c("name", "CMA", "year"))
-
-rent_windsor <- 
-  readxl::read_xlsx("data/cmhc_Windsor_2015.xlsx", skip = 2) |> 
-  slice(1:15) |> 
-  select(1, 10:11) |> 
-  set_names(c("name", "rent", "rent_rel")) |> 
-  mutate(CMA = "35559", year = 2015, .after = name) |> 
-  mutate(rent = as.numeric(rent)) |> 
-  mutate(rent_rel = if_else(rent_rel %in% c("a", "b", "c", "d"), rent_rel, NA))
-
-vac_windsor <- 
-  readxl::read_xlsx("data/cmhc_Windsor_2015.xlsx", sheet = 4, skip = 2) |> 
-  slice(1:15) |> 
-  select(1, 10:11) |> 
-  set_names(c("name", "vacancy", "vacancy_rel")) |> 
-  mutate(CMA = "35559", year = 2015, .after = name) |> 
-  mutate(vacancy = as.numeric(vacancy)) |> 
-  mutate(vacancy_rel = if_else(vacancy_rel %in% c("a", "b", "c", "d"), 
-                               vacancy_rel, NA))
-
-univ_windsor <- 
-  readxl::read_xlsx("data/cmhc_Windsor_2015.xlsx", sheet = 7, skip = 2) |> 
-  slice(1:15) |> 
-  select(1, 6) |> 
-  set_names(c("name", "universe")) |> 
-  mutate(CMA = "35559", year = 2015, .after = name)
-
-cmhc_windsor <- 
-  rent_windsor |> 
-  inner_join(vac_windsor, by = c("name", "CMA", "year")) |> 
-  inner_join(univ_windsor, by = c("name", "CMA", "year"))
-
-cmhc_2015 <- 
-  cmhc_2015 |> 
-  bind_rows(cmhc_halifax, cmhc_windsor)
-
-rm(cmhc_halifax, cmhc_windsor, rent_halifax, rent_windsor, univ_halifax, 
-   univ_windsor, vac_halifax, vac_windsor)
-
-
 # Reconcile naming differences and identify missing entries ---------------
 
 # Start by trying to match cmhc_2015 names to 2016 names, via cmhc_join_2015
@@ -1362,37 +1290,6 @@ cmhc_nbhd <-
 cmhc_nbhd <-
   cmhc_nbhd |> 
   mutate(name_CMA = coalesce(name_CMA, paste0(name, " (CSD)")))
-
-
-# Adjust rents for inflation ----------------------------------------------
-
-cpi <- 
-  read_csv("data/CPI.csv", show_col_types = FALSE) |> 
-  select(REF_DATE, GEO, product = `Products and product groups`, UOM, 
-         value = VALUE) |> 
-  suppressWarnings()
-
-cpi <- 
-  cpi |> 
-  filter(product == "Shelter", GEO == "Canada", UOM == "2002=100") |> 
-  mutate(month = yearmonth(REF_DATE)) |> 
-  select(month, value) |> 
-  filter(month >= yearmonth("2015-10"))
-
-cpi_rent <- 
-  cpi |> 
-  filter(month(month) == 10) |> 
-  mutate(year = year(month)) |> 
-  select(year, value) |> 
-  mutate(value = value / value[year == 2023])
-
-cmhc <- 
-  cmhc |> 
-  inner_join(cpi_rent, by = "year") |> 
-  mutate(rent = rent * value) |> 
-  select(-value)
-
-rm(cpi, cpi_rent)
 
 
 # Harmonize cmhc and cmhc_nbhd re: missing data ---------------------------

@@ -14,7 +14,7 @@ md <- qread("output/md.qs")
 # 2017-2022 average ATT
 aggte(md$no_2023$rent_log, "simple")
 aggte(md$main$FREH, "simple")
-aggte(md$main$no_FREH, "simple")
+aggte(md$main$non_FREH, "simple")
 
 # Average rent
 exp(mean(dr$main$rent_log_raw, na.rm = TRUE))
@@ -26,11 +26,20 @@ exp(mean(dr$main$rent_log_raw, na.rm = TRUE)) - (
         aggte(md$no_2023$rent_log, "simple")$overall.att))
 
 # RE-ESF treatment at average
-sd(dr$main$rent_raw, na.rm = TRUE) * -0.0230
+(aggte(md$main$FREH, "simple")$overall.att * mc$common.1$b$Estimate[2] +
+  aggte(md$main$non_FREH, "simple")$overall.att * mc$common.1$b$Estimate[3])
+
+# RE-ESF effect at average
+(aggte(md$main$FREH, "simple")$overall.att * mc$common.1$b$Estimate[2] +
+    aggte(md$main$non_FREH, "simple")$overall.att * mc$common.1$b$Estimate[3]) *
+  sd(dr$main$rent_raw, na.rm = TRUE)
 
 # Ratio of treatments
 (exp(mean(dr$main$rent_log_raw, na.rm = TRUE)) - (
   exp(mean(dr$main$rent_log_raw, na.rm = TRUE) + 
         sd(dr$main$rent_log_raw, na.rm = TRUE) * 
         aggte(md$no_2023$rent_log, "simple")$overall.att))) / 
-  (sd(dr$main$rent_raw, na.rm = TRUE) * -0.0230)
+  (sd(dr$main$rent_raw, na.rm = TRUE) * (
+    aggte(md$main$FREH, "simple")$overall.att * mc$common.1$b$Estimate[2] +
+      aggte(md$main$non_FREH, "simple")$overall.att * 
+      mc$common.1$b$Estimate[3]))

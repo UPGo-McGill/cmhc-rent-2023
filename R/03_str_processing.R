@@ -94,7 +94,7 @@ CSD <- qread("output/CSD.qs", nthreads = availableCores())
 #   mutate(rev = if_else(R == 0, 0, rev))
 # 
 # 
-# # Convert currency and adjust for inflation -------------------------------
+# # Convert currency --------------------------------------------------------
 # 
 # exchange_rates <- qread("data/exchange_rates.qs")
 # 
@@ -105,32 +105,7 @@ CSD <- qread("output/CSD.qs", nthreads = availableCores())
 #   mutate(rev = rev * exchange_rate) |>
 #   select(-year_month, -exchange_rate)
 # 
-# cpi <-
-#   read_csv("data/CPI.csv") |>
-#   select(REF_DATE, GEO, product = `Products and product groups`, UOM,
-#          value = VALUE)
-# 
-# cpi <-
-#   cpi |>
-#   filter(product %in% c("All-items", "Shelter"), GEO == "Canada",
-#          UOM == "2002=100") |>
-#   mutate(month = yearmonth(REF_DATE)) |>
-#   select(month, product, value) |>
-#   filter(month >= yearmonth("2014-10"))
-# 
-# cpi_income <-
-#   cpi |>
-#   filter(product == "All-items") |>
-#   mutate(value = value / value[month == yearmonth("2023-09")]) |>
-#   select(-product)
-# 
-# monthly <-
-#   monthly |>
-#   inner_join(cpi_income, by = "month") |>
-#   mutate(rev = rev * value) |>
-#   select(-value)
-# 
-# rm(cpi, cpi_income, exchange_rates)
+# rm(exchange_rates)
 # 
 # 
 # # Calculate FREH ----------------------------------------------------------

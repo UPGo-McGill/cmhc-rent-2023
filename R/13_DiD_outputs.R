@@ -45,7 +45,7 @@ aggte(md$main$price, type = "simple", na.rm = TRUE, alp = .1)
 
 
 
-# Figure 8: Calendar effects ----------------------------------------------
+# Figure 9: Calendar effects ----------------------------------------------
 
 cal <- list()
 cal$main <- aggte(md$main$rent_log, type = "calendar")

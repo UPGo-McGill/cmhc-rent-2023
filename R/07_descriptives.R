@@ -62,7 +62,35 @@ monthly_sept |>
     min = min(value, na.rm = TRUE),
     max = max(value, na.rm = TRUE),
     .by = name) |> 
-  mutate(across(-c(name, n), \(x) scales::comma(x, 0.001))) |> 
+  mutate(across(n:max, \(x) case_when(
+           abs(x) >= 100 ~ scales::comma(x, 1),
+           abs(x) >= 10 ~ scales::comma(x, 0.1),
+           abs(x) >= 1 ~ scales::comma(x, 0.01),
+           .default = scales::comma(x, 0.001)))) |> 
+  mutate(range = paste(min, max, sep = " – ")) |> 
+  select(-min, -max) |> 
+  mutate(description = case_when(
+    name == "rent_log" ~ "Average monthly rent of purpose-built rentals (log)",
+    name == "rent_change" ~ "Y.o.y. change in rent",
+    name == "FREH_change" ~ "Y.o.y. change in FREH listings as % of dwellings",
+    name == "non_FREH_change" ~ 
+      "Y.o.y. change in non-FREH listings as % of dwellings",
+    name == "price_change" ~ "Y.o.y. change in average nightly STR price",
+    name == "rent_lag_log" ~ "Lagged average monthly rent (log)",
+    name == "vacancy_lag_log" ~ 
+      "Lagged purpose-built rental vacancy rate (log)",
+    name == "income_log" ~ "Average total household income (log)",
+    name == "apart_log" ~ 
+      "% of occupied private dwelling units which are apartments (log)",
+    name == "tourism_log" ~ 
+      "% of employment in entertainment and accommodation (log)"), 
+    source = case_when(
+      name %in% c(
+        "rent_log", "rent_change", "rent_lag_log", "vacancy_lag_log") ~ "CMHC",
+      name %in% c("FREH_change", "non_FREH_change", "price_change") ~ "Airdna",
+      .default = "Census"),
+    .after = name) |> 
+  gt::gt() |> 
   suppressWarnings()
 
 
