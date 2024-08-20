@@ -1,6 +1,5 @@
 #### 11 RENT CHANGE MODEL OUTPUTS ##############################################
 
-source("R/01_startup.R")
 source("R/08_process_DAGs.R")
 mc <- qread("output/mc.qs", nthreads = availableCores())
 
