@@ -7,7 +7,7 @@ mc <- qread("output/mc.qs", nthreads = availableCores())
 ### Model summary ##############################################################
 
 
-# Table 3: RE-ESF model ---------------------------------------------------
+# Table 4: RE-ESF model ---------------------------------------------------
 
 # Main results
 mc$common.1
@@ -31,9 +31,9 @@ mc$common.1$b |>
 nrow(mc$common.1$sf)
 
 
-# Figure 7: Parameter estimates -------------------------------------------
+# Figure 10: Parameter estimates -------------------------------------------
 
-fig_8 <-
+fig_10 <-
   names(ac) |> 
   map(\(x) {
     mc[[x]]$b |> 
@@ -62,4 +62,4 @@ fig_8 <-
   theme_minimal() +
   theme(text = element_text(family = "Futura"), legend.position = "bottom")
 
-ggsave("output/figure_8.png", fig_8, width = 8, height = 4, units = "in")
+ggsave("output/figure_10.png", fig_10, width = 8, height = 4, units = "in")

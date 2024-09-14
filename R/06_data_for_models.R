@@ -10,6 +10,36 @@ qload("output/cmhc.qsm", nthreads = availableCores())
 source("R/05_imputation.R")
 
 
+# Produce DiD dataset -----------------------------------------------------
+
+dr <- list()
+
+dr$main <- 
+  monthly_sept |> 
+  impute() |> 
+  st_drop_geometry() |> 
+  filter(!is.na(rent)) |> 
+  select(id:province, rent, FREH, non_FREH, price, STR) |>
+  # Create logged versions of variables
+  mutate(across(c(rent, FREH, non_FREH, price), 
+                .fns = list(log = \(x) log(
+                  if_else(x == 0, min(x[x > 0], na.rm = TRUE), x))))) |> 
+  mutate(across(c(rent:price_log), list(raw = \(x) x)),
+         across(c(rent:price_log), \(x) as.numeric(scale(x))))
+
+dr$no_imp <- 
+  monthly_sept |> 
+  st_drop_geometry() |> 
+  filter(!is.na(rent)) |> 
+  select(id:province, rent, FREH, non_FREH, price, STR) |>
+  # Create logged versions of variables
+  mutate(across(c(rent, FREH, non_FREH, price), 
+                .fns = list(log = \(x) log(
+                  if_else(x == 0, min(x[x > 0], na.rm = TRUE), x))))) |> 
+  mutate(across(c(rent:price_log), list(raw = \(x) x)),
+         across(c(rent:price_log), \(x) as.numeric(scale(x))))
+
+
 # Produce dataset with rent_change as DV ----------------------------------
 
 dc <- list()
@@ -35,7 +65,7 @@ dc$main <-
   mutate(across(c(FREH_lag, non_FREH_lag, price_lag, vacancy_lag), 
                 list(dummy = \(x) x == 0)), .before = rent) |> 
   mutate(across(c(FREH_lag, non_FREH_lag, price_lag, vacancy_lag), 
-                \(x) if_else(x == 0, min(x[x > 0]), x))) |> 
+                \(x) if_else(x == 0, min(x[x > 0], na.rm = TRUE), x))) |> 
   # Create logged versions of variables
   mutate(across(c(rent_lag, FREH_lag, non_FREH_lag, price_lag, vacancy_lag, 
                   apart, income, tourism), .fns = list(log = \(x) log(x))),
@@ -57,7 +87,7 @@ dc$no_imp <-
   mutate(across(c(FREH_lag, non_FREH_lag, price_lag, vacancy_lag), 
                 list(dummy = \(x) x == 0)), .before = rent_change) |> 
   mutate(across(c(FREH_lag, non_FREH_lag, price_lag, vacancy_lag), 
-                \(x) if_else(x == 0, min(x[x > 0]), x))) |> 
+                \(x) if_else(x == 0, min(x[x > 0], na.rm = TRUE), x))) |> 
   # Create logged versions of variables
   mutate(across(c(rent_lag, FREH_lag, non_FREH_lag, price_lag, vacancy_lag, 
                   apart, income, tourism), .fns = list(log = \(x) log(x))),
@@ -78,7 +108,7 @@ dc$no_vac <-
   mutate(across(c(FREH_lag, non_FREH_lag, price_lag), 
                 list(dummy = \(x) x == 0)), .before = rent_change) |> 
   mutate(across(c(FREH_lag, non_FREH_lag, price_lag), 
-                \(x) if_else(x == 0, min(x[x > 0]), x))) |> 
+                \(x) if_else(x == 0, min(x[x > 0], na.rm = TRUE), x))) |> 
   # Create logged versions of variables
   mutate(across(c(rent_lag, FREH_lag, non_FREH_lag, price_lag, apart, income, 
                   tourism), .fns = list(log = \(x) log(x))),
@@ -87,30 +117,6 @@ dc$no_vac <-
   mutate(across(c(rent_change:tourism_log), list(raw = \(x) x)),
          across(c(rent_change:tourism_log), \(x) as.numeric(scale(x))),
          .before = geometry)
-
-
-# Produce DiD dataset -----------------------------------------------------
-
-dr <- list()
-
-dr$main <- 
-  monthly_sept |> 
-  impute() |> 
-  st_drop_geometry() |> 
-  filter(!is.na(rent)) |> 
-  select(id:province, rent, FREH, non_FREH, price, STR) |>
-  mutate(rent_log = log(rent)) |> 
-  mutate(across(c(rent:rent_log), list(raw = \(x) x)),
-         across(c(rent:rent_log), \(x) as.numeric(scale(x))))
-
-dr$no_imp <- 
-  monthly_sept |> 
-  st_drop_geometry() |> 
-  filter(!is.na(rent)) |> 
-  select(id:province, rent, FREH, non_FREH, price, vacancy) |>
-  mutate(rent_log = log(rent)) |> 
-  mutate(across(c(rent:rent_log), list(raw = \(x) x)),
-         across(c(rent:rent_log), \(x) as.numeric(scale(x))))
 
 
 # Clean up ----------------------------------------------------------------

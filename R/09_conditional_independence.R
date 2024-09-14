@@ -42,9 +42,9 @@ max(tc$var_2$estimate)
 qsave(tc, file = "output/tc.qs")
 
 
-# Figure 6: Conditional independence --------------------------------------
+# Figure 8: Conditional independence --------------------------------------
 
-fig_6 <- 
+fig_8 <- 
   tc$var_2 |> 
   ggplot() +
   geom_vline(xintercept = 0, colour = "grey70") +
@@ -58,4 +58,4 @@ fig_6 <-
   theme_minimal() +
   theme(text = element_text(family = "futura"))
 
-ggsave("output/figure_6.png", fig_6, width = 8, height = 5, units = "in")
+ggsave("output/figure_8.png", fig_8, width = 8, height = 5, units = "in")

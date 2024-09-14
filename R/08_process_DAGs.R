@@ -157,9 +157,59 @@ ac <- map(ac, \(x) {
 })
 
 
-# Figure 5 ----------------------------------------------------------------
+# Figure 4 ----------------------------------------------------------------
 
-# fig_5 <-
+# fig_4 <- 'dag {
+# bb="0,0,6,5"
+# "Competition with hotels" [latent,pos="2.000,3.000"]
+# "Landlord STR decision" [latent,pos="2.000,1.000"]
+# "Rent stickiness" [latent,pos="4.000,3.000"]
+# "Resident STR decision" [latent,pos="2.000,2.000"]
+# Demand [latent,pos="4.000,2.000"]
+# FREH [exposure,pos="3.000,1.000"]
+# Regulation [latent,pos="1.000,1.500"]
+# Supply [latent,pos="4.000,1.000"]
+# non_FREH [exposure,pos="3.000,2.000"]
+# price [exposure,pos="3.000,3.000"]
+# rent [outcome,pos="5.000,2.000"]
+# "Competition with hotels" -> price
+# "Landlord STR decision" -> FREH
+# "Rent stickiness" -> rent
+# "Resident STR decision" -> non_FREH
+# Demand -> rent
+# FREH -> Supply
+# Regulation -> "Landlord STR decision"
+# Regulation -> "Resident STR decision"
+# Supply -> rent
+# non_FREH -> Demand
+# price -> "Rent stickiness"
+# }' |> 
+#   tidy_dagitty() |> 
+#   node_status() |>
+#   mutate(status = case_when(
+#     status == "exposure" ~ "b",
+#     status == "outcome" ~ "a",
+#     status == "latent" ~ "f")) |>
+#   mutate(y = y * -1, yend = yend * -1) |>
+#   ggplot(aes(x = x, y = y, xend = xend, yend = yend, colour = status)) +
+#   geom_dag_edges(edge_width = 0.2) +
+#   geom_dag_point(size = 16) +
+#   geom_label(aes(label = name), family = "Futura", size = 3,
+#              show.legend = FALSE) +
+#   scale_colour_manual(name = NULL, values = c(
+#     a = "#1b9e77", b = "#d95f02", f = "grey50"), 
+#     labels = c("Outcome", "Treatment", "Latent")) +
+#   guides(colour = guide_legend(nrow = 1)) +
+#   theme_dag() +
+#   theme(plot.background = element_rect(colour = "transparent", fill = "white"),
+#         text = element_text(family = "Futura"), legend.position = "bottom")
+# 
+# ggsave("output/figure_4.png", fig_4, width = 12, height = 4, units = "in")
+  
+
+# Figure 7 ----------------------------------------------------------------
+
+# fig_7 <-
 #   hc$FREH |>
 #   tidy_dagitty() |>
 #   node_status() |>
@@ -196,7 +246,7 @@ ac <- map(ac, \(x) {
 #   theme(plot.background = element_rect(colour = "transparent", fill = "white"),
 #         text = element_text(family = "Futura"), legend.position = "bottom")
 # 
-# ggsave("output/figure_5.png", fig_5, width = 12, height = 7, units = "in")
+# ggsave("output/figure_7.png", fig_7, width = 12, height = 7, units = "in")
 
 
 # Clean up ----------------------------------------------------------------

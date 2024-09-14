@@ -55,7 +55,7 @@ dd$van <-
 
 # Fit models --------------------------------------------------------------
 
-md_vars <- c("rent_log", "FREH", "non_FREH", "price")
+md_vars <- c("rent_log", "FREH_log", "non_FREH_log", "price_log")
 
 md <- map(dd, \(y) {
   md_vars |> 

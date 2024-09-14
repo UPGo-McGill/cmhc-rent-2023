@@ -20,11 +20,96 @@ largest_CMAs <-
   pull(CMA)
 
 
+### DiD dataset ################################################################
+
+# Load regulations
+reg <-
+  qread("data/reg.qs") |> 
+  mutate(reg = if_else(reg == "TBD", FALSE, as.logical(reg))) |> 
+  mutate(date = if_else(date >= "2023-01-02", NA, date)) |> 
+  mutate(reg = if_else(is.na(date), FALSE, TRUE)) |> 
+  inner_join(st_drop_geometry(cmhc_nbhd), by = c("id", "name")) |> 
+  select(-c(pop:tenant))
+
+
+# Table A1: STR regulations -----------------------------------------------
+
+reg |> 
+  filter(reg) |> 
+  count(name_CSD, province, date) |> 
+  select(-n) |> 
+  gt::gt()
+
+# Montreal borough details
+reg |> 
+  filter(reg) |> 
+  filter(name_CSD == "Montréal")
+
+
+### DiD robustness checks ######################################################
+
+ad <- map(md, map, \(x) aggte(x, type = "simple", na.rm = TRUE, alp = .05))
+
+# Provincial population
+get_census("CA21", regions = list(C = 1), level = "PR") |> 
+  mutate(in_df = GeoUID %in% c("13", "24", "35", "59")) |> 
+  summarize(dwellings = sum(Dwellings), .by = in_df) |> 
+  mutate(pct = dwellings / sum(dwellings))
+
+
+# Table A2: ATT for all model variants ------------------------------------
+
+map(names(ad), \(x) {
+  tibble(
+    model = x,
+    var = names(ad[[x]]),
+    att = round(map_dbl(ad[[x]], \(x) x$overall.att), 3),
+    se = round(map_dbl(ad[[x]], \(x) x$overall.se), 3))}) |> 
+  bind_rows() |> 
+  mutate(att = paste0(att, "\n(", se, ")")) |> 
+  select(-se) |> 
+  pivot_wider(names_from = var, values_from = att) |> 
+  filter(model != "no_2023") |> 
+  gt::gt()
+
+# Confidence intervals
+map(md, map, \(x) aggte(x, type = "simple", na.rm = TRUE, alp = .001))
+map(md, map, \(x) aggte(x, type = "simple", na.rm = TRUE, alp = .01))
+ad
+map(md, map, \(x) aggte(x, type = "simple", na.rm = TRUE, alp = .1))
+
+
+### DiD diagnostics ############################################################
+
+# Parallel trends assumption ----------------------------------------------
+
+fig_A1_list <-
+  map(setdiff(names(md), "no_2023"), \(x) {
+    aggte(md[[x]]$rent_log, type = "dynamic") |> 
+      ggdid() +
+      ggtitle(x) +
+      theme_minimal() +
+      scale_x_continuous(name = "Years post-treatment", 
+                         breaks = c(-6, -4, -2, 0, 2, 4)) + 
+      scale_y_continuous(name = "ATT") +
+      scale_color_brewer(name = NULL, palette = "Dark2", labels = c(
+        "Pre-treatment", "Post-treatment")) +
+      theme(text = element_text(family = "Futura"),
+            legend.position = "bottom")
+  })
+
+fig_A1 <-
+  wrap_plots(fig_A1_list, guides = "collect") & 
+  theme(legend.position = "bottom")  
+
+ggsave("output/figure_A1.png", fig_A1, width = 8, height = 8, units = "in")
+
+
 ### Structural causal model ####################################################
 
-# Figure A1: DAGs ---------------------------------------------------------
+# Figure A2: DAGs ---------------------------------------------------------
 
-fig_A1_1 <-
+fig_A2_1 <-
   hc$non_FREH |>
   tidy_dagitty() |>
   node_status() |>
@@ -61,7 +146,7 @@ fig_A1_1 <-
   theme(plot.background = element_rect(colour = "transparent", fill = "white"),
         text = element_text(family = "Futura"), legend.position = "bottom")
 
-fig_A1_2 <-
+fig_A2_2 <-
   hc$price |>
   tidy_dagitty() |>
   node_status() |>
@@ -97,15 +182,15 @@ fig_A1_2 <-
   theme(plot.background = element_rect(colour = "transparent", fill = "white"),
         text = element_text(family = "Futura"), legend.position = "bottom")
 
-fig_A1 <-
-  wrap_plots(fig_A1_1, fig_A1_2) + 
+fig_A2 <-
+  wrap_plots(fig_A2_1, fig_A2_2) + 
   plot_layout(nrow = 2, guides = "collect") &
   theme(legend.position = "bottom")
 
-ggsave("output/figure_A1.png", fig_A1, width = 12, height = 13, units = "in")
+ggsave("output/figure_A2.png", fig_A2, width = 12, height = 13, units = "in")
 
 
-# Table A1: Conditional independence tests --------------------------------
+# Table A3: Conditional independence tests --------------------------------
 
 tc$var_2 |> 
   mutate(var_1 = str_extract(vars, ".*(?= _\\|\\|_)"),
@@ -133,7 +218,7 @@ tc$var_2 |>
 map(ac, \(x) paste(x, collapse = ", "))
 
 
-# Table A2: Model variants ------------------------------------------------
+# Table A4: Model variants ------------------------------------------------
 
 rob_model_names <- names(mc)[c(1, 4, 5, 2, 3, 8, 6, 7)]
 
@@ -175,9 +260,9 @@ map(rob_model_names, \(x) {
   gt::gt()
 
 
-# Figure A2: Parameter estimates ------------------------------------------
+# Figure A3: Parameter estimates ------------------------------------------
 
-fig_A2 <-
+fig_A3 <-
   names(ac) |> 
   map(\(x) {
     mc[[x]]$b |> 
@@ -228,19 +313,19 @@ fig_A2 <-
   theme_minimal() +
   theme(text = element_text(family = "Futura"), legend.position = "bottom")
 
-ggsave("output/figure_A2.png", fig_A2, width = 8, height = 4, units = "in")
+ggsave("output/figure_A3.png", fig_A3, width = 8, height = 4, units = "in")
 
 
-# Table A3: SNVC model ----------------------------------------------------
+# Table A5: SNVC model ----------------------------------------------------
 
 mc$sn_common_force
 
 
 ### rent_change diagnostics ####################################################
 
-# Figure 3: Residuals-fitted plot -----------------------------------------
+# Figure A4: Residuals-fitted plot ----------------------------------------
 
-fig_A3 <-
+fig_A4 <-
   tibble(pred = mc$common.1$pred$pred, resid = mc$common.1$resid) |> 
   ggplot(aes(pred, resid)) +
   geom_point() +
@@ -250,12 +335,12 @@ fig_A3 <-
   theme_minimal() +
   theme(text = element_text(family = "Futura"))
 
-ggsave("output/figure_A3.png", fig_A3, width = 8, height = 4, units = "in")
+ggsave("output/figure_A4.png", fig_A4, width = 8, height = 4, units = "in")
 
 
-# Figure A4: QQ plots -----------------------------------------------------
+# Figure A5: QQ plots -----------------------------------------------------
 
-fig_A4_1 <-
+fig_A5_1 <-
   ggplot() +
   geom_qq(aes(sample = mc$common.1$resid)) +
   geom_qq_line(aes(sample = mc$common.1$resid)) +
@@ -265,7 +350,7 @@ fig_A4_1 <-
   theme_minimal() +
   theme(text = element_text(family = "Futura"))
 
-fig_A4_2 <-
+fig_A5_2 <-
   ggplot() +
   geom_qq(aes(sample = mc$non_gauss$resid)) +
   geom_qq_line(aes(sample = mc$non_gauss$resid)) +
@@ -275,9 +360,9 @@ fig_A4_2 <-
   theme_minimal() +
   theme(text = element_text(family = "Futura"))
 
-fig_A4 <- wrap_plots(fig_A4_1, fig_A4_2, nrow = 1)
+fig_A5 <- wrap_plots(fig_A5_1, fig_A5_2, nrow = 1)
 
-ggsave("output/figure_A4.png", fig_A4, width = 8, height = 4, units = "in")
+ggsave("output/figure_A5.png", fig_A5, width = 8, height = 4, units = "in")
 
 
 # VIF ---------------------------------------------------------------------
@@ -288,9 +373,9 @@ lm(rent_change ~ FREH_change + non_FREH_change + price_change + rent_lag_log +
   car::vif()
 
 
-# Figure A5: Map of residuals ---------------------------------------------
+# Figure A6: Map of residuals ---------------------------------------------
 
-fig_A5_list <- map(largest_CMAs, \(x) {
+fig_A6_list <- map(largest_CMAs, \(x) {
   
   name <- 
     dc$main |> 
@@ -330,17 +415,17 @@ fig_A5_list <- map(largest_CMAs, \(x) {
   
 })
 
-fig_A5 <- 
-  wrap_plots(c(fig_A5_list), nrow = 2) + 
+fig_A6 <- 
+  wrap_plots(c(fig_A6_list), nrow = 2) + 
   plot_layout(guides = "collect") & 
   theme(legend.position = "bottom", legend.key.width = unit(2, "cm"))
 
-ggsave("output/figure_A5.png", fig_A5, width = 10, height = 7, units = "in")
+ggsave("output/figure_A6.png", fig_A6, width = 10, height = 7, units = "in")
 
 
-# Figure A6: Stationarity of residuals and dependent variable -------------
+# Figure A7: Stationarity of residuals and dependent variable -------------
 
-fig_A6 <- 
+fig_A7 <- 
   dc$main |> 
   st_drop_geometry() |> 
   mutate(Residuals = mc$common.1$resid[,1]) |> 
@@ -353,89 +438,5 @@ fig_A6 <-
   theme_minimal() +
   theme(text = element_text(family = "Futura"))
 
-ggsave("output/figure_A6.png", fig_A6, width = 8, height = 4, units = "in")
+ggsave("output/figure_A7.png", fig_A7, width = 8, height = 4, units = "in")
 
-
-### DiD dataset ################################################################
-
-# Load regulations
-reg <-
-  qread("data/reg.qs") |> 
-  mutate(reg = if_else(reg == "TBD", FALSE, as.logical(reg))) |> 
-  mutate(date = if_else(date >= "2023-01-02", NA, date)) |> 
-  mutate(reg = if_else(is.na(date), FALSE, TRUE)) |> 
-  inner_join(st_drop_geometry(cmhc_nbhd), by = c("id", "name")) |> 
-  select(-c(pop:tenant))
-
-
-# Table A4: STR regulations -----------------------------------------------
-
-reg |> 
-  filter(reg) |> 
-  count(name_CSD, province, date) |> 
-  select(-n) |> 
-  gt::gt()
-
-# Montreal borough details
-reg |> 
-  filter(reg) |> 
-  filter(name_CSD == "Montréal")
-
-
-### DiD robustness checks ######################################################
-
-ad <- map(md, map, \(x) aggte(x, type = "simple", na.rm = TRUE, alp = .05))
-
-# Provincial population
-get_census("CA21", regions = list(C = 1), level = "PR") |> 
-  mutate(in_df = GeoUID %in% c("13", "24", "35", "59")) |> 
-  summarize(dwellings = sum(Dwellings), .by = in_df) |> 
-  mutate(pct = dwellings / sum(dwellings))
-
-
-# Table A5: ATT for all model variants ------------------------------------
-
-map(names(ad), \(x) {
-  tibble(
-    model = x,
-    var = names(ad[[x]]),
-    att = round(map_dbl(ad[[x]], \(x) x$overall.att), 3),
-    se = round(map_dbl(ad[[x]], \(x) x$overall.se), 3))}) |> 
-  bind_rows() |> 
-  mutate(att = paste0(att, "\n(", se, ")")) |> 
-  select(-se) |> 
-  pivot_wider(names_from = var, values_from = att) |> 
-  filter(model != "no_2023") |> 
-  gt::gt()
-
-# Confidence intervals
-map(md, map, \(x) aggte(x, type = "simple", na.rm = TRUE, alp = .001))
-map(md, map, \(x) aggte(x, type = "simple", na.rm = TRUE, alp = .01))
-ad
-map(md, map, \(x) aggte(x, type = "simple", na.rm = TRUE, alp = .1))
-
-
-### DiD diagnostics ############################################################
-
-# Parallel trends assumption ----------------------------------------------
-
-fig_A7_list <-
-  map(setdiff(names(md), "no_2023"), \(x) {
-    aggte(md[[x]]$rent_log, type = "dynamic") |> 
-      ggdid() +
-      ggtitle(x) +
-      theme_minimal() +
-      scale_x_continuous(name = "Years post-treatment", 
-                         breaks = c(-6, -4, -2, 0, 2, 4)) + 
-      scale_y_continuous(name = "ATT") +
-      scale_color_brewer(name = NULL, palette = "Dark2", labels = c(
-        "Pre-treatment", "Post-treatment")) +
-      theme(text = element_text(family = "Futura"),
-            legend.position = "bottom")
-  })
-
-fig_A7 <-
-  wrap_plots(fig_A7_list, guides = "collect") & 
-  theme(legend.position = "bottom")  
-
-ggsave("output/figure_A7.png", fig_A7, width = 8, height = 8, units = "in")
