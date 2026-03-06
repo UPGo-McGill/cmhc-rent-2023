@@ -1,4 +1,4 @@
-#### 08 PROCESS DAGs ###########################################################
+#### 07 PROCESS DAGs ###########################################################
 
 source("R/01_startup.R")
 
@@ -7,7 +7,8 @@ source("R/01_startup.R")
 
 hc <- list()
 
-hc$common <- dagitty('dag {
+hc$common <- dagitty(
+  'dag {
 bb="-2,-8.016,8.841,5.107"
 "Competition with hotels" [latent,pos="2.730,-1.434"]
 "Landlord STR decision" [latent,pos="2.459,-4.598"]
@@ -89,30 +90,41 @@ universe_change -> "Rent stickiness"
 universe_change -> Supply
 vacancy_lag_log -> "Landlord STR decision"
 vacancy_lag_log -> "Rent stickiness"
-}')
+}'
+)
 
-hc$FREH <- 
-  hc$common |> 
+hc$FREH <-
+  hc$common |>
   setVariableStatus("exposure", "FREH_change")
 
-hc$non_FREH <- 
-  hc$common |> 
+hc$non_FREH <-
+  hc$common |>
   setVariableStatus("exposure", "non_FREH_change")
 
-hc$price <- 
-  hc$common |> 
+hc$price <-
+  hc$common |>
   setVariableStatus("exposure", "price_change")
 
 
 # Adjustment sets ---------------------------------------------------------
 
-ac_order <- c("FREH_change", "non_FREH_change", "price_change", "rent_lag_log",
-              "FREH_lag_log", "non_FREH_lag_log", "price_lag_log",
-              "vacancy_lag_log", "apart_log", "income_log")
+ac_order <- c(
+  "FREH_change",
+  "non_FREH_change",
+  "price_change",
+  "rent_lag_log",
+  "FREH_lag_log",
+  "non_FREH_lag_log",
+  "price_lag_log",
+  "vacancy_lag_log",
+  "apart_log",
+  "income_log"
+)
 ac <- list()
 ac$FREH <- map(adjustmentSets(hc$FREH), \(x) sort(c(x, "FREH_change")))
-ac$non_FREH <- map(adjustmentSets(hc$non_FREH), 
-                   \(x) sort(c(x, "non_FREH_change")))
+ac$non_FREH <- map(adjustmentSets(hc$non_FREH), \(x) {
+  sort(c(x, "non_FREH_change"))
+})
 ac$price <- map(adjustmentSets(hc$price), \(x) sort(c(x, "price_change")))
 
 # Find common adjustment set
@@ -120,17 +132,19 @@ ac$common <- intersect(intersect(ac$FREH, ac$non_FREH), ac$price)
 stopifnot(length(ac$common) == 1)
 
 # Remove common adjustment set from variable-specific sets
-ac$FREH <- ac$FREH[!map_lgl(ac$FREH, \(x) all(x == ac$common[[1]]))] |> 
+ac$FREH <- ac$FREH[!map_lgl(ac$FREH, \(x) all(x == ac$common[[1]]))] |>
   suppressWarnings()
 ac$non_FREH <- ac$non_FREH[
-  !map_lgl(ac$non_FREH, \(x) all(x == ac$common[[1]]))] |>
+  !map_lgl(ac$non_FREH, \(x) all(x == ac$common[[1]]))
+] |>
   suppressWarnings()
-ac$price <- ac$price[!map_lgl(ac$price, \(x) all(x == ac$common[[1]]))] |> 
+ac$price <- ac$price[!map_lgl(ac$price, \(x) all(x == ac$common[[1]]))] |>
   suppressWarnings()
 
 # Produce unified list
 ac <- unlist(ac, recursive = FALSE)
-ac <- c(ac["common.1"], ac[-which(names(ac) == "common.1")])
+ac <- c(ac["common"], ac[-which(names(ac) == "common")])
+names(ac) <- c("common.1", names(ac)[-1])
 ac <- map(ac, \(x) x[order(match(x, ac_order))])
 
 # Remove additional duplicates
@@ -148,18 +162,22 @@ if (all(ac$FREH.3 == ac$non_FREH.3)) {
 
 # Add dummy variables where needed
 ac <- map(ac, \(x) {
-  
-  if (any("FREH_lag_log" %in% x)) x <- c(x, "FREH_lag_dummy")
-  if (any("non_FREH_lag_log" %in% x)) x <- c(x, "non_FREH_lag_dummy")
-  if (any("price_lag_log" %in% x)) x <- c(x, "price_lag_dummy")
+  if (any("FREH_lag_log" %in% x)) {
+    x <- c(x, "FREH_lag_dummy")
+  }
+  if (any("non_FREH_lag_log" %in% x)) {
+    x <- c(x, "non_FREH_lag_dummy")
+  }
+  if (any("price_lag_log" %in% x)) {
+    x <- c(x, "price_lag_dummy")
+  }
   x
-  
 })
 
 
-# Figure 4 ----------------------------------------------------------------
+# Figure 2 ----------------------------------------------------------------
 
-# fig_4 <- 'dag {
+# fig_2 <- 'dag {
 # bb="0,0,6,5"
 # "Competition with hotels" [latent,pos="2.000,3.000"]
 # "Landlord STR decision" [latent,pos="2.000,1.000"]
@@ -183,71 +201,44 @@ ac <- map(ac, \(x) {
 # Supply -> rent
 # non_FREH -> Demand
 # price -> "Rent stickiness"
-# }' |> 
-#   tidy_dagitty() |> 
-#   node_status() |>
-#   mutate(status = case_when(
-#     status == "exposure" ~ "b",
-#     status == "outcome" ~ "a",
-#     status == "latent" ~ "f")) |>
-#   mutate(y = y * -1, yend = yend * -1) |>
-#   ggplot(aes(x = x, y = y, xend = xend, yend = yend, colour = status)) +
-#   geom_dag_edges(edge_width = 0.2) +
-#   geom_dag_point(size = 16) +
-#   geom_label(aes(label = name), family = "Futura", size = 3,
-#              show.legend = FALSE) +
-#   scale_colour_manual(name = NULL, values = c(
-#     a = "#1b9e77", b = "#d95f02", f = "grey50"), 
-#     labels = c("Outcome", "Treatment", "Latent")) +
-#   guides(colour = guide_legend(nrow = 1)) +
-#   theme_dag() +
-#   theme(plot.background = element_rect(colour = "transparent", fill = "white"),
-#         text = element_text(family = "Futura"), legend.position = "bottom")
-# 
-# ggsave("output/figure_4.png", fig_4, width = 12, height = 4, units = "in")
-  
-
-# Figure 7 ----------------------------------------------------------------
-
-# fig_7 <-
-#   hc$FREH |>
+# }' |>
 #   tidy_dagitty() |>
 #   node_status() |>
-#   node_ancestors("FREH_change") |>
-#   select(everything(), FREH_anc = ancestor) |>
-#   node_ancestors("rent_change") |>
-#   mutate(status = case_when(
-#     status == "exposure" ~ "b",
-#     status == "outcome" ~ "a",
-#     status == "latent" ~ "f",
-#     name == "FREH_lag_log" ~ "c",
-#     FREH_anc == "ancestor" & ancestor == "ancestor" ~ "e",
-#     ancestor == "ancestor" ~ "d")) |>
-#   mutate(label = case_when(
-#     status == "a" ~ "Outcome",
-#     status == "b" ~ "Exposure",
-#     status == "c" ~ "Ancestor\n(treat.)",
-#     status == "d" ~ "Ancestor\n(outcome)",
-#     status == "e" ~ "Ancestor\n(both)",
-#     status == "f" ~ "Latent")) |>
+#   mutate(
+#     status = case_when(
+#       status == "exposure" ~ "b",
+#       status == "outcome" ~ "a",
+#       status == "latent" ~ "f"
+#     )
+#   ) |>
 #   mutate(y = y * -1, yend = yend * -1) |>
 #   ggplot(aes(x = x, y = y, xend = xend, yend = yend, colour = status)) +
 #   geom_dag_edges(edge_width = 0.2) +
 #   geom_dag_point(size = 16) +
-#   geom_label(aes(label = name), family = "Futura", size = 3, 
-#              show.legend = FALSE) +
-#   scale_colour_manual(name = NULL, values = c(
-#     a = "#1b9e77", b = "#d95f02", c = "#e6ab02", d = "#7570b3", e = "#e7298a",
-#     f = "grey50"),
-#     labels = c("Outcome", "Treatment", "Ancestor of treatment",
-#                "Ancestor of outcome", "Ancestor of both", "Latent")) +
+#   geom_label(
+#     aes(label = name),
+#     family = "Futura",
+#     size = 3,
+#     show.legend = FALSE
+#   ) +
+#   scale_colour_manual(
+#     name = NULL,
+#     values = c(
+#       a = "#1b9e77",
+#       b = "#d95f02",
+#       f = "grey50"
+#     ),
+#     labels = c("Outcome", "Treatment", "Latent")
+#   ) +
 #   guides(colour = guide_legend(nrow = 1)) +
 #   theme_dag() +
-#   theme(plot.background = element_rect(colour = "transparent", fill = "white"),
-#         text = element_text(family = "Futura"), legend.position = "bottom")
-# 
-# ggsave("output/figure_7.png", fig_7, width = 12, height = 7, units = "in")
+#   theme(
+#     plot.background = element_rect(colour = "transparent", fill = "white"),
+#     text = element_text(family = "Futura"),
+#     legend.position = "bottom"
+#   )
 
+# ggsave("figures/figure_2.png", fig_2, width = 12, height = 4, units = "in")
 
 # Clean up ----------------------------------------------------------------
 
