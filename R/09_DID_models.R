@@ -1,4 +1,4 @@
-#### 10 DIFFERENCE-IN-DIFFERENCES MODELS #######################################
+#### 09 DIFFERENCE-IN-DIFFERENCES MODELS #######################################
 
 source("R/01_startup.R")
 source("R/06_data_for_models.R")
@@ -290,12 +290,21 @@ dd$adj <-
   filter_out(is.infinite(treat)) |>
   suppressWarnings()
 
-# Residualized rent variant
-dd$resid <-
+# Residualized rent variants
+dd$resid_cma_year <-
   dd$main |>
   mutate(
     rent_log = resid(lm(
       rent_log ~ factor(name_CMA) + factor(year),
+      data = dd$main
+    ))
+  )
+
+dd$resid_cma_by_year <-
+  dd$main |>
+  mutate(
+    rent_log = resid(lm(
+      rent_log ~ factor(name_CMA):factor(year),
       data = dd$main
     ))
   )
@@ -333,7 +342,7 @@ md$no_2023$rent_log <-
     data = filter(dd$main, year <= 2022)
   )
 
-md_un <-
+md_no_pool <-
   map(dd, \(y) {
     md_vars |>
       set_names(md_vars) |>
@@ -380,5 +389,5 @@ dd <- map(dd, \(x) mutate(x, id = str_remove(as.character(id), "^1111")))
 
 qsave(dd, "output/dd.qs")
 qsave(md, "output/md.qs")
-qsave(md_un, "output/md_un.qs")
+qsave(md_no_pool, "output/md_no_pool.qs")
 qsave(md_CSD, "output/md_CSD.qs")

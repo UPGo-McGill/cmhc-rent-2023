@@ -1,4 +1,4 @@
-#### 12 DIFFERENCE-IN-DIFFERENCES OUTPUTS ######################################
+#### 11 DIFFERENCE-IN-DIFFERENCES OUTPUTS ######################################
 
 source("R/01_startup.R")
 dd <- qread("output/dd.qs")
@@ -172,4 +172,5 @@ aggte(md$adj$FREH, type = "simple", na.rm = TRUE, alp = .001)
 aggte(md$adj$non_FREH, type = "simple", na.rm = TRUE, alp = .001)
 aggte(md$adj$price, type = "simple", na.rm = TRUE, alp = .05)
 
-aggte(md$resid$rent_log, type = "simple", na.rm = TRUE, alp = .05)
+aggte(md$resid_cma_year$rent_log, type = "simple", na.rm = TRUE, alp = .05)
+aggte(md$resid_cma_by_year$rent_log, type = "simple", na.rm = TRUE, alp = .05)
