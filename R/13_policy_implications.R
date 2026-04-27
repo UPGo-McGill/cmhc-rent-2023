@@ -463,9 +463,9 @@ effect_cum |>
   scales::percent(0.1)
 
 
-# Figure 6: STR share of total rent ---------------------------------------
+# Figure 7: STR share of total rent ---------------------------------------
 
-fig_6 <-
+fig_7 <-
   effect_yty |>
   select(year, str_pct, str_share) |>
   mutate(type = "Year-to-year effect") |>
@@ -506,7 +506,7 @@ fig_6 <-
   theme_minimal() +
   theme(text = element_text(family = "Futura"), legend.position = "none")
 
-ggsave("figures/figure_6.png", fig_6, width = 8, height = 4.5, units = "in")
+ggsave("figures/figure_7.png", fig_7, width = 8, height = 4.5, units = "in")
 
 
 # Size of STR market compared to LTR market -------------------------------

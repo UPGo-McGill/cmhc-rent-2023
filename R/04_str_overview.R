@@ -64,8 +64,6 @@ fig_1a <-
   theme_minimal() +
   theme(text = element_text(family = "Futura"), legend.position = "bottom")
 
-ggsave("figures/figure_1a.png", fig_1a, width = 8, height = 4, units = "in")
-
 # 2015-2023 rent change
 cmhc |>
   inner_join(st_drop_geometry(select(cmhc_nbhd, id, province, CMA))) |>
@@ -137,8 +135,6 @@ fig_1b <-
   scale_linetype(name = NULL) +
   theme_minimal() +
   theme(text = element_text(family = "Futura"), legend.position = "bottom")
-
-ggsave("figures/figure_1b.png", fig_1b, width = 8, height = 4, units = "in")
 
 # Sep 2022 figures
 monthly |>
@@ -221,4 +217,14 @@ fig_1c <-
   theme_minimal() +
   theme(text = element_text(family = "Futura"), legend.position = "bottom")
 
-ggsave("figures/figure_1c.png", fig_1c, width = 8, height = 4, units = "in")
+
+# Consolidated figure 1 --------------------------------------------------
+
+fig_1 <-
+  patchwork::wrap_plots(fig_1a, fig_1b, fig_1c, nrow = 3) +
+  patchwork::plot_annotation(
+    tag_levels = "A",
+    theme = theme(text = element_text(family = "Futura"))
+  )
+
+ggsave("figures/figure_1.png", fig_1, width = 8, height = 12, units = "in")
